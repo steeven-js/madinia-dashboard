@@ -9,6 +9,7 @@ import { useMarketingsPosts } from 'src/hooks/use-marketings-post';
 import { CONFIG } from 'src/config-global';
 
 import { PostListView } from 'src/sections/marketings/view';
+import { EmptyContent } from 'src/components/empty-content';
 
 const metadata = { title: `Marketings Posts | Dashboard - ${CONFIG.name}` };
 
@@ -19,20 +20,8 @@ export default function Page() {
     error: marketinggsError,
   } = useMarketingsPosts();
 
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   if (marketinggsError) {
     return <div>Erreur : {marketinggsError}</div>;
-  }
-
-  if (!marketingsPosts || marketingsPosts.length === 0) {
-    return <div>Aucun post marketing disponible.</div>;
   }
 
   return (
@@ -41,7 +30,15 @@ export default function Page() {
         <title>{metadata.title}</title>
       </Helmet>
 
-      <PostListView posts={marketingsPosts} isLoading={isLoading} />
+      {isLoading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+          <CircularProgress />
+        </Box>
+      ) : marketingsPosts.length === 0 ? (
+        <EmptyContent title="Aucun post" />
+      ) : (
+        <PostListView posts={marketingsPosts} isLoading={isLoading} />
+      )}
     </>
   );
 }
