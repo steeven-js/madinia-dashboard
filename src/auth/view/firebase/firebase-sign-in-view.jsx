@@ -17,12 +17,14 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
+import { AnimateLogo2 } from 'src/components/animate';
 import { Form, Field } from 'src/components/hook-form';
 
 import { useAuthContext } from '../../hooks';
 import { FormHead } from '../../components/form-head';
+// import { FormSocials } from '../../components/form-socials';
 import { FormDivider } from '../../components/form-divider';
-import { FormSocials } from '../../components/form-socials';
+
 import {
   signInWithGoogle,
   signInWithGithub,
@@ -30,34 +32,24 @@ import {
   signInWithPassword,
 } from '../../context/firebase';
 
-// ----------------------------------------------------------------------
-
 export const SignInSchema = zod.object({
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: "L'email est requis !" })
+    .email({ message: "L'email doit être une adresse email valide !" }),
   password: zod
     .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
+    .min(1, { message: 'Le mot de passe est requis !' })
+    .min(6, { message: 'Le mot de passe doit contenir au moins 6 caractères !' }),
 });
-
-// ----------------------------------------------------------------------
 
 export function FirebaseSignInView() {
   const router = useRouter();
-
   const { checkUserSession } = useAuthContext();
-
   const [errorMsg, setErrorMsg] = useState('');
-
   const password = useBoolean();
 
-  const defaultValues = {
-    email: '',
-    password: '',
-  };
+  const defaultValues = { email: '', password: '' };
 
   const methods = useForm({
     resolver: zodResolver(SignInSchema),
@@ -73,7 +65,6 @@ export function FirebaseSignInView() {
     try {
       await signInWithPassword({ email: data.email, password: data.password });
       await checkUserSession?.();
-
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -84,30 +75,41 @@ export function FirebaseSignInView() {
   const handleSignInWithGoogle = async () => {
     try {
       await signInWithGoogle();
+      await checkUserSession?.();
+      router.refresh();
     } catch (error) {
       console.error(error);
+      setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   };
 
   const handleSignInWithGithub = async () => {
     try {
       await signInWithGithub();
+      await checkUserSession?.();
+      router.refresh();
     } catch (error) {
       console.error(error);
+      setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   };
 
   const handleSignInWithTwitter = async () => {
     try {
       await signInWithTwitter();
+      await checkUserSession?.();
+      router.refresh();
     } catch (error) {
       console.error(error);
+      setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   };
 
+  const renderLogo = <AnimateLogo2 sx={{ mb: 3, mx: 'auto' }} />;
+
   const renderForm = (
     <Box gap={3} display="flex" flexDirection="column">
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Adresse email" InputLabelProps={{ shrink: true }} />
 
       <Box gap={1.5} display="flex" flexDirection="column">
         <Link
@@ -117,13 +119,13 @@ export function FirebaseSignInView() {
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
         >
-          Forgot password?
+          Mot de passe oublié ?
         </Link>
 
         <Field.Text
           name="password"
-          label="Password"
-          placeholder="6+ characters"
+          label="Mot de passe"
+          placeholder="6+ caractères"
           type={password.value ? 'text' : 'password'}
           InputLabelProps={{ shrink: true }}
           InputProps={{
@@ -145,26 +147,27 @@ export function FirebaseSignInView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Sign in..."
+        loadingIndicator="Connexion..."
       >
-        Sign in
+        Se connecter
       </LoadingButton>
     </Box>
   );
 
   return (
     <>
+      {renderLogo}
+
       <FormHead
-        title="Sign in to your account"
-        description={
-          <>
-            {`Don’t have an account? `}
-            <Link component={RouterLink} href={paths.auth.firebase.signUp} variant="subtitle2">
-              Get started
-            </Link>
-          </>
-        }
-        sx={{ textAlign: { xs: 'center', md: 'left' } }}
+        title="Connectez-vous à votre compte"
+        // description={
+        //   <>
+        //     {`Vous n'avez pas de compte ? `}
+        //     <Link component={RouterLink} href={paths.auth.firebase.signUp} variant="subtitle2">
+        //       Commencez ici
+        //     </Link>
+        //   </>
+        // }
       />
 
       {!!errorMsg && (
@@ -177,13 +180,13 @@ export function FirebaseSignInView() {
         {renderForm}
       </Form>
 
-      <FormDivider />
+      {/* <FormDivider /> */}
 
-      <FormSocials
+      {/* <FormSocials
         signInWithGoogle={handleSignInWithGoogle}
         singInWithGithub={handleSignInWithGithub}
         signInWithTwitter={handleSignInWithTwitter}
-      />
+      /> */}
     </>
   );
 }

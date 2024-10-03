@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { AuthSplitLayout } from 'src/layouts/auth-split';
+import { AuthCenteredLayout } from 'src/layouts/auth-centered';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
@@ -116,14 +117,17 @@ const Firebase = {
 
 const authFirebase = {
   path: 'firebase',
+  element: (
+    <AuthCenteredLayout>
+      <Outlet />
+    </AuthCenteredLayout>
+  ),
   children: [
     {
       path: 'sign-in',
       element: (
         <GuestGuard>
-          <AuthSplitLayout section={{ title: 'Hi, Welcome back' }}>
-            <Firebase.SignInPage />
-          </AuthSplitLayout>
+          <Firebase.SignInPage />
         </GuestGuard>
       ),
     },
@@ -131,27 +135,17 @@ const authFirebase = {
       path: 'sign-up',
       element: (
         <GuestGuard>
-          <AuthSplitLayout>
-            <Firebase.SignUpPage />
-          </AuthSplitLayout>
+          <Firebase.SignUpPage />
         </GuestGuard>
       ),
     },
     {
       path: 'verify',
-      element: (
-        <AuthSplitLayout>
-          <Firebase.VerifyPage />
-        </AuthSplitLayout>
-      ),
+      element: <Firebase.VerifyPage />,
     },
     {
       path: 'reset-password',
-      element: (
-        <AuthSplitLayout>
-          <Firebase.ResetPasswordPage />
-        </AuthSplitLayout>
-      ),
+      element: <Firebase.ResetPasswordPage />,
     },
   ],
 };
