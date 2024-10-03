@@ -8,8 +8,9 @@ import { useMarketingsPosts } from 'src/hooks/use-marketings-post';
 
 import { CONFIG } from 'src/config-global';
 
-import { PostListView } from 'src/sections/marketings/view';
 import { EmptyContent } from 'src/components/empty-content';
+
+import { PostListView } from 'src/sections/marketings/view';
 
 const metadata = { title: `Marketings Posts | Dashboard - ${CONFIG.name}` };
 

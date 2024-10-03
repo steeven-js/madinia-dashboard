@@ -8,8 +8,9 @@ import { usePosts } from 'src/hooks/use-posts';
 
 import { CONFIG } from 'src/config-global';
 
-import { PostListView } from 'src/sections/blog/view';
 import { EmptyContent } from 'src/components/empty-content';
+
+import { PostListView } from 'src/sections/blog/view';
 
 // ----------------------------------------------------------------------
 

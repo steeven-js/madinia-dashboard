@@ -11,6 +11,8 @@ import { _contacts, _notifications } from 'src/_mock';
 import { Logo } from 'src/components/logo';
 import { useSettingsContext } from 'src/components/settings';
 
+import { useAuth } from 'src/hooks/use-auth';
+
 import { Main } from './main';
 import { NavMobile } from './nav-mobile';
 import { layoutClasses } from '../classes';
@@ -41,6 +43,8 @@ export function DashboardLayout({ sx, children, header, data }) {
   const settings = useSettingsContext();
 
   const navColorVars = useNavColorVars(theme, settings);
+
+  const { userId, userProfile, loading } = useAuth();
 
   const layoutQuery = 'lg';
 
@@ -150,7 +154,7 @@ export function DashboardLayout({ sx, children, header, data }) {
                 {/* -- Settings button -- */}
                 <SettingsButton />
                 {/* -- Account drawer -- */}
-                <AccountDrawer data={_account} />
+                <AccountDrawer data={_account} user={userProfile} />
               </Box>
             ),
           }}

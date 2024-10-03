@@ -23,8 +23,6 @@ import { Form, Field } from 'src/components/hook-form';
 import { useAuthContext } from '../../hooks';
 import { FormHead } from '../../components/form-head';
 // import { FormSocials } from '../../components/form-socials';
-import { FormDivider } from '../../components/form-divider';
-
 import {
   signInWithGoogle,
   signInWithGithub,

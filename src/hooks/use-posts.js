@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import {
   doc,
@@ -8,13 +9,12 @@ import {
   getDocs,
   orderBy,
   startAt,
+  deleteDoc,
   collection,
   onSnapshot,
-  deleteDoc,
 } from 'firebase/firestore';
 
 import { db } from 'src/utils/firebase';
-import { toast } from 'sonner';
 
 export function usePosts(sortBy = 'latest', searchQuery = '', publish = 'all') {
   const [posts, setPosts] = useState([]);
