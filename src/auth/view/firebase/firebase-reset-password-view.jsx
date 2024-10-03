@@ -21,8 +21,8 @@ import { FormReturnLink } from '../../components/form-return-link';
 export const ResetPasswordSchema = zod.object({
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: "L'email est requis !" })
+    .email({ message: "L'email doit être une adresse email valide !" }),
 });
 
 // ----------------------------------------------------------------------
@@ -62,8 +62,8 @@ export function FirebaseResetPasswordView() {
       <Field.Text
         autoFocus
         name="email"
-        label="Email address"
-        placeholder="example@gmail.com"
+        label="Adresse email"
+        placeholder="exemple@gmail.com"
         InputLabelProps={{ shrink: true }}
       />
 
@@ -73,9 +73,9 @@ export function FirebaseResetPasswordView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Send request..."
+        loadingIndicator="Envoi de la demande..."
       >
-        Send request
+        Envoyer la demande
       </LoadingButton>
     </Box>
   );
@@ -84,8 +84,8 @@ export function FirebaseResetPasswordView() {
     <>
       <FormHead
         icon={<PasswordIcon />}
-        title="Forgot your password?"
-        description={`Please enter the email address associated with your account and we'll email you a link to reset your password.`}
+        title="Mot de passe oublié ?"
+        description={`Veuillez entrer l'adresse email associée à votre compte et nous vous enverrons un lien pour réinitialiser votre mot de passe.`}
       />
 
       <Form methods={methods} onSubmit={onSubmit}>

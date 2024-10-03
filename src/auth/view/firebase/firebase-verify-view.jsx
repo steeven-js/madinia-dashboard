@@ -12,8 +12,8 @@ export function FirebaseVerifyView() {
     <>
       <FormHead
         icon={<EmailInboxIcon />}
-        title="Please check your email!"
-        description={`We've emailed a 6-digit confirmation code. \nPlease enter the code in the box below to verify your email.`}
+        title="Veuillez vérifier votre email !"
+        description={`Nous vous avons envoyé un code de confirmation à 6 chiffres par email. \nVeuillez entrer le code dans la case ci-dessous pour vérifier votre email.`}
       />
 
       <FormReturnLink href={paths.auth.firebase.signIn} sx={{ mt: 0 }} />
