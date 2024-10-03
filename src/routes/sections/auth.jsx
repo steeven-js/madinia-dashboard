@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
 import { AuthSplitLayout } from 'src/layouts/auth-split';
 import { AuthCenteredLayout } from 'src/layouts/auth-centered';
@@ -133,11 +133,7 @@ const authFirebase = {
     },
     {
       path: 'sign-up',
-      element: (
-        <GuestGuard>
-          <Firebase.SignUpPage />
-        </GuestGuard>
-      ),
+      element: <Navigate to="/auth/firebase/sign-in" replace />,
     },
     {
       path: 'verify',
