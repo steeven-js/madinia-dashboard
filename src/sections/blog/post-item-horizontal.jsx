@@ -22,6 +22,7 @@ import { Label } from 'src/components/label';
 import { Image } from 'src/components/image';
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import { deletePostById } from 'src/hooks/use-posts';
 
 // ----------------------------------------------------------------------
 
@@ -31,6 +32,10 @@ export function PostItemHorizontal({ post, currentUser }) {
   const popover = usePopover();
 
   const router = useRouter();
+
+  const handleDeletePost = async (postId) => {
+    await deletePostById(postId);
+  };
 
   const {
     id,
@@ -153,6 +158,7 @@ export function PostItemHorizontal({ post, currentUser }) {
 
           <MenuItem
             onClick={() => {
+              handleDeletePost(id);
               popover.onClose();
             }}
             sx={{ color: 'error.main' }}

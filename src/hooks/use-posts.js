@@ -10,9 +10,11 @@ import {
   startAt,
   collection,
   onSnapshot,
+  deleteDoc,
 } from 'firebase/firestore';
 
 import { db } from 'src/utils/firebase';
+import { toast } from 'sonner';
 
 export function usePosts(sortBy = 'latest', searchQuery = '', publish = 'all') {
   const [posts, setPosts] = useState([]);
@@ -207,3 +209,16 @@ export function useSearchMarketingsPosts(searchQuery) {
 
   return { searchResults, searchLoading };
 }
+
+export const deletePostById = async (postId) => {
+  try {
+    await deleteDoc(doc(db, 'posts', postId));
+    console.log(`Post with ID ${postId} successfully deleted`);
+    toast.success('Post has been deleted');
+    return true;
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    toast.error('Error deleting post');
+    return false;
+  }
+};
