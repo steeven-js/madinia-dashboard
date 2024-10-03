@@ -55,7 +55,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
     <AnimateAvatar
       width={96}
       slotProps={{
-        avatar: { src: user?.photoURL, alt: user?.displayName },
+        avatar: { src: user?.avatarUrl, alt: user?.displayName },
         overlay: {
           border: 2,
           spacing: 3,
@@ -71,7 +71,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
     <>
       <AccountButton
         onClick={handleOpenDrawer}
-        photoURL={user?.photoURL}
+        photoURL={user?.avatarUrl}
         displayName={user?.displayName}
         sx={sx}
         {...other}
