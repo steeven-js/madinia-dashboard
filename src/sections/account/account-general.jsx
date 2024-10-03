@@ -1,4 +1,5 @@
 import { z as zod } from 'zod';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
@@ -11,22 +12,25 @@ import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
+import { updateUserData } from 'src/hooks/use-users';
+
 import { fData } from 'src/utils/format-number';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
-import { useMockedUser } from 'src/auth/hooks';
-
 // ----------------------------------------------------------------------
 
 export const UpdateUserSchema = zod.object({
-  displayName: zod.string().min(1, { message: 'Name is required!' }),
+  name: zod.string().min(1, { message: 'Name is required!' }),
   email: zod
     .string()
     .min(1, { message: 'Email is required!' })
     .email({ message: 'Email must be a valid email address!' }),
-  photoURL: schemaHelper.file({
+  avatarUrl: schemaHelper.file({
     message: { required_error: 'Avatar is required!' },
   }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
@@ -42,21 +46,22 @@ export const UpdateUserSchema = zod.object({
   isPublic: zod.boolean(),
 });
 
-export function AccountGeneral() {
-  const { user } = useMockedUser();
+export function AccountGeneral({ currentUser, userProfile }) {
+  const router = useRouter();
+  const [_isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues = {
-    displayName: user?.displayName || '',
-    email: user?.email || '',
-    photoURL: user?.photoURL || null,
-    phoneNumber: user?.phoneNumber || '',
-    country: user?.country || '',
-    address: user?.address || '',
-    state: user?.state || '',
-    city: user?.city || '',
-    zipCode: user?.zipCode || '',
-    about: user?.about || '',
-    isPublic: user?.isPublic || false,
+    name: userProfile?.name || '',
+    email: userProfile?.email || '',
+    avatarUrl: userProfile?.avatarUrl || null,
+    phoneNumber: userProfile?.phoneNumber || '',
+    country: userProfile?.country || '',
+    address: userProfile?.address || '',
+    state: userProfile?.state || '',
+    city: userProfile?.city || '',
+    zipCode: userProfile?.zipCode || '',
+    about: userProfile?.about || '',
+    isPublic: userProfile?.isPublic || false,
   };
 
   const methods = useForm({
@@ -71,12 +76,16 @@ export function AccountGeneral() {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
+    setIsSubmitting(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      toast.success('Update success!');
-      console.info('DATA', data);
+      await updateUserData({ currentUser, data });
+
+      router.push(paths.dashboard.root);
     } catch (error) {
       console.error(error);
+      toast.error('Une erreur est survenue lors de la mise à jour');
+    } finally {
+      setIsSubmitting(false);
     }
   });
 
@@ -93,7 +102,7 @@ export function AccountGeneral() {
             }}
           >
             <Field.UploadAvatar
-              name="photoURL"
+              name="avatarUrl"
               maxSize={3145728}
               helperText={
                 <Typography
@@ -116,6 +125,7 @@ export function AccountGeneral() {
               name="isPublic"
               labelPlacement="start"
               label="Public profile"
+              value={userProfile?.isPublic ? 'true' : 'false'}
               sx={{ mt: 5 }}
             />
 
@@ -136,7 +146,7 @@ export function AccountGeneral() {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <Field.Text name="displayName" label="Name" />
+              <Field.Text name="name" label="Name" />
               <Field.Text name="email" label="Email address" />
               <Field.Phone name="phoneNumber" label="Phone number" />
               <Field.Text name="address" label="Address" />

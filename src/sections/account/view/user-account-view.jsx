@@ -5,16 +5,14 @@ import { paths } from 'src/routes/paths';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
+import { _userAbout } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _userAbout, _userPlans, _userPayment, _userInvoices, _userAddressBook } from 'src/_mock';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AccountGeneral } from '../account-general';
-import { AccountBilling } from '../account-billing';
 import { AccountSocialLinks } from '../account-social-links';
-import { AccountNotifications } from '../account-notifications';
 import { AccountChangePassword } from '../account-change-password';
 
 // ----------------------------------------------------------------------
@@ -33,7 +31,7 @@ const TABS = [
 
 // ----------------------------------------------------------------------
 
-export function AccountView() {
+export function AccountView({ user, userProfile }) {
   const tabs = useTabs('general');
 
   return (
@@ -54,18 +52,7 @@ export function AccountView() {
         ))}
       </Tabs>
 
-      {tabs.value === 'general' && <AccountGeneral />}
-
-      {tabs.value === 'billing' && (
-        <AccountBilling
-          plans={_userPlans}
-          cards={_userPayment}
-          invoices={_userInvoices}
-          addressBook={_userAddressBook}
-        />
-      )}
-
-      {tabs.value === 'notifications' && <AccountNotifications />}
+      {tabs.value === 'general' && <AccountGeneral currentUser={user} userProfile={userProfile} />}
 
       {tabs.value === 'social' && <AccountSocialLinks socialLinks={_userAbout.socialLinks} />}
 
