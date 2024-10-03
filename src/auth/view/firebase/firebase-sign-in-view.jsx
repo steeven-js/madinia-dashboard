@@ -158,14 +158,14 @@ export function FirebaseSignInView() {
 
       <FormHead
         title="Connectez-vous à votre compte"
-        // description={
-        //   <>
-        //     {`Vous n'avez pas de compte ? `}
-        //     <Link component={RouterLink} href={paths.auth.firebase.signUp} variant="subtitle2">
-        //       Commencez ici
-        //     </Link>
-        //   </>
-        // }
+        description={
+          <>
+            {`Vous n'avez pas de compte ? `}
+            <Link component={RouterLink} href={paths.auth.firebase.signUp} variant="subtitle2">
+              Commencez ici
+            </Link>
+          </>
+        }
       />
 
       {!!errorMsg && (

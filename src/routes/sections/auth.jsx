@@ -133,7 +133,11 @@ const authFirebase = {
     },
     {
       path: 'sign-up',
-      element: <Navigate to="/auth/firebase/sign-in" replace />,
+      element: (
+        <GuestGuard>
+          <Firebase.SignUpPage />
+        </GuestGuard>
+      ),
     },
     {
       path: 'verify',
