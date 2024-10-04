@@ -148,15 +148,6 @@ export const paths = {
       details: (id) => `${ROOTS.DASHBOARD}/post/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/post/${id}/edit`,
     },
-    marketings: {
-      root: `${ROOTS.DASHBOARD}/marketings`,
-      new: `${ROOTS.DASHBOARD}/marketings/new`,
-      details: (id) => `${ROOTS.DASHBOARD}/marketings/post/${id}`,
-      edit: (id) => `${ROOTS.DASHBOARD}/marketings/post/${id}/edit`,
-      customers: `${ROOTS.DASHBOARD}/marketings/customers`,
-      campaign: `${ROOTS.DASHBOARD}/marketings/campaign`,
-      ad: `${ROOTS.DASHBOARD}/marketings/ad`,
-    },
     order: {
       root: `${ROOTS.DASHBOARD}/order`,
       details: (id) => `${ROOTS.DASHBOARD}/order/${id}`,

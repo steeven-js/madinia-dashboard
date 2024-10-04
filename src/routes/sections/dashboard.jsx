@@ -24,11 +24,6 @@ const BlogPostsPage = lazy(() => import('src/pages/dashboard/post/list'));
 const BlogPostPage = lazy(() => import('src/pages/dashboard/post/details'));
 const BlogNewPostPage = lazy(() => import('src/pages/dashboard/post/new'));
 const BlogEditPostPage = lazy(() => import('src/pages/dashboard/post/edit'));
-// Marketing
-const MarketingsPostsPage = lazy(() => import('src/pages/dashboard/marketings/list'));
-const MarketingsPostPage = lazy(() => import('src/pages/dashboard/marketings/details'));
-const MarketingNewPostPage = lazy(() => import('src/pages/dashboard/marketings/new'));
-const MarketingEditPostPage = lazy(() => import('src/pages/dashboard/marketings/edit'));
 // App
 const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
@@ -69,16 +64,6 @@ export const dashboardRoutes = [
           { path: ':id', element: <BlogPostPage /> },
           { path: ':id/edit', element: <BlogEditPostPage /> },
           { path: 'new', element: <BlogNewPostPage /> },
-        ],
-      },
-      {
-        path: 'marketings',
-        children: [
-          { element: <MarketingsPostsPage />, index: true },
-          { path: 'posts', element: <MarketingsPostsPage /> },
-          { path: 'post/:id', element: <MarketingsPostPage /> },
-          { path: 'post/:id/edit', element: <MarketingEditPostPage /> },
-          { path: 'new', element: <MarketingNewPostPage /> },
         ],
       },
       { path: 'calendar', element: <CalendarPage /> },

@@ -53,18 +53,18 @@ export const navData = [
     ],
   },
   /**
-   * Marketings
+   * Blog
    */
   {
-    subheader: 'marketings',
+    subheader: 'Blog',
     items: [
       {
-        title: 'Marketings',
-        path: paths.dashboard.marketings.root,
-        icon: ICONS.analytics,
+        title: 'Blog',
+        path: paths.dashboard.post.root,
+        icon: ICONS.blog,
         children: [
-          { title: 'Posts', path: paths.dashboard.marketings.root },
-          { title: 'Create', path: paths.dashboard.marketings.new },
+          { title: 'Posts', path: paths.dashboard.post.root },
+          { title: 'Create', path: paths.dashboard.post.new },
         ],
       },
     ],
@@ -82,15 +82,6 @@ export const navData = [
         children: [
           { title: 'Cards', path: paths.dashboard.user.cards },
           { title: 'List', path: paths.dashboard.user.list },
-        ],
-      },
-      {
-        title: 'Blog',
-        path: paths.dashboard.post.root,
-        icon: ICONS.blog,
-        children: [
-          { title: 'Posts', path: paths.dashboard.post.root },
-          { title: 'Create', path: paths.dashboard.post.new },
         ],
       },
       { title: 'Calendar', path: paths.dashboard.calendar, icon: ICONS.calendar },
