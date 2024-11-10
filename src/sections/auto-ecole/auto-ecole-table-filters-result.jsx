@@ -6,7 +6,7 @@ import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-r
 
 // ----------------------------------------------------------------------
 
-export function UserTableFiltersResult({ filters, onResetPage, totalResults, sx }) {
+export function AutoEcoleTableFiltersResult({ filters, onResetPage, totalResults, sx }) {
   const handleRemoveKeyword = useCallback(() => {
     onResetPage();
     filters.setState({ name: '' });

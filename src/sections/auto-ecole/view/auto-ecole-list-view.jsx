@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { doc, deleteDoc } from 'firebase/firestore';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -17,13 +16,10 @@ import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useUsersData } from 'src/hooks/use-users';
 import { useSetState } from 'src/hooks/use-set-state';
-
-import { db } from 'src/utils/firebase';
+import { deleteAutoEcole } from 'src/hooks/use-auto-ecole';
 
 import { varAlpha } from 'src/theme/styles';
-import { USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -44,20 +40,25 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { UserTableRow } from '../user-table-row';
-import { UserTableToolbar } from '../user-table-toolbar';
-import { UserTableFiltersResult } from '../user-table-filters-result';
-import { deleteAutoEcole } from 'src/hooks/use-auto-ecole';
+import { AutoEcoleTableRow } from '../auto-ecole-table-row';
+import { AutoEcoleTableToolbar } from '../auto-ecole-table-toolbar';
+import { AutoEcoleTableFiltersResult } from '../auto-ecole-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
+export const AUTO_ECOLE_STATUS = [
+  { value: 'active', label: 'Active' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'banned', label: 'Banned' },
+  { value: 'rejected', label: 'Rejected' },
+];
+
+const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...AUTO_ECOLE_STATUS];
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name' },
   { id: 'phoneNumber', label: 'Phone number', width: 180 },
   { id: 'company', label: 'Company', width: 220 },
-  { id: 'role', label: 'Role', width: 180 },
   { id: 'status', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
@@ -77,7 +78,7 @@ export function AutolEcoleListView({ data, loading, error }) {
 
   const [_tableData, setTableData] = useState([]);
 
-  const filters = useSetState({ name: '', role: [], status: 'all' });
+  const filters = useSetState({ name: '', status: 'all' });
 
   const dataFiltered = applyFilter({
     inputData: data,
@@ -87,8 +88,7 @@ export function AutolEcoleListView({ data, loading, error }) {
 
   const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
 
-  const canReset =
-    !!filters.state.name || filters.state.role.length > 0 || filters.state.status !== 'all';
+  const canReset = !!filters.state.name || filters.state.status !== 'all';
 
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
@@ -173,11 +173,11 @@ export function AutolEcoleListView({ data, loading, error }) {
           action={
             <Button
               component={RouterLink}
-              href={paths.dashboard.user.new}
+              href={paths.dashboard.autoEcole.new}
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New user
+              Créer une auto-école
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -221,14 +221,14 @@ export function AutolEcoleListView({ data, loading, error }) {
             ))}
           </Tabs>
 
-          <UserTableToolbar
+          <AutoEcoleTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
             options={{ roles: ROLE_OPTIONS }}
           />
 
           {canReset && (
-            <UserTableFiltersResult
+            <AutoEcoleTableFiltersResult
               filters={filters}
               totalResults={dataFiltered.length}
               onResetPage={table.onResetPage}
@@ -280,7 +280,7 @@ export function AutolEcoleListView({ data, loading, error }) {
                       table.page * table.rowsPerPage + table.rowsPerPage
                     )
                     .map((row) => (
-                      <UserTableRow
+                      <AutoEcoleTableRow
                         key={row.id}
                         row={row}
                         selected={table.selected.includes(row.id)}
@@ -340,7 +340,7 @@ export function AutolEcoleListView({ data, loading, error }) {
 }
 
 function applyFilter({ inputData, comparator, filters }) {
-  const { name, status, role } = filters;
+  const { name, status } = filters;
 
   const stabilizedThis = inputData.map((el, index) => [el, index]);
 
@@ -360,10 +360,6 @@ function applyFilter({ inputData, comparator, filters }) {
 
   if (status !== 'all') {
     inputData = inputData.filter((user) => user.status === status);
-  }
-
-  if (role.length) {
-    inputData = inputData.filter((user) => role.includes(user.role));
   }
 
   return inputData;

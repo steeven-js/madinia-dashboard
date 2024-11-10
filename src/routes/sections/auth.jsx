@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import { AuthSplitLayout } from 'src/layouts/auth-split';
 import { AuthCenteredLayout } from 'src/layouts/auth-centered';

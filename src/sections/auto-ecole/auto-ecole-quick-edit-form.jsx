@@ -14,7 +14,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { updateFastUsers } from 'src/hooks/use-users';
+import { updateFastAutoEcole } from 'src/hooks/use-auto-ecole';
 
 import { USER_STATUS_OPTIONS } from 'src/_mock';
 
@@ -23,7 +23,7 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export const UserQuickEditSchema = zod.object({
+export const AutoEcoleQuickEditSchema = zod.object({
   name: zod.string().min(1, { message: 'Name is required!' }),
   email: zod
     .string()
@@ -38,47 +38,33 @@ export const UserQuickEditSchema = zod.object({
   address: zod.string().min(1, { message: 'Address is required!' }),
   zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
   company: zod.string().min(1, { message: 'Company is required!' }),
-  role: schemaHelper.objectOrNull({
-    message: { required_error: 'Role is required!' },
-  }),
   // Not required
   status: zod.string(),
 });
 
 // ----------------------------------------------------------------------
 
-const ROLE_OPTIONS = [
-  'User',
-  'Admin',
-  'Editor',
-  'Manager',
-  'Developer',
-];
-
-// ----------------------------------------------------------------------
-
-export function UserQuickEditForm({ currentUser, open, onClose }) {
+export function AutoEcoleQuickEditForm({ currentAutoEcole, open, onClose }) {
   const [_isSubmitting, setIsSubmitting] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      address: currentUser?.address || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      zipCode: currentUser?.zipCode || '',
-      status: currentUser?.status,
-      company: currentUser?.company || '',
-      role: currentUser?.role || ROLE_OPTIONS[0],
+      name: currentAutoEcole?.name || '',
+      email: currentAutoEcole?.email || '',
+      phoneNumber: currentAutoEcole?.phoneNumber || '',
+      address: currentAutoEcole?.address || '',
+      country: currentAutoEcole?.country || '',
+      state: currentAutoEcole?.state || '',
+      city: currentAutoEcole?.city || '',
+      zipCode: currentAutoEcole?.zipCode || '',
+      status: currentAutoEcole?.status,
+      company: currentAutoEcole?.company || '',
     }),
-    [currentUser]
+    [currentAutoEcole]
   );
 
   const methods = useForm({
     mode: 'all',
-    resolver: zodResolver(UserQuickEditSchema),
+    resolver: zodResolver(AutoEcoleQuickEditSchema),
     defaultValues,
   });
 
@@ -91,7 +77,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
   const onSubmit = handleSubmit(async (data) => {
     setIsSubmitting(true);
     try {
-      await updateFastUsers({ currentUser, data });
+      await updateFastAutoEcole({ currentAutoEcole, data });
       console.log('data:', data);
 
       reset();
@@ -152,18 +138,6 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
             <Field.Text name="address" label="Address" />
             <Field.Text name="zipCode" label="Zip/code" />
             <Field.Text name="company" label="Company" />
-
-            <Field.Autocomplete
-              name="role"
-              autoHighlight
-              options={ROLE_OPTIONS.map((option) => option)}
-              getOptionLabel={(option) => option}
-              renderOption={(props, option) => (
-                <li {...props} key={option}>
-                  {option}
-                </li>
-              )}
-            />
           </Box>
         </DialogContent>
 

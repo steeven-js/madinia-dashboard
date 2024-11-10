@@ -1,7 +1,7 @@
 import { z as zod } from 'zod';
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
@@ -16,11 +16,14 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
+
+import { saveAutoEcole } from 'src/hooks/use-auto-ecole';
+
 import { fData } from 'src/utils/format-number';
+
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
-import { createAutoEcole } from 'src/hooks/use-auto-ecole';
 
 // ----------------------------------------------------------------------
 
@@ -41,7 +44,6 @@ export const NewUserSchema = zod.object({
   company: zod.string().min(1, { message: 'Company is required!' }),
   state: zod.string().min(1, { message: 'State is required!' }),
   city: zod.string().min(1, { message: 'City is required!' }),
-  role: zod.string().min(1, { message: 'Role is required!' }),
   zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
   // Not required
   status: zod.string(),
@@ -50,26 +52,25 @@ export const NewUserSchema = zod.object({
 
 // ----------------------------------------------------------------------
 
-export function AutoEcoleNewEditForm({ currentUser }) {
+export function AutoEcoleNewEditForm({ currentAutoEcole }) {
   const router = useRouter();
 
   const defaultValues = useMemo(
     () => ({
-      status: currentUser?.status || '',
-      avatarUrl: currentUser?.avatarUrl || null,
-      isVerified: currentUser?.isVerified || true,
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      address: currentUser?.address || '',
-      zipCode: currentUser?.zipCode || '',
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      status: currentAutoEcole?.status || '',
+      avatarUrl: currentAutoEcole?.avatarUrl || null,
+      isVerified: currentAutoEcole?.isVerified || true,
+      name: currentAutoEcole?.name || '',
+      email: currentAutoEcole?.email || '',
+      phoneNumber: currentAutoEcole?.phoneNumber || '',
+      country: currentAutoEcole?.country || '',
+      state: currentAutoEcole?.state || '',
+      city: currentAutoEcole?.city || '',
+      address: currentAutoEcole?.address || '',
+      zipCode: currentAutoEcole?.zipCode || '',
+      company: currentAutoEcole?.company || '',
     }),
-    [currentUser]
+    [currentAutoEcole]
   );
 
   const methods = useForm({
@@ -90,7 +91,7 @@ export function AutoEcoleNewEditForm({ currentUser }) {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await createAutoEcole(data);
+      await saveAutoEcole(data);
       toast.success('Auto-école mise à jour avec succès');
       reset();
       router.push(paths.dashboard.autoEcole.list);
@@ -105,7 +106,7 @@ export function AutoEcoleNewEditForm({ currentUser }) {
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
           <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            {currentUser && (
+            {currentAutoEcole && (
               <Label
                 color={
                   (values.status === 'active' && 'success') ||
@@ -140,7 +141,7 @@ export function AutoEcoleNewEditForm({ currentUser }) {
               />
             </Box>
 
-            {currentUser && (
+            {currentAutoEcole && (
               <FormControlLabel
                 labelPlacement="start"
                 control={
@@ -193,7 +194,7 @@ export function AutoEcoleNewEditForm({ currentUser }) {
               sx={{ mx: 0, width: 1, justifyContent: 'space-between' }}
             />
 
-            {currentUser && (
+            {currentAutoEcole && (
               <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                 <Button variant="soft" color="error">
                   Delete user
@@ -230,12 +231,11 @@ export function AutoEcoleNewEditForm({ currentUser }) {
               <Field.Text name="address" label="Address" />
               <Field.Text name="zipCode" label="Zip/code" />
               <Field.Text name="company" label="Company" />
-              <Field.Text name="role" label="Role" />
             </Box>
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create user' : 'Save changes'}
+                {!currentAutoEcole ? 'Créer auto-école' : 'modifier auto-école'}
               </LoadingButton>
             </Stack>
           </Card>

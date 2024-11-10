@@ -18,11 +18,11 @@ import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-import { UserQuickEditForm } from './user-quick-edit-form';
+import { AutoEcoleQuickEditForm } from './auto-ecole-quick-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
+export function AutoEcoleTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
   const confirm = useBoolean();
 
   const popover = usePopover();
@@ -54,8 +54,6 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.company}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.role}</TableCell>
 
         <TableCell>
           <Label
@@ -89,7 +87,11 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         </TableCell>
       </TableRow>
 
-      <UserQuickEditForm currentUser={row} open={quickEdit.value} onClose={quickEdit.onFalse} />
+      <AutoEcoleQuickEditForm
+        currentAutoEcole={row}
+        open={quickEdit.value}
+        onClose={quickEdit.onFalse}
+      />
 
       <CustomPopover
         open={popover.open}
@@ -106,7 +108,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            Supprimer
           </MenuItem>
 
           <MenuItem
@@ -116,7 +118,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
             }}
           >
             <Iconify icon="solar:pen-bold" />
-            Edit
+            Modifier
           </MenuItem>
         </MenuList>
       </CustomPopover>
@@ -125,10 +127,10 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Etes vous sûre de vouloir supprimer?"
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            Supprimer
           </Button>
         }
       />
