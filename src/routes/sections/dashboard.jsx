@@ -19,6 +19,13 @@ const UserListPage = lazy(() => import('src/pages/dashboard/user/list'));
 const UserAccountPage = lazy(() => import('src/pages/dashboard/user/account'));
 const UserCreatePage = lazy(() => import('src/pages/dashboard/user/new'));
 const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit'));
+// Auto Ecole
+// const UserProfilePage = lazy(() => import('src/pages/dashboard/user/profile'));
+// const UserCardsPage = lazy(() => import('src/pages/dashboard/user/cards'));
+const AutoEcoleListPage = lazy(() => import('src/pages/dashboard/auto-ecole/list'));
+// const UserAccountPage = lazy(() => import('src/pages/dashboard/user/account'));
+const AutoEcoleCreatePage = lazy(() => import('src/pages/dashboard/auto-ecole/new'));
+// const UserEditPage = lazy(() => import('src/pages/dashboard/user/edit'));
 // Blog
 const BlogPostsPage = lazy(() => import('src/pages/dashboard/post/list'));
 const BlogPostPage = lazy(() => import('src/pages/dashboard/post/details'));
@@ -54,6 +61,18 @@ export const dashboardRoutes = [
           { path: 'new', element: <UserCreatePage /> },
           { path: ':id/edit', element: <UserEditPage /> },
           { path: 'account/:id', element: <UserAccountPage /> },
+        ],
+      },
+      {
+        path: 'autoEcole',
+        children: [
+          { element: <UserProfilePage />, index: true },
+          // { path: 'profile/:id', element: <UserProfilePage /> },
+          // { path: 'cards', element: <UserCardsPage /> },
+          { path: 'list', element: <AutoEcoleListPage /> },
+          { path: 'new', element: <AutoEcoleCreatePage /> },
+          // { path: ':id/edit', element: <UserEditPage /> },
+          // { path: 'account/:id', element: <UserAccountPage /> },
         ],
       },
       {

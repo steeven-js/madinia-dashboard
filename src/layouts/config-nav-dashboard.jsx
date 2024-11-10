@@ -84,6 +84,16 @@ export const navData = [
           { title: 'List', path: paths.dashboard.user.list },
         ],
       },
+      {
+        title: 'AutoEcole',
+        path: paths.dashboard.autoEcole.root,
+        icon: ICONS.user,
+        children: [
+          // { title: 'Cards', path: paths.dashboard.autoEcole.cards },
+          { title: 'List', path: paths.dashboard.autoEcole.list },
+          { title: 'New', path: paths.dashboard.autoEcole.new },
+        ],
+      },
       { title: 'Calendar', path: paths.dashboard.calendar, icon: ICONS.calendar },
       { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
     ],
