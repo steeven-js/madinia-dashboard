@@ -8,6 +8,65 @@ import { doc, query, setDoc, getDoc, addDoc, orderBy, collection, onSnapshot } f
 import { db, storage } from 'src/utils/firebase';
 
 /**
+ * Hook personnalisé pour récupérer toutes les auto-écoles en temps réel
+ * @returns {Object} État des auto-écoles {data, loading, error}
+ */
+export function useAutoEcoles() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Création de la requête
+    const q = query(
+      collection(db, "auto-ecole"),
+      orderBy("createdAt", "desc"),
+    );
+
+    // Mise en place de l'écouteur temps réel
+    const unsubscribe = onSnapshot(q,
+      (querySnapshot) => {
+        // En cas de succès
+        const autoEcoles = [];
+        querySnapshot.forEach((_doc) => {
+          autoEcoles.push({
+            id: _doc.id,
+            ..._doc.data()
+          });
+        });
+        const autoEcolesData = autoEcoles.filter((autoEcole) => !autoEcole.deletedAt);
+        setData(autoEcolesData);
+        setLoading(false);
+      },
+      (_error) => {
+        // En cas d'erreur
+        setLoading(false);
+        if (_error.code === 'failed-precondition') {
+          console.error(
+            'Un index est requis pour cette requête. Veuillez suivre le lien pour le créer :',
+            _error.message
+          );
+          setError('Index manquant pour cette requête');
+        } else {
+          console.error('Erreur lors de la récupération:', _error);
+          setError('Erreur lors de la récupération des données');
+        }
+      }
+    );
+
+    // Nettoyage lors du démontage du composant
+    return () => unsubscribe();
+  }, []); // Dépendances vides car on veut que l'effet s'exécute une seule fois
+
+  return {
+    data,
+    loading,
+    error,
+    success: !error
+  };
+}
+
+/**
  * Crée ou met à jour une auto-école dans Firestore
  * @param {Object} data - Les données de l'auto-école
  * @param {string} [data.id] - L'ID de l'auto-école (optionnel, si absent = création)
@@ -93,37 +152,6 @@ export async function saveAutoEcole(data) {
 }
 
 /**
- * Suppression douce d'une auto-école
- * @param {string} id - L'ID de l'auto-école à supprimer
- * @returns {Promise<Object>} Résultat de l'opération
- */
-export async function deleteAutoEcole(id) {
-  try {
-    if (!id) {
-      throw new Error('ID requis');
-    }
-
-    await setDoc(
-      doc(db, "auto-ecole", id),
-      {
-        deletedAt: new Date(),
-        updatedAt: new Date()
-      },
-      { merge: true }
-    );
-
-    return {
-      success: true,
-      message: 'Auto-école supprimée avec succès'
-    };
-
-  } catch (error) {
-    console.error('Erreur lors de la suppression:', error);
-    throw error;
-  }
-}
-
-/**
  * Récupère une auto-école par son ID
  * @param {string} id - L'ID de l'auto-école
  * @returns {Promise<Object>} Les données de l'auto-école
@@ -174,63 +202,42 @@ export function useAutoEcoleById(id) {
 }
 
 /**
- * Hook personnalisé pour récupérer toutes les auto-écoles en temps réel
- * @returns {Object} État des auto-écoles {data, loading, error}
+ * Suppression douce d'une auto-école
+ * @param {string} id - L'ID de l'auto-école à supprimer
+ * @returns {Promise<Object>} Résultat de l'opération
  */
-export function useAutoEcoles() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export async function deleteAutoEcole(id) {
+  try {
+    if (!id) {
+      throw new Error('ID requis');
+    }
 
-  useEffect(() => {
-    // Création de la requête
-    const q = query(
-      collection(db, "auto-ecole"),
-      orderBy("createdAt", "desc")
-    );
-
-    // Mise en place de l'écouteur temps réel
-    const unsubscribe = onSnapshot(q,
-      (querySnapshot) => {
-        // En cas de succès
-        const autoEcoles = [];
-        querySnapshot.forEach((_doc) => {
-          autoEcoles.push({
-            id: _doc.id,
-            ..._doc.data()
-          });
-        });
-        setData(autoEcoles);
-        setLoading(false);
+    await setDoc(
+      doc(db, "auto-ecole", id),
+      {
+        deletedAt: new Date(),
+        updatedAt: new Date()
       },
-      (_error) => {
-        // En cas d'erreur
-        setLoading(false);
-        if (_error.code === 'failed-precondition') {
-          console.error(
-            'Un index est requis pour cette requête. Veuillez suivre le lien pour le créer :',
-            _error.message
-          );
-          setError('Index manquant pour cette requête');
-        } else {
-          console.error('Erreur lors de la récupération:', _error);
-          setError('Erreur lors de la récupération des données');
-        }
-      }
+      { merge: true }
     );
 
-    // Nettoyage lors du démontage du composant
-    return () => unsubscribe();
-  }, []); // Dépendances vides car on veut que l'effet s'exécute une seule fois
+    return {
+      success: true,
+      message: 'Auto-école supprimée avec succès'
+    };
 
-  return {
-    data,
-    loading,
-    error,
-    success: !error
-  };
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error);
+    throw error;
+  }
 }
 
+/**
+ *  Met à jour les données d'une auto-école
+ * @param {Object} currentAutoEcole - Les données actuelles de l'auto-école
+ * @param {Object} data - Les nouvelles données de l'auto-école
+ * @returns {Promise<void>} Résultat de la mise à jour
+ */
 export async function updateFastAutoEcole({ currentAutoEcole, data }) {
   try {
     const autoEcoleRef = doc(db, 'auto-ecole', currentAutoEcole.id);

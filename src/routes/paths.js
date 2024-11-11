@@ -129,7 +129,7 @@ export const paths = {
       cards: `${ROOTS.DASHBOARD}/autoEcole/cards`,
       // profile: (id) => `${ROOTS.DASHBOARD}/user/profile/${id}`,
       // account: (id) => `${ROOTS.DASHBOARD}/user/account/${id}`,
-      // edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
+      edit: (id) => `${ROOTS.DASHBOARD}/autoEcole/${id}/edit`,
       // demo: {
       //   edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
       // },

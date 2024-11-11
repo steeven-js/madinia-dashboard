@@ -89,7 +89,7 @@ export const navData = [
         path: paths.dashboard.autoEcole.root,
         icon: ICONS.user,
         children: [
-          // { title: 'Cards', path: paths.dashboard.autoEcole.cards },
+          { title: 'Cards', path: paths.dashboard.autoEcole.cards },
           { title: 'List', path: paths.dashboard.autoEcole.list },
           { title: 'New', path: paths.dashboard.autoEcole.new },
         ],

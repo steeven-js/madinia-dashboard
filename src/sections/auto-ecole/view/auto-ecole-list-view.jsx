@@ -26,6 +26,7 @@ import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -69,16 +70,13 @@ const ROLE_OPTIONS = ['User', 'Admin', 'Editor', 'Manager', 'Developer'];
 
 // ----------------------------------------------------------------------
 
-export function AutolEcoleListView({ data, loading, error }) {
+export function AutoEcoleListView({ data, loading, error }) {
   const table = useTable();
-
   const router = useRouter();
-
   const confirm = useBoolean();
-
   const [_tableData, setTableData] = useState([]);
-
   const filters = useSetState({ name: '', status: 'all' });
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const dataFiltered = applyFilter({
     inputData: data,
@@ -87,57 +85,52 @@ export function AutolEcoleListView({ data, loading, error }) {
   });
 
   const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
-
   const canReset = !!filters.state.name || filters.state.status !== 'all';
-
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
   const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = data.filter((row) => row.id !== id);
+    async (id) => {
+      try {
+        setDeleteLoading(true);
+        await deleteAutoEcole(id);
+        toast.success('Auto-école supprimée avec succès');
 
-      toast.success('Delete success!');
-
-      setTableData(deleteRow);
-
-      table.onUpdatePageDeleteRow(dataInPage.length);
+        const newDataLength = dataInPage.length - 1;
+        if (newDataLength === 0 && table.page > 0) {
+          table.setPage(table.page - 1);
+        }
+      } catch (_error) {
+        console.error('Erreur lors de la suppression:', _error);
+        toast.error('Erreur lors de la suppression');
+      } finally {
+        setDeleteLoading(false);
+      }
     },
-    [dataInPage.length, table, data]
+    [dataInPage.length, table]
   );
 
-  // Fonction pour supprimer les utilisateurs par ID
-  const deleteUsersByIds = async (ids) => {
-    try {
-      deleteAutoEcole(ids);
-      toast.success('Delete success!');
-    } catch (_error) {
-      console.error('Error deleting users:', _error);
-      toast.error('Delete failed!');
-    }
-  };
-
-  // Gestionnaire de suppression de lignes
   const handleDeleteRows = useCallback(async () => {
-    const selectedIds = table.selected;
-
-    // Filtre les données de la table pour conserver seulement celles non sélectionnées
-    const deleteRows = data.filter((row) => !selectedIds.includes(row.id));
-
-    // Appel de la fonction pour supprimer les utilisateurs
-    await deleteUsersByIds(selectedIds);
-
-    // Met à jour les données de la table après suppression
-    setTableData(deleteRows);
-
-    table.onUpdatePageDeleteRows({
-      totalRowsInPage: dataInPage.length,
-      totalRowsFiltered: dataFiltered.length,
-    });
-  }, [dataFiltered.length, dataInPage.length, table, data]);
+    try {
+      setDeleteLoading(true);
+      const selectedIds = table.selected;
+      await Promise.all(selectedIds.map((id) => deleteAutoEcole(id)));
+      toast.success(`${selectedIds.length} auto-écoles supprimées avec succès`);
+      table.onSelectAllRows(false);
+      const remainingRows = dataInPage.length - selectedIds.length;
+      if (remainingRows === 0 && table.page > 0) {
+        table.setPage(table.page - 1);
+      }
+    } catch (_error) {
+      console.error('Erreur lors de la suppression multiple:', _error);
+      toast.error('Erreur lors de la suppression multiple');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [table, dataInPage.length]);
 
   const handleEditRow = useCallback(
     (id) => {
-      router.push(paths.dashboard.user.edit(id));
+      router.push(paths.dashboard.autoEcole.edit(id));
     },
     [router]
   );
@@ -160,9 +153,17 @@ export function AutolEcoleListView({ data, loading, error }) {
     );
   }
 
+  if (error) {
+    return (
+      <EmptyContent
+        title="Erreur"
+        description={error.message || 'Une erreur est survenue lors du chargement des données'}
+      />
+    );
+  }
+
   return (
-    <>
-      <DashboardContent>
+    <DashboardContent>
         <CustomBreadcrumbs
           heading="List"
           links={[
@@ -202,8 +203,7 @@ export function AutolEcoleListView({ data, loading, error }) {
                 icon={
                   <Label
                     variant={
-                      ((tab.value === 'all' || tab.value === filters.state.status) && 'filled') ||
-                      'soft'
+                      tab.value === 'all' || tab.value === filters.state.status ? 'filled' : 'soft'
                     }
                     color={
                       (tab.value === 'active' && 'success') ||
@@ -274,94 +274,76 @@ export function AutolEcoleListView({ data, loading, error }) {
                 />
 
                 <TableBody>
-                  {dataFiltered
-                    .slice(
-                      table.page * table.rowsPerPage,
-                      table.page * table.rowsPerPage + table.rowsPerPage
-                    )
-                    .map((row) => (
-                      <AutoEcoleTableRow
-                        key={row.id}
-                        row={row}
-                        selected={table.selected.includes(row.id)}
-                        onSelectRow={() => table.onSelectRow(row.id)}
-                        onDeleteRow={() => handleDeleteRow(row.id)}
-                        onEditRow={() => handleEditRow(row.id)}
-                      />
-                    ))}
+                  {dataInPage.map((row) => (
+                    <AutoEcoleTableRow
+                      key={row.id}
+                      row={row}
+                      selected={table.selected.includes(row.id)}
+                      onSelectRow={() => table.onSelectRow(row.id)}
+                      onDeleteRow={() => handleDeleteRow(row.id)}
+                      onEditRow={() => handleEditRow(row.id)}
+                    />
+                  ))}
 
                   <TableEmptyRows
-                    height={table.dense ? 56 : 56 + 20}
+                    height={56}
                     emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
                   />
-
-                  <TableNoData notFound={notFound} />
+                  <TableNoData notFound={notFound} isFiltered={canReset} />
                 </TableBody>
               </Table>
             </Scrollbar>
           </Box>
 
           <TablePaginationCustom
-            page={table.page}
-            dense={table.dense}
             count={dataFiltered.length}
+            page={table.page}
             rowsPerPage={table.rowsPerPage}
             onPageChange={table.onChangePage}
-            onChangeDense={table.onChangeDense}
             onRowsPerPageChange={table.onChangeRowsPerPage}
           />
         </Card>
-      </DashboardContent>
 
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Supprimer"
-        content={
-          <>
-            Êtes vous sûre de vouloir supprimer <strong> {table.selected.length} </strong>{' '}
-            auto-écoles?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              handleDeleteRows();
-              confirm.onFalse();
-            }}
-          >
-            Supprimer
-          </Button>
-        }
-      />
-    </>
+        <ConfirmDialog
+          open={confirm.value}
+          onClose={confirm.onFalse}
+          title="Delete"
+          content={
+            <>
+              Are you sure you want to delete <strong>{table.selected.length}</strong> items?
+            </>
+          }
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                confirm.onFalse();
+                handleDeleteRows();
+              }}
+            >
+              Delete
+            </Button>
+          }
+        />
+      </DashboardContent>
   );
 }
 
 function applyFilter({ inputData, comparator, filters }) {
   const { name, status } = filters;
-
-  const stabilizedThis = inputData.map((el, index) => [el, index]);
-
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-
-  inputData = stabilizedThis.map((el) => el[0]);
+  let dataFiltered = [...inputData];
 
   if (name) {
-    inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
+    dataFiltered = dataFiltered.filter((user) =>
+      user.name.toLowerCase().includes(name.toLowerCase())
     );
   }
 
   if (status !== 'all') {
-    inputData = inputData.filter((user) => user.status === status);
+    dataFiltered = dataFiltered.filter((user) => user.status === status);
   }
 
-  return inputData;
+  dataFiltered = dataFiltered.sort(comparator);
+  return dataFiltered;
 }

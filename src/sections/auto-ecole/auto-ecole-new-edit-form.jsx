@@ -1,5 +1,5 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
@@ -25,8 +25,6 @@ import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
-// ----------------------------------------------------------------------
-
 export const NewUserSchema = zod.object({
   avatarUrl: schemaHelper.file({
     message: { required_error: 'Avatar is required!' },
@@ -45,21 +43,17 @@ export const NewUserSchema = zod.object({
   state: zod.string().min(1, { message: 'State is required!' }),
   city: zod.string().min(1, { message: 'City is required!' }),
   zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
-  // Not required
   status: zod.string(),
-  isVerified: zod.boolean(),
 });
-
-// ----------------------------------------------------------------------
 
 export function AutoEcoleNewEditForm({ currentAutoEcole }) {
   const router = useRouter();
 
   const defaultValues = useMemo(
     () => ({
+      id: currentAutoEcole?.id || null, // Ajout de l'ID dans les valeurs par défaut
       status: currentAutoEcole?.status || '',
       avatarUrl: currentAutoEcole?.avatarUrl || null,
-      isVerified: currentAutoEcole?.isVerified || true,
       name: currentAutoEcole?.name || '',
       email: currentAutoEcole?.email || '',
       phoneNumber: currentAutoEcole?.phoneNumber || '',
@@ -87,17 +81,33 @@ export function AutoEcoleNewEditForm({ currentAutoEcole }) {
     formState: { isSubmitting },
   } = methods;
 
+  // Mise à jour du formulaire quand currentAutoEcole change
+  useEffect(() => {
+    if (currentAutoEcole) {
+      reset(defaultValues);
+    }
+  }, [currentAutoEcole, defaultValues, reset]);
+
   const values = watch();
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await saveAutoEcole(data);
-      toast.success('Auto-école mise à jour avec succès');
-      reset();
-      router.push(paths.dashboard.autoEcole.list);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erreur lors de la mise à jour de l'auto-école");
+      // Ajout de l'ID pour la mise à jour si on est en mode édition
+      const submitData = currentAutoEcole ? { ...data, id: currentAutoEcole.id } : data;
+
+      const result = await saveAutoEcole(submitData);
+
+      if (result.success) {
+        toast.success(
+          currentAutoEcole ? 'Auto-école mise à jour avec succès' : 'Auto-école créée avec succès'
+        );
+        router.push(paths.dashboard.autoEcole.list);
+      } else {
+        throw new Error(result.message || 'Une erreur est survenue');
+      }
+    } catch (_error) {
+      console.error('Erreur lors de la sauvegarde:', _error);
+      toast.error(_error.message || "Erreur lors de la sauvegarde de l'auto-école");
     }
   });
 
@@ -178,22 +188,6 @@ export function AutoEcoleNewEditForm({ currentAutoEcole }) {
               />
             )}
 
-            <Field.Switch
-              name="isVerified"
-              labelPlacement="start"
-              label={
-                <>
-                  <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Email verified
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Disabling this will automatically send the user a verification email
-                  </Typography>
-                </>
-              }
-              sx={{ mx: 0, width: 1, justifyContent: 'space-between' }}
-            />
-
             {currentAutoEcole && (
               <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                 <Button variant="soft" color="error">
@@ -235,7 +229,7 @@ export function AutoEcoleNewEditForm({ currentAutoEcole }) {
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentAutoEcole ? 'Créer auto-école' : 'modifier auto-école'}
+                {!currentAutoEcole ? 'Créer auto-école' : 'Modifier auto-école'}
               </LoadingButton>
             </Stack>
           </Card>
