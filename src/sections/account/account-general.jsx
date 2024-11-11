@@ -21,11 +21,12 @@ import { fData } from 'src/utils/format-number';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import { useAuth } from 'src/hooks/use-auth';
 
 // ----------------------------------------------------------------------
 
 export const UpdateUserSchema = zod.object({
-  name: zod.string().min(1, { message: 'Name is required!' }),
+  displayName: zod.string().min(1, { message: 'Name is required!' }),
   email: zod
     .string()
     .min(1, { message: 'Email is required!' })
@@ -51,7 +52,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
   const [_isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues = {
-    name: userProfile?.name || '',
+    displayName: userProfile?.displayName || '',
     email: userProfile?.email || '',
     avatarUrl: userProfile?.avatarUrl || null,
     phoneNumber: userProfile?.phoneNumber || '',
@@ -63,6 +64,10 @@ export function AccountGeneral({ currentUser, userProfile }) {
     about: userProfile?.about || '',
     isPublic: userProfile?.isPublic || false,
   };
+
+  const { user } = useAuth();
+
+  console.log(user);
 
   const methods = useForm({
     mode: 'all',
@@ -146,7 +151,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <Field.Text name="name" label="Name" />
+              <Field.Text name="displayName" label="displayName" />
               <Field.Text name="email" label="Email address" />
               <Field.Phone name="phoneNumber" label="Phone number" />
               <Field.Text name="address" label="Address" />
