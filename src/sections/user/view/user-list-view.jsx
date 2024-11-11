@@ -19,7 +19,7 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
+import { _roles_, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -58,14 +58,14 @@ const TABLE_HEAD = [
 
 // ----------------------------------------------------------------------
 
-export function UserListView() {
+export function UserListView({ users }) {
   const table = useTable();
 
   const router = useRouter();
 
   const confirm = useBoolean();
 
-  const [tableData, setTableData] = useState(_userList);
+  const [tableData, setTableData] = useState(users);
 
   const filters = useSetState({ name: '', role: [], status: 'all' });
 
@@ -84,7 +84,7 @@ export function UserListView() {
 
   const handleDeleteRow = useCallback(
     (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
+      const deleteRow = tableData.filter((row) => row.uid !== id);
 
       toast.success('Delete success!');
 
@@ -96,7 +96,7 @@ export function UserListView() {
   );
 
   const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
+    const deleteRows = tableData.filter((row) => !table.selected.includes(row.uid));
 
     toast.success('Delete success!');
 
@@ -140,7 +140,7 @@ export function UserListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New user
+              Nouvel utilisateur
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -187,7 +187,7 @@ export function UserListView() {
           <UserTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
-            options={{ roles: _roles }}
+            options={{ roles: _roles_ }}
           />
 
           {canReset && (
@@ -207,7 +207,7 @@ export function UserListView() {
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  dataFiltered.map((row) => row.id)
+                  dataFiltered.map((row) => row.uid)
                 )
               }
               action={
@@ -231,7 +231,7 @@ export function UserListView() {
                   onSelectAllRows={(checked) =>
                     table.onSelectAllRows(
                       checked,
-                      dataFiltered.map((row) => row.id)
+                      dataFiltered.map((row) => row.uid)
                     )
                   }
                 />
@@ -244,12 +244,12 @@ export function UserListView() {
                     )
                     .map((row) => (
                       <UserTableRow
-                        key={row.id}
+                        key={row.uid}
                         row={row}
-                        selected={table.selected.includes(row.id)}
-                        onSelectRow={() => table.onSelectRow(row.id)}
-                        onDeleteRow={() => handleDeleteRow(row.id)}
-                        onEditRow={() => handleEditRow(row.id)}
+                        selected={table.selected.includes(row.uid)}
+                        onSelectRow={() => table.onSelectRow(row.uid)}
+                        onDeleteRow={() => handleDeleteRow(row.uid)}
+                        onEditRow={() => handleEditRow(row.uid)}
                       />
                     ))}
 

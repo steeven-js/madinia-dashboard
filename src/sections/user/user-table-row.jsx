@@ -19,6 +19,7 @@ import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
+import { USER_ROLES_OPTIONS } from 'src/_mock';
 
 // ----------------------------------------------------------------------
 
@@ -29,11 +30,17 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
   const quickEdit = useBoolean();
 
+  // Fonction pour obtenir le label du rôle
+  const getRoleLabel = (roleValue) => {
+    const role = USER_ROLES_OPTIONS.find((option) => option.value === roleValue);
+    return role ? role.label : roleValue;
+  };
+
   return (
     <>
       <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
         <TableCell padding="checkbox">
-          <Checkbox id={row.id} checked={selected} onClick={onSelectRow} />
+          <Checkbox id={row.uid} checked={selected} onClick={onSelectRow} />
         </TableCell>
 
         <TableCell>
@@ -42,7 +49,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
             <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
               <Link color="inherit" onClick={onEditRow} sx={{ cursor: 'pointer' }}>
-                {row.name}
+                {row.displayName}
               </Link>
               <Box component="span" sx={{ color: 'text.disabled' }}>
                 {row.email}
@@ -55,7 +62,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.company}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.role}</TableCell>
+        <TableCell sx={{ whiteSpace: 'nowrap' }}>{getRoleLabel(row.role)}</TableCell>
 
         <TableCell>
           <Label

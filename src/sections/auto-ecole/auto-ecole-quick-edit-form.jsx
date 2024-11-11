@@ -127,7 +127,7 @@ export function AutoEcoleQuickEditForm({ currentAutoEcole, open, onClose }) {
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
             <Field.Text name="name" label="Full name" />
-            <Field.Text name="email" label="Email address" />
+            <Field.TextDisabled name="email" label="Email address" />
             <Field.Phone name="phoneNumber" label="Phone number" />
 
             <Field.CountrySelect

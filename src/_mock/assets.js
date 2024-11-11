@@ -302,10 +302,9 @@ export const _countryNames = [
 export const _roles = [
   `CEO`,
   `CTO`,
-  `Project Coordinator`,
-  `Team Leader`,
-  `Software Developer`,
-  `Marketing Strategist`,
+  `Développeur`,
+  `Administrateur`,
+  `Marketing Manager`,
   `Data Analyst`,
   `Product Owner`,
   `Graphic Designer`,
@@ -324,6 +323,14 @@ export const _roles = [
   `Event Planner`,
   `Legal Counsel`,
   `Training Coordinator`,
+];
+// ----------------------------------------------------------------------
+
+export const _roles_ = [
+  `Développeur`,
+  `Administrateur`,
+  `Marketing Manager`,
+  `Visiteur`,
 ];
 
 // ----------------------------------------------------------------------

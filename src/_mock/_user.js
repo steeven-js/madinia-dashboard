@@ -9,6 +9,13 @@ export const USER_STATUS_OPTIONS = [
   { value: 'rejected', label: 'Rejected' },
 ];
 
+export const USER_ROLES_OPTIONS = [
+  { value: 'developpeur', label: 'Développeur' },
+  { value: 'administrateur', label: 'Administrateur' },
+  { value: 'marketing-manager', label: 'Marketing-Manager' },
+  { value: 'visiteur', label: 'Visiteur' },
+];
+
 export const _userAbout = {
   id: _mock.id(1),
   role: _mock.role(1),

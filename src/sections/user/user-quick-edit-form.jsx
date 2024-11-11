@@ -1,5 +1,5 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
@@ -14,15 +14,16 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { USER_STATUS_OPTIONS } from 'src/_mock';
+import { _roles_, USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import { updateUserData } from 'src/hooks/use-users';
 
 // ----------------------------------------------------------------------
 
 export const UserQuickEditSchema = zod.object({
-  name: zod.string().min(1, { message: 'Name is required!' }),
+  displayName: zod.string().min(1, { message: 'Name is required!' }),
   email: zod
     .string()
     .min(1, { message: 'Email is required!' })
@@ -44,9 +45,10 @@ export const UserQuickEditSchema = zod.object({
 // ----------------------------------------------------------------------
 
 export function UserQuickEditForm({ currentUser, open, onClose }) {
+  const [_isSubmitting, setIsSubmitting] = useState(false);
   const defaultValues = useMemo(
     () => ({
-      name: currentUser?.name || '',
+      displayName: currentUser?.displayName || '',
       email: currentUser?.email || '',
       phoneNumber: currentUser?.phoneNumber || '',
       address: currentUser?.address || '',
@@ -74,23 +76,22 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
   } = methods;
 
   const onSubmit = handleSubmit(async (data) => {
-    const promise = new Promise((resolve) => setTimeout(resolve, 1000));
-
+    setIsSubmitting(true);
     try {
+      await updateUserData({ data });
+      // console.log('data:', data);
+
+      // Recharger la page
+      window.location.reload();
+
       reset();
       onClose();
-
-      toast.promise(promise, {
-        loading: 'Loading...',
-        success: 'Update success!',
-        error: 'Update error!',
-      });
-
-      await promise;
-
-      console.info('DATA', data);
+      toast.success('Auto-école mise à jour avec succès');
     } catch (error) {
       console.error(error);
+      toast.error('Une erreur est survenue lors de la mise à jour');
+    } finally {
+      setIsSubmitting(false);
     }
   });
 
@@ -126,7 +127,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-            <Field.Text name="name" label="Full name" />
+            <Field.Text name="displayName" label="Full name" />
             <Field.Text name="email" label="Email address" />
             <Field.Phone name="phoneNumber" label="Phone number" />
 
@@ -142,17 +143,23 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
             <Field.Text name="address" label="Address" />
             <Field.Text name="zipCode" label="Zip/code" />
             <Field.Text name="company" label="Company" />
-            <Field.Text name="role" label="Role" />
+            <Field.Select name="role" label="Role">
+              {USER_ROLES_OPTIONS.map((roles) => (
+                <MenuItem key={roles.value} value={roles.value}>
+                  {roles.label}
+                </MenuItem>
+              ))}
+            </Field.Select>
           </Box>
         </DialogContent>
 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Cancel
+            Annuler
           </Button>
 
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Update
+            Mettre à jour
           </LoadingButton>
         </DialogActions>
       </Form>
