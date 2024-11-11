@@ -10,8 +10,8 @@ import { toast } from 'src/components/snackbar';
 const getCurrentUserUid = () => auth.currentUser?.uid;
 
 export const useUsers = () => {
-  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const usersRef = collection(db, 'users');
@@ -47,7 +47,7 @@ export const useUsersData = () => {
       usersRef,
       (snapshot) => {
         const fetchedUsers = snapshot.docs.map((docSnapshot) => ({
-          uid: docSnapshot.id,
+          id: docSnapshot.id,
           ...docSnapshot.data(),
         }));
         setUsers(fetchedUsers);
@@ -67,24 +67,24 @@ export const useUsersData = () => {
   return { users, loading, updateUsersList };
 };
 
-export const useUserById = (uid) => {
+export const useUserById = (id) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!uid) {
+    if (!id) {
       setUser(null);
       setLoading(false);
       // Return a no-op cleanup function
       return () => {};
     }
 
-    const userDocRef = doc(db, 'users', uid);
+    const userDocRef = doc(db, 'users', id);
     const unsubscribe = onSnapshot(
       userDocRef,
       (docSnapshot) => {
         if (docSnapshot.exists()) {
-          setUser({ uid: docSnapshot.id, ...docSnapshot.data() });
+          setUser({ id: docSnapshot.id, ...docSnapshot.data() });
         } else {
           console.error('No such document!');
           setUser(null);
@@ -98,7 +98,7 @@ export const useUserById = (uid) => {
     );
 
     return () => unsubscribe();
-  }, [uid]);
+  }, [id]);
 
   return { user, loading };
 };

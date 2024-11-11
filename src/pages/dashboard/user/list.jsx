@@ -2,13 +2,15 @@ import { Helmet } from 'react-helmet-async';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { useUsers } from 'src/hooks/use-users';
+import { useUserById, useUsers } from 'src/hooks/use-users';
 
 import { CONFIG } from 'src/config-global';
 
 import { EmptyContent } from 'src/components/empty-content';
 
 import { UserListView } from 'src/sections/user/view';
+import { auth } from 'src/utils/firebase';
+import { useAuth } from 'src/hooks/use-auth';
 
 // ----------------------------------------------------------------------
 
@@ -17,7 +19,7 @@ const metadata = { title: `User list | Dashboard - ${CONFIG.appName}` };
 export default function Page() {
   const { users, loading } = useUsers();
 
-  console.log('users:', users);
+  const { userProfile: currentAuthUser } = useAuth();
 
   return (
     <>
@@ -32,7 +34,7 @@ export default function Page() {
       ) : users.length === 0 ? (
         <EmptyContent title="Aucun post" />
       ) : (
-        <UserListView users={users} />
+        <UserListView users={users} currentAuthUser={currentAuthUser} />
       )}
     </>
   );
