@@ -3,8 +3,8 @@ import { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Pagination from '@mui/material/Pagination';
 
-import { AutoEcoleCard } from './auto-ecole';
 import { BlankView } from '../blank/view';
+import { AutoEcoleCard } from './auto-ecole';
 
 // ----------------------------------------------------------------------
 

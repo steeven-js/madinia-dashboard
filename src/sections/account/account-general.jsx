@@ -15,13 +15,13 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useAuth } from 'src/hooks/use-auth';
 import { updateUserData } from 'src/hooks/use-users';
 
 import { fData } from 'src/utils/format-number';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
-import { useAuth } from 'src/hooks/use-auth';
 
 // ----------------------------------------------------------------------
 

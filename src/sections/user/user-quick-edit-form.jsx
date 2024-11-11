@@ -14,11 +14,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { _roles_, USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
+import { updateUserData } from 'src/hooks/use-users';
+
+import { USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
-import { updateUserData } from 'src/hooks/use-users';
 
 // ----------------------------------------------------------------------
 

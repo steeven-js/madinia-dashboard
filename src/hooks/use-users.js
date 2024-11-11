@@ -9,6 +9,34 @@ import { toast } from 'src/components/snackbar';
 
 const getCurrentUserUid = () => auth.currentUser?.uid;
 
+export const useUsers = () => {
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const usersRef = collection(db, 'users');
+    const unsubscribe = onSnapshot(
+      usersRef,
+      (snapshot) => {
+        const fetchedUsers = snapshot.docs.map((docSnapshot) => ({
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+        }));
+        setUsers(fetchedUsers);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching users:', error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  return { users, loading };
+};
+
 export const useUsersData = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

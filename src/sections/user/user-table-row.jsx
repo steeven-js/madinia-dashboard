@@ -13,13 +13,14 @@ import IconButton from '@mui/material/IconButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { USER_ROLES_OPTIONS } from 'src/_mock';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
-import { USER_ROLES_OPTIONS } from 'src/_mock';
 
 // ----------------------------------------------------------------------
 

@@ -1,10 +1,12 @@
-import { Box, CircularProgress } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import { EmptyContent } from 'src/components/empty-content';
+
+import { Box, CircularProgress } from '@mui/material';
+
+import { useUsers } from 'src/hooks/use-users';
 
 import { CONFIG } from 'src/config-global';
-import { useUsersData } from 'src/hooks/use-users';
-import { BlankView } from 'src/sections/blank/view';
+
+import { EmptyContent } from 'src/components/empty-content';
 
 import { UserListView } from 'src/sections/user/view';
 
@@ -13,7 +15,9 @@ import { UserListView } from 'src/sections/user/view';
 const metadata = { title: `User list | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
-  const { users, loading: usersLoading } = useUsersData();
+  const { users, loading } = useUsers();
+
+  console.log('users:', users);
 
   return (
     <>
@@ -21,7 +25,7 @@ export default function Page() {
         <title> {metadata.title}</title>
       </Helmet>
 
-      {usersLoading ? (
+      {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
           <CircularProgress />
         </Box>

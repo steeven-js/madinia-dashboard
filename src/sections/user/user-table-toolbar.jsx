@@ -30,14 +30,20 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
 
   const handleFilterRole = useCallback(
     (event) => {
-      const newValue =
+      const selectedValues =
         typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value;
 
       onResetPage();
-      filters.setState({ role: newValue });
+      filters.setState({ role: selectedValues });
     },
     [filters, onResetPage]
   );
+
+  // Fonction pour obtenir le label d'un rôle
+  const getRoleLabel = (roleValue) => {
+    const role = options.roles.find((r) => r.value === roleValue);
+    return role ? role.label : roleValue;
+  };
 
   return (
     <>
@@ -54,18 +60,18 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
             value={filters.state.role}
             onChange={handleFilterRole}
             input={<OutlinedInput label="Role" />}
-            renderValue={(selected) => selected.map((value) => value).join(', ')}
+            renderValue={(selected) => selected.map(getRoleLabel).join(', ')}
             inputProps={{ id: 'user-filter-role-select-label' }}
             MenuProps={{ PaperProps: { sx: { maxHeight: 240 } } }}
           >
             {options.roles.map((option) => (
-              <MenuItem key={option} value={option}>
+              <MenuItem key={option.value} value={option.value}>
                 <Checkbox
                   disableRipple
                   size="small"
-                  checked={filters.state.role.includes(option)}
+                  checked={filters.state.role.includes(option.value)}
                 />
-                {option}
+                {option.label}
               </MenuItem>
             ))}
           </Select>

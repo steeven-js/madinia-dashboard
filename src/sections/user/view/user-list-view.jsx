@@ -19,7 +19,7 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _roles_, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
+import { USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -84,7 +84,7 @@ export function UserListView({ users }) {
 
   const handleDeleteRow = useCallback(
     (id) => {
-      const deleteRow = tableData.filter((row) => row.uid !== id);
+      const deleteRow = tableData.filter((row) => row.id !== id);
 
       toast.success('Delete success!');
 
@@ -96,7 +96,7 @@ export function UserListView({ users }) {
   );
 
   const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !table.selected.includes(row.uid));
+    const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
 
     toast.success('Delete success!');
 
@@ -187,7 +187,7 @@ export function UserListView({ users }) {
           <UserTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
-            options={{ roles: _roles_ }}
+            options={{ roles: USER_ROLES_OPTIONS }}
           />
 
           {canReset && (
@@ -207,7 +207,7 @@ export function UserListView({ users }) {
               onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  dataFiltered.map((row) => row.uid)
+                  dataFiltered.map((row) => row.id)
                 )
               }
               action={
@@ -231,7 +231,7 @@ export function UserListView({ users }) {
                   onSelectAllRows={(checked) =>
                     table.onSelectAllRows(
                       checked,
-                      dataFiltered.map((row) => row.uid)
+                      dataFiltered.map((row) => row.id)
                     )
                   }
                 />
@@ -244,12 +244,12 @@ export function UserListView({ users }) {
                     )
                     .map((row) => (
                       <UserTableRow
-                        key={row.uid}
+                        key={row.id}
                         row={row}
-                        selected={table.selected.includes(row.uid)}
-                        onSelectRow={() => table.onSelectRow(row.uid)}
-                        onDeleteRow={() => handleDeleteRow(row.uid)}
-                        onEditRow={() => handleEditRow(row.uid)}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
+                        onDeleteRow={() => handleDeleteRow(row.id)}
+                        onEditRow={() => handleEditRow(row.id)}
                       />
                     ))}
 
@@ -305,29 +305,34 @@ export function UserListView({ users }) {
 function applyFilter({ inputData, comparator, filters }) {
   const { name, status, role } = filters;
 
+  // Create stable sort array
   const stabilizedThis = inputData.map((el, index) => [el, index]);
 
+  // Sort based on comparator and maintain original order for equal items
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
+    return order !== 0 ? order : a[1] - b[1];
   });
 
-  inputData = stabilizedThis.map((el) => el[0]);
+  // Apply filters sequentially
+  return stabilizedThis
+    .map((el) => el[0])
+    .filter((user) => {
+      // Name filter
+      if (name && !user.displayName.toLowerCase().includes(name.toLowerCase())) {
+        return false;
+      }
 
-  if (name) {
-    inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
-    );
-  }
+      // Status filter
+      if (status !== 'all' && user.status !== status) {
+        return false;
+      }
 
-  if (status !== 'all') {
-    inputData = inputData.filter((user) => user.status === status);
-  }
+      // Role filter
+      if (role?.length && !role.includes(user.role)) {
+        return false;
+      }
 
-  if (role.length) {
-    inputData = inputData.filter((user) => role.includes(user.role));
-  }
-
-  return inputData;
+      return true;
+    });
 }

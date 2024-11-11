@@ -1,8 +1,11 @@
-import { Box, CircularProgress } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
-import { CONFIG } from 'src/config-global';
+import { Box, CircularProgress } from '@mui/material';
+
 import { useAutoEcoles } from 'src/hooks/use-auto-ecole';
+
+import { CONFIG } from 'src/config-global';
+
 import { AutolEcoleCardsView } from 'src/sections/auto-ecole/view';
 
 // ----------------------------------------------------------------------

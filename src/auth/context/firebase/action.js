@@ -59,10 +59,10 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
      */
     await _sendEmailVerification(newUser.user);
 
-    const userProfile = doc(collection(FIRESTORE, 'users'), newUser.user?.uid);
+    const userProfile = doc(collection(FIRESTORE, 'users'), newUser.user?.id);
 
     await setDoc(userProfile, {
-      uid: newUser.user?.uid,
+      id: newUser.user?.id,
       email,
       displayName: `${firstName} ${lastName}`,
     });
