@@ -78,10 +78,14 @@ export function AutoEcoleQuickEditForm({ currentAutoEcole, open, onClose }) {
     setIsSubmitting(true);
     try {
       await updateFastAutoEcole({ currentAutoEcole, data });
-      console.log('data:', data);
+      // console.log('data:', data);
+
+      // Recharger la page
+      window.location.reload();
 
       reset();
       onClose();
+      toast.success('Auto-école mise à jour avec succès');
     } catch (error) {
       console.error(error);
       toast.error('Une erreur est survenue lors de la mise à jour');
@@ -143,11 +147,11 @@ export function AutoEcoleQuickEditForm({ currentAutoEcole, open, onClose }) {
 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Cancel
+            Annuler
           </Button>
 
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Update
+            Mettre à jour
           </LoadingButton>
         </DialogActions>
       </Form>

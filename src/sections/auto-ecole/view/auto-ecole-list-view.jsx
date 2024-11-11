@@ -167,7 +167,7 @@ export function AutolEcoleListView({ data, loading, error }) {
           heading="List"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Card', href: paths.dashboard.user.cards },
+            { name: 'Auto Ecoles', href: paths.dashboard.user.cards },
             { name: 'List' },
           ]}
           action={
@@ -316,10 +316,11 @@ export function AutolEcoleListView({ data, loading, error }) {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title="Supprimer"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            Êtes vous sûre de vouloir supprimer <strong> {table.selected.length} </strong>{' '}
+            auto-écoles?
           </>
         }
         action={
@@ -331,7 +332,7 @@ export function AutolEcoleListView({ data, loading, error }) {
               confirm.onFalse();
             }}
           >
-            Delete
+            Supprimer
           </Button>
         }
       />

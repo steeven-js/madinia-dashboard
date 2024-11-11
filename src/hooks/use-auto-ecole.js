@@ -128,42 +128,49 @@ export async function deleteAutoEcole(id) {
  * @param {string} id - L'ID de l'auto-école
  * @returns {Promise<Object>} Les données de l'auto-école
  */
-export async function getAutoEcoleById(id) {
-  try {
-    if (!id) {
-      throw new Error('ID requis');
-    }
+export function useAutoEcoleById(id) {
+  const [autoEcoleById, setAutoEcoleById] = useState(null);
+  const [autoEcoleByIdLoading, setAutoEcoleByIdLoading] = useState(true);
+  const [autoEcoleError, setAutoEcoleError] = useState(null);
 
-    const docSnap = await getDoc(doc(db, "auto-ecole", id));
+  useEffect(() => {
+    let unsubscribe = () => {};
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-
-      if (data.deletedAt) {
-        return {
-          success: false,
-          message: 'Auto-école non trouvée'
-        };
+    const fetchAutoEcole = () => {
+      if (!id) {
+        setAutoEcoleByIdLoading(false);
+        return;
       }
 
-      return {
-        success: true,
-        data: {
-          id: docSnap.id,
-          ...data
-        }
-      };
-    }
+      const autoEcoleRef = doc(db, 'auto-ecole', id);
 
-    return {
-      success: false,
-      message: 'Auto-école non trouvée'
+      unsubscribe = onSnapshot(
+        autoEcoleRef,
+        (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            setAutoEcoleById({ id: docSnapshot.id, ...docSnapshot.data() });
+            setAutoEcoleError(null);
+          } else {
+            setAutoEcoleError("L'auto-école n'existe pas");
+            setAutoEcoleById(null);
+          }
+          setAutoEcoleByIdLoading(false);
+        },
+        (error) => {
+          console.error("Erreur lors de la récupération de l'auto-école:", error);
+          setAutoEcoleError(error.message);
+          setAutoEcoleByIdLoading(false);
+        }
+      );
     };
 
-  } catch (error) {
-    console.error('Erreur lors de la récupération:', error);
-    throw error;
-  }
+    fetchAutoEcole();
+
+    // Nettoyage du listener lors du démontage du composant
+    return () => unsubscribe();
+  }, [id]);
+
+  return { autoEcoleById, autoEcoleByIdLoading, autoEcoleError };
 }
 
 /**

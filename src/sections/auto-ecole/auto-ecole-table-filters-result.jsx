@@ -17,16 +17,6 @@ export function AutoEcoleTableFiltersResult({ filters, onResetPage, totalResults
     filters.setState({ status: 'all' });
   }, [filters, onResetPage]);
 
-  const handleRemoveRole = useCallback(
-    (inputValue) => {
-      const newValue = filters.state.role.filter((item) => item !== inputValue);
-
-      onResetPage();
-      filters.setState({ role: newValue });
-    },
-    [filters, onResetPage]
-  );
-
   const handleReset = useCallback(() => {
     onResetPage();
     filters.onResetState();
@@ -41,12 +31,6 @@ export function AutoEcoleTableFiltersResult({ filters, onResetPage, totalResults
           onDelete={handleRemoveStatus}
           sx={{ textTransform: 'capitalize' }}
         />
-      </FiltersBlock>
-
-      <FiltersBlock label="Role:" isShow={!!filters.state.role.length}>
-        {filters.state.role.map((item) => (
-          <Chip {...chipProps} key={item} label={item} onDelete={() => handleRemoveRole(item)} />
-        ))}
       </FiltersBlock>
 
       <FiltersBlock label="Keyword:" isShow={!!filters.state.name}>
