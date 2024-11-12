@@ -1,5 +1,4 @@
-import { useDispatch } from 'react-redux';
-import { doc, setDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import {
   signOut as _signOut,
   signInWithPopup as _signInWithPopup,
@@ -13,7 +12,6 @@ import {
 } from 'firebase/auth';
 
 import { AUTH, FIRESTORE } from 'src/lib/firebase';
-import { clearAuth } from 'src/store/slices/authSlice';
 
 /** **************************************
  * Sign in
@@ -27,6 +25,20 @@ export const signInWithPassword = async ({ email, password }) => {
     if (!user?.emailVerified) {
       throw new Error('Email not verified!');
     }
+
+    // Récupérer l'uid de l'utilisateur créé
+    const uid = user.uid;
+
+    // Créer un document utilisateur
+    const userRef = doc(FIRESTORE, 'users', uid);
+
+    // Enregistrer les données utilisateur
+    await updateDoc(userRef, {
+      email,
+      isVerified: true,
+      lastConnection: new Date(),
+    });
+
   } catch (error) {
     console.error('Error during sign in with password:', error);
     throw error;
@@ -61,13 +73,23 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
      */
     await _sendEmailVerification(newUser.user);
 
-    const userProfile = doc(collection(FIRESTORE, 'users'), newUser.user?.id);
+    // Récupérer l'uid de l'utilisateur créé
+    const uid = newUser.user.uid;
 
-    await setDoc(userProfile, {
-      id: newUser.user?.id,
+    // Créer un document utilisateur
+    const userRef = doc(FIRESTORE, 'users', uid);
+
+    // Enregistrer les données utilisateur
+    await setDoc(userRef, {
       email,
-      displayName: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
+      isVerified: false,
+      role: 'user',
+      status: 'pending',
+      createdAt: new Date(),
     });
+
   } catch (error) {
     console.error('Error during sign up:', error);
     throw error;
@@ -78,9 +100,6 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
  * Sign out
  *************************************** */
 export const signOut = async () => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const dispatch = useDispatch();
-  dispatch(clearAuth());
   await _signOut(AUTH);
 };
 

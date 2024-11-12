@@ -2,20 +2,20 @@ import { Helmet } from 'react-helmet-async';
 
 import { CONFIG } from 'src/config-global';
 
-import { OverviewAppView } from 'src/sections/overview/app/view';
+import { BlankView } from 'src/sections/blank/view';
 
 // ----------------------------------------------------------------------
 
 const metadata = { title: `Dashboard - ${CONFIG.name}` };
 
-export default function OverviewAppPage() {
+export default function AdminOverviewAppPage() {
   return (
     <>
       <Helmet>
         <title> {metadata.title}</title>
       </Helmet>
 
-      <OverviewAppView />
+      <BlankView />
     </>
   );
 }

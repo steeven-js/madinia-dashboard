@@ -182,13 +182,13 @@ export function FirebaseSignUpView() {
 
       <SignUpTerms />
 
-      <FormDivider />
+      {/* <FormDivider />
 
       <FormSocials
         signInWithGoogle={handleSignInWithGoogle}
         singInWithGithub={handleSignInWithGithub}
         signInWithTwitter={handleSignInWithTwitter}
-      />
+      /> */}
     </>
   );
 }
