@@ -2,15 +2,14 @@ import { Helmet } from 'react-helmet-async';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { useUserById, useUsers } from 'src/hooks/use-users';
+import { useAuth } from 'src/hooks/use-auth';
+import { useUsers } from 'src/hooks/use-users';
 
 import { CONFIG } from 'src/config-global';
 
 import { EmptyContent } from 'src/components/empty-content';
 
 import { UserListView } from 'src/sections/user/view';
-import { auth } from 'src/utils/firebase';
-import { useAuth } from 'src/hooks/use-auth';
 
 // ----------------------------------------------------------------------
 

@@ -39,10 +39,11 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
+import { RoleBasedGuard } from 'src/auth/guard';
+
 import { UserTableRow } from '../user-table-row';
 import { UserTableToolbar } from '../user-table-toolbar';
 import { UserTableFiltersResult } from '../user-table-filters-result';
-import { RoleBasedGuard } from 'src/auth/guard';
 
 // ----------------------------------------------------------------------
 

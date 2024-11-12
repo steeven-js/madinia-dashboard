@@ -26,27 +26,41 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
+import { navDataAdmin as dashboardNavDataAdmin } from '../config-nav-dashboard-administrator';
 
 // ----------------------------------------------------------------------
 
 export function DashboardLayout({ sx, children, header, data }) {
   const theme = useTheme();
-
   const mobileNavOpen = useBoolean();
 
   const settings = useSettingsContext();
 
   const navColorVars = useNavColorVars(theme, settings);
 
-  const { userId, userProfile, loading } = useAuth();
+  const { userProfile } = useAuth();
 
   const layoutQuery = 'lg';
-
-  const navData = data?.nav ?? dashboardNavData;
 
   const isNavMini = settings.navLayout === 'mini';
   const isNavHorizontal = settings.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
+
+  // Determine which navigation data to use based on user role
+  const getNavigationData = () => {
+    // Check user role and return appropriate navigation data
+    if (userProfile?.role === 'administrator') {
+      return dashboardNavDataAdmin;
+    }
+    if (userProfile?.role === 'developpeur') {
+      return dashboardNavData;
+    }
+
+    // Default to regular dashboard navigation if role doesn't match or is undefined
+    return dashboardNavDataAdmin;
+  };
+
+  const navData = getNavigationData();
 
   return (
     <LayoutSection
