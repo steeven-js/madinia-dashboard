@@ -67,7 +67,7 @@ export function UserListView({ users, currentAuthUser }) {
 
   const confirm = useBoolean();
 
-  const [role, setRole] = useState('dev');
+  const [acceptedRoles, setAcceptedRoles] = useState(['dev']);
 
   const [tableData, setTableData] = useState(users);
 
@@ -130,31 +130,31 @@ export function UserListView({ users, currentAuthUser }) {
   return (
     <>
       <DashboardContent>
-        <CustomBreadcrumbs
-          heading="List"
-          links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'User', href: paths.dashboard.user.root },
-            { name: 'List' },
-          ]}
-          action={
-            <Button
-              component={RouterLink}
-              href={paths.dashboard.user.new}
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-            >
-              Nouvel utilisateur
-            </Button>
-          }
-          sx={{ mb: { xs: 3, md: 5 } }}
-        />
         <RoleBasedGuard
           hasContent
           currentRole={currentAuthUser?.role}
-          acceptRoles={[role]}
+          acceptRoles={acceptedRoles}
           sx={{ py: 10 }}
         >
+          <CustomBreadcrumbs
+            heading="List"
+            links={[
+              { name: 'Dashboard', href: paths.dashboard.root },
+              { name: 'User', href: paths.dashboard.user.root },
+              { name: 'List' },
+            ]}
+            action={
+              <Button
+                component={RouterLink}
+                href={paths.dashboard.user.new}
+                variant="contained"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+              >
+                Nouvel utilisateur
+              </Button>
+            }
+            sx={{ mb: { xs: 3, md: 5 } }}
+          />
           <Card>
             <Tabs
               value={filters.state.status}

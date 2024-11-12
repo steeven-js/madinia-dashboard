@@ -9,7 +9,6 @@ import { useAuth } from 'src/hooks/use-auth';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { allLangs } from 'src/locales';
-import { CONFIG } from 'src/config-global';
 
 import { Logo } from 'src/components/logo';
 import { useSettingsContext } from 'src/components/settings';
@@ -28,8 +27,8 @@ import { StyledDivider, useNavColorVars } from './styles';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
+import { navDataAdmin } from '../config-nav-dashboard-administrator';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
-import { navDataAdmin as dashboardNavDataAdmin } from '../config-nav-dashboard-administrator';
 
 // ----------------------------------------------------------------------
 
@@ -43,29 +42,23 @@ export function DashboardLayout({ sx, children, header, data }) {
 
   const { userProfile } = useAuth();
 
+  const useAuthRole = useSelector((state) => state.auth.role);
+
+  const getUserAuthRole = () => {
+    if (useAuthRole === 'admin') {
+      return navDataAdmin;
+    } 
+      return dashboardNavData;
+    
+  };
+
   const layoutQuery = 'lg';
+
+  const navData = getUserAuthRole();
 
   const isNavMini = settings.navLayout === 'mini';
   const isNavHorizontal = settings.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
-
-  const currentAuthRole = useSelector((state) => state.auth.role);
-
-  // Determine which navigation data to use based on user role
-  const getNavigationData = () => {
-    // Check user role and return appropriate navigation data
-    if (currentAuthRole === CONFIG.roles.admin) {
-      return dashboardNavDataAdmin;
-    }
-    if (currentAuthRole === CONFIG.roles.dev) {
-      return dashboardNavData;
-    }
-
-    // Default to regular dashboard navigation if role doesn't match or is undefined
-    return dashboardNavDataAdmin;
-  };
-
-  const navData = getNavigationData();
 
   return (
     <LayoutSection

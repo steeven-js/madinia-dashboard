@@ -8,9 +8,11 @@ import { ForbiddenIllustration } from 'src/assets/illustrations';
 import { varBounce, MotionContainer } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
+export function RoleBasedGuard({ children, hasContent, currentRole, acceptRoles, sx }) {
+  // Vérifier si les rôles sont définis et si le rôle actuel est inclus
+  const isAllowed = !acceptRoles?.length || acceptRoles.includes(currentRole);
 
-export function RoleBasedGuard({ sx, children, hasContent, currentRole, acceptRoles }) {
-  if (typeof acceptRoles !== 'undefined' && !acceptRoles.includes(currentRole)) {
+  if (!isAllowed) {
     return hasContent ? (
       <Container component={MotionContainer} sx={{ textAlign: 'center', ...sx }}>
         <m.div variants={varBounce().in}>
@@ -32,5 +34,5 @@ export function RoleBasedGuard({ sx, children, hasContent, currentRole, acceptRo
     ) : null;
   }
 
-  return <> {children} </>;
+  return <>{children}</>;
 }

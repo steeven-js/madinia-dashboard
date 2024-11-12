@@ -13,16 +13,11 @@ import { mainRoutes } from './main';
 import { authDemoRoutes } from './auth-demo';
 import { dashboardRoutes } from './dashboard';
 import { componentsRoutes } from './components';
-import { dashboardAdminRoutes } from './dashboar-admin';
 
 const HomePage = lazy(() => import('src/pages/home'));
 
 export function Router() {
-  const { userProfile } = useAuth();
-
-  // Determine which dashboard routes to use based on user role
-  const roleBasedDashboardRoutes =
-    userProfile?.role === CONFIG.roles.dev ? dashboardRoutes : dashboardAdminRoutes;
+  useAuth();
 
   const routes = [
     {
@@ -42,8 +37,8 @@ export function Router() {
     ...authRoutes,
     ...authDemoRoutes,
 
-    // Role-based dashboard routes
-    ...roleBasedDashboardRoutes,
+    // Dashboard routes
+    ...dashboardRoutes,
 
     // Main routes
     ...mainRoutes,
