@@ -29,6 +29,7 @@ import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { navDataAdmin } from '../config-nav-dashboard-administrator';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
+import { navDataUser } from '../config-nav-dashboard-user';
 
 // ----------------------------------------------------------------------
 
@@ -45,11 +46,17 @@ export function DashboardLayout({ sx, children, header, data }) {
   const useAuthRole = useSelector((state) => state.auth.role);
 
   const getUserAuthRole = () => {
+    if (useAuthRole === 'dev') {
+      return dashboardNavData;
+    }
+
     if (useAuthRole === 'admin') {
       return navDataAdmin;
-    } 
-      return dashboardNavData;
-    
+    }
+
+    if (useAuthRole === 'user') {
+      return navDataUser;
+    }
   };
 
   const layoutQuery = 'lg';

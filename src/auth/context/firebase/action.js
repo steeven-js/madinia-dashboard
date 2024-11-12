@@ -27,7 +27,7 @@ export const signInWithPassword = async ({ email, password }) => {
     }
 
     // Récupérer l'uid de l'utilisateur créé
-    const uid = user.uid;
+    const {uid} = user;
 
     // Créer un document utilisateur
     const userRef = doc(FIRESTORE, 'users', uid);
@@ -74,7 +74,7 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
     await _sendEmailVerification(newUser.user);
 
     // Récupérer l'uid de l'utilisateur créé
-    const uid = newUser.user.uid;
+    const {uid} = newUser.user;
 
     // Créer un document utilisateur
     const userRef = doc(FIRESTORE, 'users', uid);

@@ -41,7 +41,7 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
-export const navDataAdmin = [
+export const navDataUser = [
   /**
    * Overview
    */
@@ -50,52 +50,6 @@ export const navDataAdmin = [
     items: [
       { title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard },
       // { title: 'plantmed', path: paths.dashboard.general.plantmed, icon: ICONS.dashboard },
-    ],
-  },
-  /**
-   * Blog
-   */
-  {
-    subheader: 'Blog',
-    items: [
-      {
-        title: 'Blog',
-        path: paths.dashboard.post.root,
-        icon: ICONS.blog,
-        children: [
-          { title: 'Posts', path: paths.dashboard.post.root },
-          { title: 'Create', path: paths.dashboard.post.new },
-        ],
-      },
-    ],
-  },
-  /**
-   * Management
-   */
-  {
-    subheader: 'Management',
-    items: [
-      // {
-      //   title: 'User',
-      //   path: paths.dashboard.user.root,
-      //   icon: ICONS.user,
-      //   children: [
-      //     { title: 'Cards', path: paths.dashboard.user.cards },
-      //     { title: 'List', path: paths.dashboard.user.list },
-      //   ],
-      // },
-      {
-        title: 'AutoEcole',
-        path: paths.dashboard.autoEcole.root,
-        icon: ICONS.user,
-        children: [
-          { title: 'Cards', path: paths.dashboard.autoEcole.cards },
-          { title: 'List', path: paths.dashboard.autoEcole.list },
-          { title: 'New', path: paths.dashboard.autoEcole.new },
-        ],
-      },
-      { title: 'Calendar', path: paths.dashboard.calendar, icon: ICONS.calendar },
-      { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
     ],
   },
 ];

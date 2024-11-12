@@ -32,10 +32,10 @@ export default function OverviewAppPage() {
         </Box>
       ) : currentAuthRole.length === 0 ? (
         <EmptyContent title="Aucun Overview" />
-      ) : currentAuthRole == CONFIG.roles.dev ? (
-        <OverviewAppView />
-      ) : (
+      ) : currentAuthRole === CONFIG.roles.admin || CONFIG.roles.user ? (
         <AdminOverviewAppPage />
+      ) : (
+        <OverviewAppPage />
       )}
     </>
   );

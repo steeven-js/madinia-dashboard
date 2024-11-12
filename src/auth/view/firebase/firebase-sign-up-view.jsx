@@ -20,8 +20,6 @@ import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
 import { FormHead } from '../../components/form-head';
-import { FormDivider } from '../../components/form-divider';
-import { FormSocials } from '../../components/form-socials';
 import { SignUpTerms } from '../../components/sign-up-terms';
 import {
   signUp,
