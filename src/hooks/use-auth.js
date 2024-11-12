@@ -5,34 +5,49 @@ import { updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth
 
 import { db, auth } from 'src/utils/firebase';
 
+import { setUser, setRole, setError, clearAuth } from 'src/store/slices/authSlice';
+
 export function useAuth() {
-  const [user, setUser] = useState(null);
+  const dispatch = useDispatch();
+  const [user, setLocalUser] = useState(null);
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const dispatch = useDispatch();
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (_user) => {
       if (_user) {
-        setUser(_user);
+        setLocalUser(_user);
         setUserId(_user.uid);
-        // Récupérer le profil utilisateur depuis Firestore
+
         try {
           const userProfileDoc = await getDoc(doc(db, 'users', _user.uid));
           if (userProfileDoc.exists()) {
-            setUserProfile(userProfileDoc.data());
+            const profileData = userProfileDoc.data();
+            setUserProfile(profileData);
+
+            // Dispatch user data to Redux
+            dispatch(setUser({
+              id: _user.uid,
+              email: _user.email,
+              ...profileData
+            }));
+
+            // Dispatch role to Redux
+            dispatch(setRole(profileData?.role || 'user'));
           } else {
             console.log("Le profil utilisateur n'existe pas");
+            dispatch(clearAuth());
           }
         } catch (error) {
           console.error('Erreur lors de la récupération du profil utilisateur:', error);
+          dispatch(setError(error.message));
         }
       } else {
-        setUser(null);
+        setLocalUser(null);
         setUserId(null);
         setUserProfile(null);
+        dispatch(clearAuth());
       }
       setLoading(false);
     });
@@ -46,16 +61,16 @@ export function useAuth() {
 export function useUpdateUserProfile() {
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setUpdateError] = useState(null);
 
   const updateUserProfile = async (newData) => {
     if (!user) {
-      setError('User not authenticated');
+      setUpdateError('User not authenticated');
       return;
     }
 
     setIsUpdating(true);
-    setError(null);
+    setUpdateError(null);
 
     try {
       // Update Firebase Auth user profile
@@ -75,7 +90,7 @@ export function useUpdateUserProfile() {
       // This depends on how you've set up your useAuth hook
       // For example, you could add a refreshUserProfile function to useAuth
     } catch (err) {
-      setError(err.message);
+      setUpdateError(err.message);
     } finally {
       setIsUpdating(false);
     }
@@ -87,16 +102,16 @@ export function useUpdateUserProfile() {
 // UpdateFirebasePassword de l'utilisateur connecté
 export function useUpdateFirebasePassword() {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setFirebaseError] = useState(null);
 
   const updateFirebasePassword = async (newPassword) => {
     setIsUpdating(true);
-    setError(null);
+    setFirebaseError(null);
 
     try {
       await updatePassword(auth.currentUser, newPassword);
     } catch (err) {
-      setError(err.message);
+      setFirebaseError(err.message);
     } finally {
       setIsUpdating(false);
     }

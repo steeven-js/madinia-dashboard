@@ -1,3 +1,4 @@
+import { useDispatch } from 'react-redux';
 import { doc, setDoc, collection } from 'firebase/firestore';
 import {
   signOut as _signOut,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/auth';
 
 import { AUTH, FIRESTORE } from 'src/lib/firebase';
+import { clearAuth } from 'src/store/slices/authSlice';
 
 /** **************************************
  * Sign in
@@ -76,6 +78,9 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
  * Sign out
  *************************************** */
 export const signOut = async () => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const dispatch = useDispatch();
+  dispatch(clearAuth());
   await _signOut(AUTH);
 };
 

@@ -10,10 +10,10 @@ export const USER_STATUS_OPTIONS = [
 ];
 
 export const USER_ROLES_OPTIONS = [
-  { value: 'developpeur', label: 'Développeur' },
-  { value: 'administrateur', label: 'Administrateur' },
-  { value: 'marketing-manager', label: 'Marketing-Manager' },
-  { value: 'visiteur', label: 'Visiteur' },
+  { value: 'dev', label: 'Développeur' },
+  { value: 'admin', label: 'Administrateur' },
+  { value: 'blog', label: 'Marketing-Manager' },
+  { value: 'user', label: 'Visiteur' },
 ];
 
 export const _userAbout = {

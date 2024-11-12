@@ -1,4 +1,3 @@
-import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 
 import { CONFIG } from 'src/config-global';
@@ -10,9 +9,6 @@ import { OverviewAppView } from 'src/sections/overview/app/view';
 const metadata = { title: `Dashboard - ${CONFIG.name}` };
 
 export default function OverviewAppPage() {
-  const currentAuthRole = useSelector((state) => state.auth.role);
-  console.log('role:', currentAuthRole);
-
   return (
     <>
       <Helmet>

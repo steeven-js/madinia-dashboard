@@ -1,3 +1,5 @@
+import { useSelector } from 'react-redux';
+
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
@@ -7,6 +9,7 @@ import { useAuth } from 'src/hooks/use-auth';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { allLangs } from 'src/locales';
+import { CONFIG } from 'src/config-global';
 
 import { Logo } from 'src/components/logo';
 import { useSettingsContext } from 'src/components/settings';
@@ -46,13 +49,15 @@ export function DashboardLayout({ sx, children, header, data }) {
   const isNavHorizontal = settings.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
+  const currentAuthRole = useSelector((state) => state.auth.role);
+
   // Determine which navigation data to use based on user role
   const getNavigationData = () => {
     // Check user role and return appropriate navigation data
-    if (userProfile?.role === 'administrator') {
+    if (currentAuthRole === CONFIG.roles.admin) {
       return dashboardNavDataAdmin;
     }
-    if (userProfile?.role === 'developpeur') {
+    if (currentAuthRole === CONFIG.roles.dev) {
       return dashboardNavData;
     }
 

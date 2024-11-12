@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 
+import { useAuth } from 'src/hooks/use-auth';
+
 import { CONFIG } from 'src/config-global';
 import { MainLayout } from 'src/layouts/main';
 
@@ -11,11 +13,18 @@ import { mainRoutes } from './main';
 import { authDemoRoutes } from './auth-demo';
 import { dashboardRoutes } from './dashboard';
 import { componentsRoutes } from './components';
+import { dashboardAdminRoutes } from './dashboar-admin';
 
 const HomePage = lazy(() => import('src/pages/home'));
 
 export function Router() {
-  return useRoutes([
+  const { userProfile } = useAuth();
+
+  // Determine which dashboard routes to use based on user role
+  const roleBasedDashboardRoutes =
+    userProfile?.role === CONFIG.roles.dev ? dashboardRoutes : dashboardAdminRoutes;
+
+  const routes = [
     {
       path: '/',
       element: CONFIG.auth.skip ? (
@@ -29,20 +38,22 @@ export function Router() {
       ),
     },
 
-    // Auth
+    // Auth routes
     ...authRoutes,
     ...authDemoRoutes,
 
-    // Dashboard
-    ...dashboardRoutes,
+    // Role-based dashboard routes
+    ...roleBasedDashboardRoutes,
 
-    // Main
+    // Main routes
     ...mainRoutes,
 
-    // Components
+    // Components routes
     ...componentsRoutes,
 
-    // No match
+    // No match route
     { path: '*', element: <Navigate to="/404" replace /> },
-  ]);
+  ];
+
+  return useRoutes(routes);
 }

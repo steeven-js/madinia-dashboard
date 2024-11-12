@@ -26,7 +26,7 @@ import { AuthProvider as AmplifyAuthProvider } from 'src/auth/context/amplify';
 import { AuthProvider as SupabaseAuthProvider } from 'src/auth/context/supabase';
 import { AuthProvider as FirebaseAuthProvider } from 'src/auth/context/firebase';
 
-import { store } from './redux/store';
+import { store } from './store/store';
 
 // ----------------------------------------------------------------------
 
