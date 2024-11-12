@@ -46,16 +46,20 @@ export function DashboardLayout({ sx, children, header, data }) {
   const useAuthRole = useSelector((state) => state.auth.role);
 
   const getUserAuthRole = () => {
-    switch (useAuthRole) {
-      case 'dev':
-        return dashboardNavData;
-      case 'admin':
-        return navDataAdmin;
-      case 'user':
-        return navDataUser;
-      default:
-        return navDataUser;
+    if (useAuthRole === 'dev') {
+      return dashboardNavData;
     }
+
+    if (useAuthRole === 'admin') {
+      return navDataAdmin;
+    }
+
+    if (useAuthRole === 'user') {
+      return navDataUser;
+    }
+
+    // Default return value if none of the conditions are met
+    return navDataUser; // or [] or null, depending on your needs
   };
 
   const layoutQuery = 'lg';

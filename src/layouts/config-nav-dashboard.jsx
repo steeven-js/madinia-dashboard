@@ -87,7 +87,6 @@ export const navData = [
       {
         title: 'AutoEcole',
         path: paths.dashboard.autoEcole.root,
-        roles: ['admin'],
         icon: ICONS.user,
         children: [
           { title: 'Cards', path: paths.dashboard.autoEcole.cards },
