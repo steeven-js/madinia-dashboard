@@ -15,6 +15,44 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Helper function to serialize timestamps
+    const serializeTimestamp = (timestamp) => {
+      if (!timestamp) return null;
+      // If it's a Firestore Timestamp, convert to milliseconds
+      if (timestamp?.toMillis) {
+        return timestamp.toMillis();
+      }
+      // If it's already a Date object, convert to milliseconds
+      if (timestamp instanceof Date) {
+        return timestamp.getTime();
+      }
+      // If it's already a number (milliseconds), return as is
+      if (typeof timestamp === 'number') {
+        return timestamp;
+      }
+      return null;
+    };
+
+    // Helper function to serialize the entire user profile
+    const serializeProfile = (profile) => {
+      if (!profile) return null;
+
+      const serialized = { ...profile };
+
+      // Convert any timestamp fields to milliseconds
+      if (profile.createdAt) {
+        serialized.createdAt = serializeTimestamp(profile.createdAt);
+      }
+      if (profile.updatedAt) {
+        serialized.updatedAt = serializeTimestamp(profile.updatedAt);
+      }
+      if (profile.lastConnection) {
+        serialized.lastConnection = serializeTimestamp(profile.lastConnection);
+      }
+
+      return serialized;
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (_user) => {
       if (_user) {
         setLocalUser(_user);
@@ -26,12 +64,17 @@ export function useAuth() {
             const profileData = userProfileDoc.data();
             setUserProfile(profileData);
 
-            // Dispatch user data to Redux
-            dispatch(setUser({
+            // Serialize the user data before dispatching to Redux
+            const serializedUserData = {
               id: _user.uid,
               email: _user.email,
-              ...profileData
-            }));
+              createdAt: serializeTimestamp(_user.metadata.creationTime),
+              lastConnection: serializeTimestamp(_user.metadata.lastSignInTime),
+              ...serializeProfile(profileData)
+            };
+
+            // Dispatch serialized user data to Redux
+            dispatch(setUser(serializedUserData));
 
             // Dispatch role to Redux
             dispatch(setRole(profileData?.role || 'user'));

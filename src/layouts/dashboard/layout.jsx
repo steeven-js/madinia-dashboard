@@ -24,12 +24,12 @@ import { MenuButton } from '../components/menu-button';
 import { LayoutSection } from '../core/layout-section';
 import { HeaderSection } from '../core/header-section';
 import { StyledDivider, useNavColorVars } from './styles';
+import { navDataUser } from '../config-nav-dashboard-user';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { navDataAdmin } from '../config-nav-dashboard-administrator';
 import { navData as dashboardNavData } from '../config-nav-dashboard';
-import { navDataUser } from '../config-nav-dashboard-user';
 
 // ----------------------------------------------------------------------
 
@@ -46,16 +46,15 @@ export function DashboardLayout({ sx, children, header, data }) {
   const useAuthRole = useSelector((state) => state.auth.role);
 
   const getUserAuthRole = () => {
-    if (useAuthRole === 'dev') {
-      return dashboardNavData;
-    }
-
-    if (useAuthRole === 'admin') {
-      return navDataAdmin;
-    }
-
-    if (useAuthRole === 'user') {
-      return navDataUser;
+    switch (useAuthRole) {
+      case 'dev':
+        return dashboardNavData;
+      case 'admin':
+        return navDataAdmin;
+      case 'user':
+        return navDataUser;
+      default:
+        return navDataUser;
     }
   };
 
