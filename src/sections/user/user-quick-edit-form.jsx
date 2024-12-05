@@ -14,7 +14,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { updateUserData } from 'src/hooks/use-users';
+import { updateOrCreateUserData } from 'src/hooks/use-users';
 
 import { USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
@@ -79,7 +79,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
   const onSubmit = handleSubmit(async (data) => {
     setIsSubmitting(true);
     try {
-      await updateUserData({ data });
+      await updateOrCreateUserData({ data });
       // console.log('data:', data);
 
       // Recharger la page

@@ -2,7 +2,7 @@
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, query, limit, setDoc, orderBy, getDocs, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
 

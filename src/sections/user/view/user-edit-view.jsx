@@ -15,8 +15,8 @@ export function UserEditView({ user: currentUser }) {
         heading="Edit"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.root },
-          { name: currentUser?.name },
+          { name: 'Membres', href: paths.dashboard.user.root },
+          { name: currentUser?.displayName },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

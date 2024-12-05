@@ -1,9 +1,12 @@
 import { Helmet } from 'react-helmet-async';
 
+import { Box, CircularProgress } from '@mui/material';
+
 import { useParams } from 'src/routes/hooks';
 
+import { useUserById } from 'src/hooks/use-users';
+
 import { CONFIG } from 'src/config-global';
-import { _userList } from 'src/_mock/_user';
 
 import { UserEditView } from 'src/sections/user/view';
 
@@ -14,7 +17,7 @@ const metadata = { title: `User edit | Dashboard - ${CONFIG.appName}` };
 export default function Page() {
   const { id = '' } = useParams();
 
-  const currentUser = _userList.find((user) => user.id === id);
+  const { user, loading } = useUserById(id);
 
   return (
     <>
@@ -22,7 +25,13 @@ export default function Page() {
         <title> {metadata.title}</title>
       </Helmet>
 
-      <UserEditView user={currentUser} />
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <UserEditView user={user} />
+      )}
     </>
   );
 }

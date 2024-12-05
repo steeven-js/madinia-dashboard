@@ -10,6 +10,7 @@ import {
   getFirestore,
   doc as firestoreDoc,
 } from 'firebase/firestore';
+
 import { auth } from 'src/utils/firebase';
 
 const db = getFirestore();

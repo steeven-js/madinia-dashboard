@@ -1,7 +1,7 @@
 import { updateProfile } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
+import { doc, addDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
 
@@ -103,50 +103,74 @@ export const useUserById = (id) => {
   return { user, loading };
 };
 
-export const updateUserData = async ({ data }) => {
+export const updateOrCreateUserData = async ({ data, id = null }) => {
   const { avatarUrl: newAvatarFile, ...otherData } = data;
   let avatarUrl = newAvatarFile;
-
-  const uid = getCurrentUserUid();
-  if (!uid) {
-    throw new Error("No user is currently logged in");
-  }
-
-  const userRef = doc(db, 'users', uid);
+  let userRef;
 
   try {
-    // Mise à jour du profil auth si un nouveau displayName est fourni
-    if (otherData.displayName && auth.currentUser) {
-      const profileUpdates = {
-        displayName: otherData.displayName
-      };
+    // Gestion de l'avatar si c'est un nouveau fichier
+    if (newAvatarFile instanceof File) {
+      const fileExtension = newAvatarFile.name.split('.').pop().toLowerCase();
+      // Si pas d'ID, on en génère un pour le stockage de l'avatar
+      const avatarId = id;
+      const fileName = `avatars/${avatarId}/avatar.${fileExtension}`;
+      const storageRef = ref(storage, fileName);
 
-      // Gestion de l'avatar si c'est un nouveau fichier
-      if (newAvatarFile instanceof File) {
-        const fileExtension = newAvatarFile.name.split('.').pop();
-        const fileName = `avatars/${uid}/avatar.${fileExtension}`;
-        const storageRef = ref(storage, fileName);
-
-        await uploadBytes(storageRef, newAvatarFile);
-        avatarUrl = await getDownloadURL(storageRef);
-        profileUpdates.photoURL = avatarUrl;
-      }
-
-      // Mise à jour du profil auth
-      await updateProfile(auth.currentUser, profileUpdates);
+      await uploadBytes(storageRef, newAvatarFile);
+      avatarUrl = await getDownloadURL(storageRef);
     }
 
-    // Mise à jour du document Firestore
-    const userData = { ...otherData };
+    // Préparation des données pour Firestore
+    const userData = {
+      ...otherData,
+      updatedAt: Date.now(),
+    };
+
     if (avatarUrl) {
       userData.avatarUrl = avatarUrl;
     }
 
-    await updateDoc(userRef, userData);
-    toast.success('Mise à jour réussie !');
+    // Création ou mise à jour selon la présence de l'ID
+    if (id) {
+      // Mise à jour
+      userRef = doc(db, 'users', id);
+      await updateDoc(userRef, userData);
+
+      // Mise à jour du profil auth si l'utilisateur est connecté
+      if (auth.currentUser && (otherData.name || avatarUrl)) {
+        const profileUpdates = {};
+
+        if (otherData.name) {
+          profileUpdates.displayName = otherData.name;
+        }
+
+        if (avatarUrl) {
+          profileUpdates.photoURL = avatarUrl;
+        }
+
+        await updateProfile(auth.currentUser, profileUpdates);
+      }
+    } else {
+      // Création
+      userData.createdAt = Date.now();
+      userData.status = 'active';
+      const newUserRef = await addDoc(collection(db, 'users'), userData);
+      userRef = newUserRef;
+      id = newUserRef.id;
+    }
+
+    toast.success(id ? 'Mise à jour réussie !' : 'Création réussie !');
+
+    return {
+      success: true,
+      id,
+      data: userData
+    };
+
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
-    toast.error('Une erreur est survenue lors de la mise à jour');
+    console.error('Erreur lors de la mise à jour/création de l\'utilisateur:', error);
+    toast.error('Une erreur est survenue lors de la mise à jour/création');
     throw error;
   }
 };

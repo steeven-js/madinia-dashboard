@@ -15,8 +15,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { useAuth } from 'src/hooks/use-auth';
-import { updateUserData } from 'src/hooks/use-users';
+import { updateOrCreateUserData } from 'src/hooks/use-users';
 
 import { fData } from 'src/utils/format-number';
 
@@ -65,10 +64,6 @@ export function AccountGeneral({ currentUser, userProfile }) {
     isPublic: userProfile?.isPublic || false,
   };
 
-  const { user } = useAuth();
-
-  console.log(user);
-
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(UpdateUserSchema),
@@ -83,7 +78,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
   const onSubmit = handleSubmit(async (data) => {
     setIsSubmitting(true);
     try {
-      await updateUserData({ currentUser, data });
+      await updateOrCreateUserData({ currentUser, data });
 
       router.push(paths.dashboard.root);
     } catch (error) {

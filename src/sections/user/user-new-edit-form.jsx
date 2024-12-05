@@ -17,6 +17,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { updateOrCreateUserData } from 'src/hooks/use-users';
+
 import { fData } from 'src/utils/format-number';
 
 import { Label } from 'src/components/label';
@@ -26,27 +28,21 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const NewUserSchema = zod.object({
-  avatarUrl: schemaHelper.file({
-    message: { required_error: 'Avatar is required!' },
-  }),
-  name: zod.string().min(1, { message: 'Name is required!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  country: schemaHelper.objectOrNull({
-    message: { required_error: 'Country is required!' },
-  }),
-  address: zod.string().min(1, { message: 'Address is required!' }),
-  company: zod.string().min(1, { message: 'Company is required!' }),
-  state: zod.string().min(1, { message: 'State is required!' }),
-  city: zod.string().min(1, { message: 'City is required!' }),
-  role: zod.string().min(1, { message: 'Role is required!' }),
-  zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
-  // Not required
+  photoUrl: schemaHelper.file().optional(),
+  displayName: zod.string(),
+  email: zod.string().email({ message: 'Email must be a valid email address!' }).optional(),
+  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }).optional(),
+  country: schemaHelper.objectOrNull().optional(),
+  address: zod.string().optional(),
+  company: zod.string().optional(),
+  state: zod.string().optional(),
+  city: zod.string().optional(),
+  role: zod.string().optional(),
+  zipCode: zod.string().optional(),
+  // Not required fields (unchanged)
   status: zod.string(),
   isVerified: zod.boolean(),
+  isBanned: zod.boolean(),
 });
 
 // ----------------------------------------------------------------------
@@ -56,19 +52,20 @@ export function UserNewEditForm({ currentUser }) {
 
   const defaultValues = useMemo(
     () => ({
-      status: currentUser?.status || '',
-      avatarUrl: currentUser?.avatarUrl || null,
-      isVerified: currentUser?.isVerified || true,
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      address: currentUser?.address || '',
-      zipCode: currentUser?.zipCode || '',
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      status: currentUser?.status ?? '',
+      photoUrl: currentUser?.photoUrl ?? null,
+      isVerified: currentUser?.isVerified ?? false,
+      isBanned: currentUser?.isBanned ?? false,
+      displayName: currentUser?.displayName ?? '',
+      email: currentUser?.email ?? '',
+      phoneNumber: currentUser?.phoneNumber ?? '',
+      country: currentUser?.country ?? null,
+      state: currentUser?.state ?? '',
+      city: currentUser?.city ?? '',
+      address: currentUser?.address ?? '',
+      zipCode: currentUser?.zipCode ?? '',
+      company: currentUser?.company ?? '',
+      role: currentUser?.role ?? '',
     }),
     [currentUser]
   );
@@ -92,8 +89,9 @@ export function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
+      updateOrCreateUserData(data, currentUser?.id);
       reset();
-      toast.success(currentUser ? 'Update success!' : 'Create success!');
+      toast.success(currentUser ? 'Mise à jour réussie !' : 'Création réussie !');
       router.push(paths.dashboard.user.list);
       console.info('DATA', data);
     } catch (error) {
@@ -215,7 +213,7 @@ export function UserNewEditForm({ currentUser }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <Field.Text name="name" label="Full name" />
+              <Field.Text name="displayName" label="Full name" />
               <Field.Text name="email" label="Email address" />
               <Field.Phone name="phoneNumber" label="Phone number" />
 

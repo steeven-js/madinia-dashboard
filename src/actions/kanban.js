@@ -7,10 +7,9 @@ import {
   updateDoc,
   arrayUnion,
   onSnapshot,
-  getFirestore,
 } from 'firebase/firestore';
 
-const db = getFirestore();
+import { db } from 'src/utils/firebase';
 
 // ----------------------------------------------------------------------
 

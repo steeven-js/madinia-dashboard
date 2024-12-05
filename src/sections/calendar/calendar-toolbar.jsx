@@ -69,7 +69,7 @@ export function CalendarToolbar({
 
         <Stack direction="row" alignItems="center" spacing={1}>
           <Button size="small" color="error" variant="contained" onClick={onToday}>
-            Aujourd'hui
+            Aujourd&apos;hui
           </Button>
 
           <IconButton onClick={onOpenFilters} aria-label="Filtres">

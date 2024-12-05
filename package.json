@@ -110,6 +110,7 @@
     "stylis-plugin-rtl": "^2.1.1",
     "swr": "^2.2.5",
     "turndown": "^7.2.0",
+    "uuid": "^11.0.3",
     "yet-another-react-lightbox": "^3.21.4",
     "zod": "^3.23.8"
   },
