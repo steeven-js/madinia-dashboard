@@ -122,6 +122,16 @@ export const paths = {
         edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
       },
     },
+    event: {
+      root: `${ROOTS.DASHBOARD}/event`,
+      new: `${ROOTS.DASHBOARD}/event/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/event/${id}`,
+      edit: (id) => `${ROOTS.DASHBOARD}/event/${id}/edit`,
+      demo: {
+        details: `${ROOTS.DASHBOARD}/event/${MOCK_ID}`,
+        edit: `${ROOTS.DASHBOARD}/event/${MOCK_ID}/edit`,
+      },
+    },
     autoEcole: {
       root: `${ROOTS.DASHBOARD}/autoEcole`,
       new: `${ROOTS.DASHBOARD}/autoEcole/new`,

@@ -70,6 +70,23 @@ export const navData = [
     ],
   },
   /**
+   * Event
+   */
+  {
+    subheader: 'Event',
+    items: [
+      {
+        title: 'Event',
+        path: paths.dashboard.event.root,
+        icon: ICONS.blog,
+        children: [
+          { title: 'List', path: paths.dashboard.event.root },
+          { title: 'Create', path: paths.dashboard.event.new },
+        ],
+      },
+    ],
+  },
+  /**
    * Management
    */
   {

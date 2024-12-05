@@ -31,6 +31,11 @@ const BlogPostsPage = lazy(() => import('src/pages/dashboard/post/list'));
 const BlogPostPage = lazy(() => import('src/pages/dashboard/post/details'));
 const BlogNewPostPage = lazy(() => import('src/pages/dashboard/post/new'));
 const BlogEditPostPage = lazy(() => import('src/pages/dashboard/post/edit'));
+// Event
+const EventListPage = lazy(() => import('src/pages/dashboard/event/list'));
+const EventDetailsPage = lazy(() => import('src/pages/dashboard/event/details'));
+const EventCreatePage = lazy(() => import('src/pages/dashboard/event/new'));
+const EventEditPage = lazy(() => import('src/pages/dashboard/event/edit'));
 // App
 const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
@@ -61,6 +66,16 @@ export const dashboardRoutes = [
           { path: 'new', element: <UserCreatePage /> },
           { path: ':id/edit', element: <UserEditPage /> },
           { path: 'account/:id', element: <UserAccountPage /> },
+        ],
+      },
+      {
+        path: 'event',
+        children: [
+          { element: <EventListPage />, index: true },
+          { path: 'list', element: <EventListPage /> },
+          { path: ':id', element: <EventDetailsPage /> },
+          { path: ':id/edit', element: <EventEditPage /> },
+          { path: 'new', element: <EventCreatePage /> },
         ],
       },
       {
