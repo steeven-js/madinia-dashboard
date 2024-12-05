@@ -102,16 +102,11 @@ export function EventNewEditForm({ event: currentEvent }) {
     }
   }, [currentEvent, defaultValues, reset]);
 
-  const handleUpload = async (files) => {
-    // Ensure files is an array
-    const acceptedFiles = Array.isArray(files) ? files : [files];
-
+  const handleUpload = async (acceptedFiles) => {
     try {
+      // Upload des nouveaux fichiers
       const uploadedUrls = await Promise.all(
         acceptedFiles.map(async (file) => {
-          // Check if the file is actually a string/URL (meaning it's already uploaded)
-          if (typeof file === 'string') return file;
-
           const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
           const storageRef = ref(storage, fileName);
           await uploadBytes(storageRef, file);
@@ -120,11 +115,12 @@ export function EventNewEditForm({ event: currentEvent }) {
         })
       );
 
-      return uploadedUrls;
+      // Ajouter les nouvelles URLs aux images existantes
+      setValue('images', [...values.images, ...uploadedUrls]);
+      toast.success('Images uploadées avec succès!');
     } catch (error) {
       console.error('Error uploading images:', error);
-      toast.error('Failed to upload images');
-      throw error;
+      toast.error("Échec de l'upload des images");
     }
   };
 
@@ -228,14 +224,19 @@ export function EventNewEditForm({ event: currentEvent }) {
             thumbnail
             name="images"
             maxSize={3145728}
+            onDrop={handleUpload}
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
-            onDrop={handleUpload}
             helperText="Format accepté : images uniquement. Taille maximale : 3MB"
             files={values.images.map((url) => ({
               preview: url,
               url,
+              type: 'image/*',
             }))}
+            // Ajouter ces props pour plus de contrôle
+            accept={{
+              'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+            }}
           />
         </Stack>
       </Stack>
