@@ -134,23 +134,11 @@ export function EventNewEditForm({ event: currentEvent }) {
         return;
       }
 
-      // Créer une copie des données sans le champ images
-      const { images, ...eventData } = data;
-
-      // Si on a des fichiers à uploader
-      if (images?.length) {
-        try {
-          // Upload des fichiers et récupération des URLs
-          const uploadedUrls = await handleUpload(images);
-
-          // Ajouter les URLs au document
-          eventData.images = uploadedUrls;
-        } catch (uploadError) {
-          console.error('Error uploading files:', uploadError);
-          toast.error("Erreur lors de l'upload des images");
-          return;
-        }
-      }
+      // Les images sont déjà sous forme d'URLs à ce stade
+      const eventData = {
+        ...data,
+        images: data.images || [], // S'assurer que images n'est jamais undefined
+      };
 
       if (currentEvent) {
         const eventRef = doc(db, 'events', currentEvent.id);
