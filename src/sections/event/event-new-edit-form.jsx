@@ -18,9 +18,8 @@ import { Iconify } from 'src/components/iconify';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { db, storage } from 'src/utils/firebase';
 import { toast } from 'sonner';
-import { arrayUnion, collection, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import useImageUpload from 'src/hooks/use-event-image';
-import { LoadingButton } from '@mui/lab';
 import { paths } from 'src/routes/paths';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useRouter } from 'src/routes/hooks';
@@ -37,6 +36,9 @@ export const NewEventSchema = zod.object({
   }),
   price: zod.number().min(0, { message: 'Le prix doit être de 0 ou plus' }),
   description: zod.string().min(1, { message: 'La description est requise !' }),
+  image: schemaHelper.file({
+    message: { required_error: 'Single upload is required!' },
+  }),
   images: schemaHelper.files({
     // Changé de 'images' à 'images' pour correspondre au nom du champ
     message: { required_error: 'Les images sont requises !' },
@@ -65,6 +67,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       location: currentEvent?.location || '',
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
+      image: currentEvent?.image || '', // Initialiser avec l'image existante
       images: currentEvent?.images || [],
       speakers: currentEvent?.speakers || [],
       participants: {
@@ -101,6 +104,23 @@ export function EventNewEditForm({ event: currentEvent }) {
       reset(defaultValues);
     }
   }, [currentEvent, defaultValues, reset]);
+
+  const handleOneUpload = async (acceptedFile) => {
+    try {
+      const file = acceptedFile[0]; // Prendre le premier fichier car c'est un upload unique
+      const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+
+      // Définir l'URL comme valeur de l'image
+      setValue('image', url);
+      toast.success('Image uploadée avec succès!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Échec de l'upload de l'image");
+    }
+  };
 
   const handleUpload = async (acceptedFiles) => {
     try {
@@ -204,6 +224,26 @@ export function EventNewEditForm({ event: currentEvent }) {
         </Field.Select>
 
         <Field.Text name="description" label="Description" multiline rows={4} required />
+
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2">Image Principale</Typography>
+          <Field.Upload
+            single
+            name="image"
+            maxSize={3145728}
+            onDrop={handleOneUpload}
+            onRemove={() => setValue('image', '')}
+            helperText="Format accepté : image uniquement. Taille maximale : 3MB"
+            file={{
+              preview: currentEvent.image,
+              url: currentEvent.image,
+              type: 'image/*',
+            }}
+            accept={{
+              'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+            }}
+          />
+        </Stack>
 
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Images</Typography>
