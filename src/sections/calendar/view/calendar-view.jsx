@@ -43,6 +43,8 @@ export function CalendarView() {
 
   const { events, eventsLoading } = useGetEvents();
 
+  // console.log('events', events);
+
   const filters = useSetState({
     colors: [],
     startDate: null,
@@ -107,13 +109,13 @@ export function CalendarView() {
           justifyContent="space-between"
           sx={{ mb: { xs: 3, md: 5 } }}
         >
-          <Typography variant="h4">Calendar</Typography>
+          <Typography variant="h4">Calendrier</Typography>
           <Button
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={onOpenForm}
           >
-            New event
+            Nouvel événement
           </Button>
         </Stack>
 
@@ -164,6 +166,15 @@ export function CalendarView() {
                 timeGridPlugin,
                 interactionPlugin,
               ]}
+              // Traductions pour le calendrier
+              locale="fr"
+              buttonText={{
+                today: "Aujourd'hui",
+                month: 'Mois',
+                week: 'Semaine',
+                day: 'Jour',
+                list: 'Liste',
+              }}
             />
           </StyledCalendar>
         </Card>
@@ -188,7 +199,7 @@ export function CalendarView() {
         }}
       >
         <DialogTitle sx={{ minHeight: 76 }}>
-          {openForm && <> {currentEvent?.id ? 'Edit' : 'Add'} event</>}
+          {openForm && <>{currentEvent?.id ? 'Modifier' : 'Ajouter'} un événement</>}
         </DialogTitle>
 
         <CalendarForm

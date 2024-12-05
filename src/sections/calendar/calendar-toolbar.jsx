@@ -13,9 +13,9 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 const VIEW_OPTIONS = [
-  { value: 'dayGridMonth', label: 'Month', icon: 'mingcute:calendar-month-line' },
-  { value: 'timeGridWeek', label: 'Week', icon: 'mingcute:calendar-week-line' },
-  { value: 'timeGridDay', label: 'Day', icon: 'mingcute:calendar-day-line' },
+  { value: 'dayGridMonth', label: 'Mois', icon: 'mingcute:calendar-month-line' },
+  { value: 'timeGridWeek', label: 'Semaine', icon: 'mingcute:calendar-week-line' },
+  { value: 'timeGridDay', label: 'Jour', icon: 'mingcute:calendar-day-line' },
   { value: 'listWeek', label: 'Agenda', icon: 'fluent:calendar-agenda-24-regular' },
 ];
 
@@ -56,23 +56,23 @@ export function CalendarToolbar({
         </Button>
 
         <Stack direction="row" alignItems="center" spacing={1}>
-          <IconButton onClick={onPrevDate}>
+          <IconButton onClick={onPrevDate} aria-label="Mois précédent">
             <Iconify icon="eva:arrow-ios-back-fill" />
           </IconButton>
 
           <Typography variant="h6">{date}</Typography>
 
-          <IconButton onClick={onNextDate}>
+          <IconButton onClick={onNextDate} aria-label="Mois suivant">
             <Iconify icon="eva:arrow-ios-forward-fill" />
           </IconButton>
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1}>
           <Button size="small" color="error" variant="contained" onClick={onToday}>
-            Today
+            Aujourd'hui
           </Button>
 
-          <IconButton onClick={onOpenFilters}>
+          <IconButton onClick={onOpenFilters} aria-label="Filtres">
             <Badge color="error" variant="dot" invisible={!canReset}>
               <Iconify icon="ic:round-filter-list" />
             </Badge>

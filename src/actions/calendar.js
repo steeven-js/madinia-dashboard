@@ -1,39 +1,56 @@
-import { useMemo } from 'react';
-import useSWR, { mutate } from 'swr';
+import { useMemo, useState, useEffect } from 'react';
+import {
+  query,
+  addDoc,
+  orderBy,
+  updateDoc,
+  deleteDoc,
+  collection,
+  onSnapshot,
+  getFirestore,
+  doc as firestoreDoc,
+} from 'firebase/firestore';
+import { auth } from 'src/utils/firebase';
 
-import axios, { fetcher, endpoints } from 'src/utils/axios';
-
-// ----------------------------------------------------------------------
-
-const enableServer = false;
-
-const CALENDAR_ENDPOINT = endpoints.calendar;
-
-const swrOptions = {
-  revalidateIfStale: enableServer,
-  revalidateOnFocus: enableServer,
-  revalidateOnReconnect: enableServer,
-};
+const db = getFirestore();
 
 // ----------------------------------------------------------------------
 
 export function useGetEvents() {
-  const { data, isLoading, error, isValidating } = useSWR(CALENDAR_ENDPOINT, fetcher, swrOptions);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const memoizedValue = useMemo(() => {
-    const events = data?.events.map((event) => ({
-      ...event,
-      textColor: event.color,
-    }));
+  useEffect(() => {
+    const eventsRef = collection(db, 'calendar-events');
+    const q = query(eventsRef, orderBy('start'));
 
-    return {
-      events: events || [],
-      eventsLoading: isLoading,
-      eventsError: error,
-      eventsValidating: isValidating,
-      eventsEmpty: !isLoading && !data?.events.length,
-    };
-  }, [data?.events, error, isLoading, isValidating]);
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const fetchedEvents = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          textColor: doc.data().color // Ensure the color is set as textColor
+        }));
+        setEvents(fetchedEvents);
+        setLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const memoizedValue = useMemo(() => ({
+    events: events || [],
+    eventsLoading: loading,
+    eventsError: error,
+    eventsValidating: false,
+    eventsEmpty: !loading && events.length === 0,
+  }), [events, loading, error]);
 
   return memoizedValue;
 }
@@ -41,82 +58,90 @@ export function useGetEvents() {
 // ----------------------------------------------------------------------
 
 export async function createEvent(eventData) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { eventData };
-    await axios.post(CALENDAR_ENDPOINT, data);
+  try {
+    // Récupérer l'utilisateur connecté
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No authenticated user found');
+    }
+
+    const eventsRef = collection(db, 'calendar-events');
+
+    // Préparer les données avec les informations supplémentaires
+    const { id, ...dataToSave } = eventData;
+    const enrichedData = {
+      ...dataToSave,
+      userId: user.uid,
+      userDisplayName: user.displayName || 'Anonymous',
+      createdAt: Date.now(), // Utilisation du serverTimestamp pour la cohérence
+    };
+
+    // Créer le document
+    const docRef = await addDoc(eventsRef, enrichedData);
+
+    // Retourner les données avec l'ID
+    return {
+      ...enrichedData,
+      id: docRef.id,
+      createdAt: new Date(), // On retourne une date JavaScript car serverTimestamp n'est pas encore résolu
+    };
+
+  } catch (error) {
+    console.error("Error creating event: ", error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    CALENDAR_ENDPOINT,
-    (currentData) => {
-      const currentEvents = currentData?.events;
-
-      const events = [...currentEvents, eventData];
-
-      return { ...currentData, events };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function updateEvent(eventData) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { eventData };
-    await axios.put(CALENDAR_ENDPOINT, data);
+  try {
+    const { id, ...dataToUpdate } = eventData;
+
+    if (!id) {
+      throw new Error("Event ID is missing");
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('No authenticated user found');
+    }
+
+    // Enrichir les données avec les informations de mise à jour
+    const enrichedData = {
+      ...dataToUpdate,
+      userId: user.uid,
+      userDisplayName: user.displayName || 'Anonymous',
+      updatedAt: Date.now(),
+    };
+
+    const eventRef = firestoreDoc(db, 'calendar-events', id);
+    await updateDoc(eventRef, enrichedData);
+
+    // Retourner les données mises à jour avec l'ID
+    return {
+      ...enrichedData,
+      id,
+      updatedAt: new Date(), // On retourne une date JavaScript car serverTimestamp n'est pas encore résolu
+    };
+
+  } catch (error) {
+    console.error("Error updating event: ", error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    CALENDAR_ENDPOINT,
-    (currentData) => {
-      const currentEvents = currentData?.events;
-
-      const events = currentEvents.map((event) =>
-        event.id === eventData.id ? { ...event, ...eventData } : event
-      );
-
-      return { ...currentData, events };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteEvent(eventId) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { eventId };
-    await axios.patch(CALENDAR_ENDPOINT, data);
+  try {
+    if (!eventId) {
+      throw new Error("Event ID is missing");
+    }
+    const eventRef = firestoreDoc(db, 'calendar-events', eventId);
+    await deleteDoc(eventRef);
+  } catch (error) {
+    console.error("Error deleting event: ", error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    CALENDAR_ENDPOINT,
-    (currentData) => {
-      const currentEvents = currentData?.events;
-
-      const events = currentEvents.filter((event) => event.id !== eventId);
-
-      return { ...currentData, events };
-    },
-    false
-  );
 }

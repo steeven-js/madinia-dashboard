@@ -80,24 +80,30 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
         } else {
           await createEvent(eventData);
           toast.success('Create success!');
+          // You might want to do something with createdEvent here
         }
         onClose();
         reset();
       }
     } catch (error) {
       console.error(error);
+      toast.error('Operation failed');
     }
   });
 
   const onDelete = useCallback(async () => {
     try {
-      await deleteEvent(`${currentEvent?.id}`);
+      if (!currentEvent?.firestoreId) {
+        throw new Error('Firestore ID is missing');
+      }
+      await deleteEvent(currentEvent.id, currentEvent.firestoreId);
       toast.success('Delete success!');
       onClose();
     } catch (error) {
       console.error(error);
+      toast.error('Delete failed');
     }
-  }, [currentEvent?.id, onClose]);
+  }, [currentEvent?.id, currentEvent?.firestoreId, onClose]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>

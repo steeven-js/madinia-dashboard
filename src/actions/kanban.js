@@ -1,37 +1,57 @@
-import { useMemo } from 'react';
-import useSWR, { mutate } from 'swr';
+import { v4 as uuidv4 } from 'uuid';
+import { useMemo, useState, useEffect } from 'react';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  arrayUnion,
+  onSnapshot,
+  getFirestore,
+} from 'firebase/firestore';
 
-import axios, { fetcher, endpoints } from 'src/utils/axios';
-
-// ----------------------------------------------------------------------
-
-const enableServer = false;
-
-const KANBAN_ENDPOINT = endpoints.kanban;
-
-const swrOptions = {
-  revalidateIfStale: enableServer,
-  revalidateOnFocus: enableServer,
-  revalidateOnReconnect: enableServer,
-};
+const db = getFirestore();
 
 // ----------------------------------------------------------------------
 
 export function useGetBoard() {
-  const { data, isLoading, error, isValidating } = useSWR(KANBAN_ENDPOINT, fetcher, swrOptions);
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    const unsubscribe = onSnapshot(boardRef,
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          setData(docSnapshot.data());
+        } else {
+          setError('No board data found');
+        }
+        setIsLoading(false);
+      },
+      (err) => {
+        setError(`Error fetching board data: ${err.message}`);
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup function to unsubscribe from the listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
 
   const memoizedValue = useMemo(() => {
-    const tasks = data?.board.tasks ?? {};
-    const columns = data?.board.columns ?? [];
+    const tasks = data?.board?.tasks ?? {};
+    const columns = data?.board?.columns ?? [];
 
     return {
       board: { tasks, columns },
       boardLoading: isLoading,
       boardError: error,
-      boardValidating: isValidating,
       boardEmpty: !isLoading && !columns.length,
     };
-  }, [data?.board.columns, data?.board.tasks, error, isLoading, isValidating]);
+  }, [data, error, isLoading]);
 
   return memoizedValue;
 }
@@ -39,282 +59,277 @@ export function useGetBoard() {
 // ----------------------------------------------------------------------
 
 export async function createColumn(columnData) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-column' } });
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Utiliser le nom fourni ou 'Untitled' si le nom est vide
+    const columnName = columnData.name.trim() || 'Untitled';
+
+    // Générer un nouvel ID unique pour la colonne avec le format demandé
+    const newColumnId = `column-${columnName}-${uuidv4()}`;
+
+    // Créer l'objet de la nouvelle colonne
+    const newColumn = {
+      id: newColumnId,
+      name: columnName,
+      // Ajoutez d'autres propriétés si nécessaire
+    };
+
+    // Mettre à jour le tableau des colonnes et créer une entrée vide pour les tâches
+    await updateDoc(boardRef, {
+      'board.columns': arrayUnion(newColumn),
+      [`board.tasks.${newColumnId}`]: []
+    });
+
+    console.log('New column created successfully');
+    return newColumn;
+  } catch (error) {
+    console.error('Error creating new column:', error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
-
-      // add new column in board.columns
-      const columns = [...board.columns, columnData];
-
-      // add new task in board.tasks
-      const tasks = { ...board.tasks, [columnData.id]: [] };
-
-      return { ...currentData, board: { ...board, columns, tasks } };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function updateColumn(columnId, columnName) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId, columnName };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-column' } });
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Utiliser le nom fourni ou 'Untitled' si le nom est vide
+    const newColumnName = columnName.trim() || 'Untitled';
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.columns) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver l'index de la colonne à mettre à jour
+    const {columns} = boardData.board;
+    const columnIndex = columns.findIndex((column) => column.id === columnId);
+
+    if (columnIndex === -1) {
+      throw new Error(`Column with ID ${columnId} not found`);
+    }
+
+    // Mettre à jour le nom de la colonne
+    columns[columnIndex].name = newColumnName;
+
+    // Mettre à jour les données du tableau avec updateDoc
+    await updateDoc(boardRef, {
+      'board.columns': columns
+    });
+
+    console.log(`Column ${columnId} updated successfully to ${newColumnName}`);
+    return { id: columnId, name: newColumnName };
+  } catch (error) {
+    console.error('Error updating column:', error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
-
-      const columns = board.columns.map((column) =>
-        column.id === columnId
-          ? {
-              // Update data when found
-              ...column,
-              name: columnName,
-            }
-          : column
-      );
-
-      return { ...currentData, board: { ...board, columns } };
-    },
-    false
-  );
 }
+
 
 // ----------------------------------------------------------------------
 
 export async function moveColumn(updateColumns) {
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
+// updateColumns est un objet avec les colonnes mises à jour qui doit remplacer les colonnes actuelles avec une lecture en temps réel
 
-      return { ...currentData, board: { ...board, columns: updateColumns } };
-    },
-    false
-  );
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
 
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { updateColumns };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-column' } });
+    // Mettre à jour les colonnes du tableau
+    await updateDoc(boardRef, {
+      'board.columns': updateColumns
+    });
+
+    console.log('Columns moved successfully');
+  } catch (error) {
+    console.error('Error moving columns:', error);
+    throw error;
   }
 }
 
 // ----------------------------------------------------------------------
 
 export async function clearColumn(columnId) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'clear-column' } });
+// Supprime toutes les tâches de la colonne
+
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Supprimer toutes les tâches de la colonne
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: []
+    });
+
+    console.log(`Tasks in column ${columnId} cleared successfully`);
+  } catch (error) {
+    console.error('Error clearing tasks:', error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
-
-      // remove all tasks in column
-      const tasks = { ...board.tasks, [columnId]: [] };
-
-      return { ...currentData, board: { ...board, tasks } };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteColumn(columnId) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-column' } });
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.columns) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Filtrer les colonnes pour supprimer la colonne avec l'ID fourni
+    const updatedColumns = boardData.board.columns.filter((column) => column.id !== columnId);
+
+    // Supprimer le tableau de tâches associé à la colonne
+    delete boardData.board.tasks[columnId];
+
+    // Mettre à jour les données du tableau avec updateDoc
+    await updateDoc(boardRef, {
+      'board.columns': updatedColumns,
+      'board.tasks': boardData.board.tasks
+    });
+
+    console.log(`Column ${columnId} deleted successfully`);
+  } catch (error) {
+    console.error('Error deleting column:', error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
-
-      // delete column in board.columns
-      const columns = board.columns.filter((column) => column.id !== columnId);
-
-      // delete tasks by column deleted
-      const tasks = Object.keys(board.tasks)
-        .filter((key) => key !== columnId)
-        .reduce((obj, key) => {
-          obj[key] = board.tasks[key];
-          return obj;
-        }, {});
-
-      return { ...currentData, board: { ...board, columns, tasks } };
-    },
-    false
-  );
 }
+
 
 // ----------------------------------------------------------------------
 
 export async function createTask(columnId, taskData) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId, taskData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-task' } });
-  }
+// Crée une nouvelle tâche dans la colonne spécifiée
 
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
+    try {
+      const boardRef = doc(db, 'boards', 'main-board');
 
-      // add task in board.tasks
-      const tasks = { ...board.tasks, [columnId]: [taskData, ...board.tasks[columnId]] };
+      // Générer un nouvel ID unique pour la tâche avec le format demandé
+      const newTaskId = `task-${uuidv4()}`;
 
-      return { ...currentData, board: { ...board, tasks } };
-    },
-    false
-  );
+      // Créer l'objet de la nouvelle tâche
+      const newTask = {
+        id: newTaskId,
+        ...taskData
+      };
+
+      // Mettre à jour le tableau des tâches de la colonne avec la nouvelle tâche
+      await updateDoc(boardRef, {
+        [`board.tasks.${columnId}`]: arrayUnion(newTask)
+      });
+
+      console.log('New task created successfully');
+      return newTask;
+    } catch (error) {
+      console.error('Error creating new task:', error);
+      throw error;
+    }
 }
 
 // ----------------------------------------------------------------------
 
 export async function updateTask(columnId, taskData) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId, taskData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-task' } });
+  // Met à jour une tâche dans la colonne spécifiée
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver l'index de la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskData.id);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskData.id} not found in column ${columnId}`);
+    }
+
+    // Mettre à jour les données de la tâche
+    columnTasks[taskIndex] = { ...columnTasks[taskIndex], ...taskData };
+
+    // Utiliser setDoc avec merge: true pour mettre à jour uniquement les champs spécifiés
+    await setDoc(
+      boardRef,
+      {
+        board: {
+          tasks: {
+            [columnId]: columnTasks,
+          },
+        },
+      },
+      { merge: true }
+    );
+
+    console.log(`Task ${taskData.id} updated successfully`);
+    return columnTasks[taskIndex];
+  } catch (error) {
+    console.error('Error updating task:', error);
+    throw error;
   }
-
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
-
-      // tasks in column
-      const tasksInColumn = board.tasks[columnId];
-
-      // find and update task
-      const updateTasks = tasksInColumn.map((task) =>
-        task.id === taskData.id
-          ? {
-              // Update data when found
-              ...task,
-              ...taskData,
-            }
-          : task
-      );
-
-      const tasks = { ...board.tasks, [columnId]: updateTasks };
-
-      return { ...currentData, board: { ...board, tasks } };
-    },
-    false
-  );
 }
 
 // ----------------------------------------------------------------------
 
 export async function moveTask(updateTasks) {
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
+// updateTasks est un objet avec les tâches mises à jour qui doit remplacer les tâches actuelles
 
-      // update board.tasks
-      const tasks = updateTasks;
+    try {
+      const boardRef = doc(db, 'boards', 'main-board');
 
-      return { ...currentData, board: { ...board, tasks } };
-    },
-    false
-  );
+      // Mettre à jour les tâches du tableau
+      await updateDoc(boardRef, {
+        'board.tasks': updateTasks
+      });
 
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { updateTasks };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-task' } });
-  }
+      console.log('Tasks moved successfully');
+    } catch (error) {
+      console.error('Error moving tasks:', error);
+      throw error;
+    }
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteTask(columnId, taskId) {
-  /**
-   * Work on server
-   */
-  if (enableServer) {
-    const data = { columnId, taskId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-task' } });
-  }
+// Supprime une tâche de la colonne spécifiée
 
-  /**
-   * Work in local
-   */
-  mutate(
-    KANBAN_ENDPOINT,
-    (currentData) => {
-      const { board } = currentData;
+      try {
+        const boardRef = doc(db, 'boards', 'main-board');
 
-      // delete task in column
-      const tasks = {
-        ...board.tasks,
-        [columnId]: board.tasks[columnId].filter((task) => task.id !== taskId),
-      };
+        // Récupérer les données actuelles du tableau
+        const boardSnapshot = await getDoc(boardRef);
+        const boardData = boardSnapshot.data();
 
-      return { ...currentData, board: { ...board, tasks } };
-    },
-    false
-  );
+        if (!boardData || !boardData.board || !boardData.board.tasks) {
+          throw new Error('Invalid board structure');
+        }
+
+        // Filtrer les tâches pour supprimer la tâche avec l'ID fourni
+        const updatedTasks = boardData.board.tasks[columnId].filter((task) => task.id !== taskId);
+
+        // Mettre à jour les données du tableau avec updateDoc
+        await updateDoc(boardRef, {
+          [`board.tasks.${columnId}`]: updatedTasks
+        });
+
+        console.log(`Task ${taskId} deleted successfully`);
+      } catch (error) {
+        console.error('Error deleting task:', error);
+        throw error;
+      }
 }
