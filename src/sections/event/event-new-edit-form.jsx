@@ -1,34 +1,33 @@
 import { z as zod } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo, useEffect, useCallback } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
-import LoadingButton from '@mui/lab/LoadingButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import { Button, MenuItem, IconButton } from '@mui/material';
-
-import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
-
-import useImageUpload from 'src/hooks/use-event-image';
-import { createOrUpdateEvent } from 'src/hooks/use-event';
-
-import { db, storage } from 'src/utils/firebase';
-
-import { toast } from 'src/components/snackbar';
-import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import {
+  Box,
+  Button,
+  Card,
+  CardHeader,
+  Divider,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { Iconify } from 'src/components/iconify';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { db, storage } from 'src/utils/firebase';
+import { toast } from 'sonner';
+import { arrayUnion, collection, doc, setDoc, updateDoc } from 'firebase/firestore';
+import useImageUpload from 'src/hooks/use-event-image';
+import { LoadingButton } from '@mui/lab';
+import { paths } from 'src/routes/paths';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useRouter } from 'src/routes/hooks';
 
 // ----------------------------------------------------------------------
 
+// Schema definition remains the same...
 export const NewEventSchema = zod.object({
   title: zod.string().min(1, { message: 'Le titre est requis !' }),
   status: zod.string(),
@@ -39,6 +38,7 @@ export const NewEventSchema = zod.object({
   price: zod.number().min(0, { message: 'Le prix doit être de 0 ou plus' }),
   description: zod.string().min(1, { message: 'La description est requise !' }),
   images: schemaHelper.files({
+    // Changé de 'images' à 'images' pour correspondre au nom du champ
     message: { required_error: 'Les images sont requises !' },
   }),
   speakers: zod.array(zod.string()),
@@ -55,7 +55,7 @@ export const NewEventSchema = zod.object({
 export function EventNewEditForm({ event: currentEvent }) {
   const router = useRouter();
 
-  const { removeImage, removeAllImages, isUploading } = useImageUpload(currentEvent?.id);
+  const { removeImage, removeAllImages } = useImageUpload(currentEvent?.id);
 
   const defaultValues = useMemo(
     () => ({
@@ -87,9 +87,10 @@ export function EventNewEditForm({ event: currentEvent }) {
   });
 
   const {
-    reset,
     watch,
+    reset,
     setValue,
+    handleSubmit,
     formState: { isSubmitting },
   } = methods;
 
@@ -111,25 +112,14 @@ export function EventNewEditForm({ event: currentEvent }) {
           // Check if the file is actually a string/URL (meaning it's already uploaded)
           if (typeof file === 'string') return file;
 
-          const fileName = `events/${currentEvent?.id || 'temp'}/${Date.now()}_${file.name}`;
+          const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
           const storageRef = ref(storage, fileName);
           await uploadBytes(storageRef, file);
           const url = await getDownloadURL(storageRef);
-
-          if (currentEvent) {
-            const eventRef = doc(db, 'events', currentEvent.id);
-            await updateDoc(eventRef, {
-              images: arrayUnion(url),
-            });
-          }
-
           return url;
         })
       );
 
-      // Update the form value with new images
-      setValue('images', [...values.images, ...uploadedUrls]);
-      toast.success('Images uploaded successfully!');
       return uploadedUrls;
     } catch (error) {
       console.error('Error uploading images:', error);
@@ -140,22 +130,46 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const onSubmit = async (data) => {
     try {
-      // Appel à la fonction createOrUpdateEvent
-      const response = await createOrUpdateEvent(data, currentEvent?.id);
-      if (response.success) {
-        toast.success(currentEvent ? 'Update success!' : 'Create success!');
-        // Reset avec les nouvelles données
-        if (response.data) {
-          reset(response.data);
+      console.log('Form data:', data);
+
+      // Validation supplémentaire si nécessaire
+      if (!data.title || !data.location) {
+        toast.error('Veuillez remplir tous les champs requis');
+        return;
+      }
+
+      // Créer une copie des données sans le champ images
+      const { images, ...eventData } = data;
+
+      // Si on a des fichiers à uploader
+      if (images?.length) {
+        try {
+          // Upload des fichiers et récupération des URLs
+          const uploadedUrls = await handleUpload(images);
+
+          // Ajouter les URLs au document
+          eventData.images = uploadedUrls;
+        } catch (uploadError) {
+          console.error('Error uploading files:', uploadError);
+          toast.error("Erreur lors de l'upload des images");
+          return;
         }
-        // Redirection
+      }
+
+      if (currentEvent) {
+        const eventRef = doc(db, 'events', currentEvent.id);
+        await updateDoc(eventRef, eventData);
         router.push(paths.dashboard.event.root);
       } else {
-        toast.error(response.error || 'Operation failed');
+        const eventsRef = collection(db, 'events');
+        await setDoc(doc(eventsRef), eventData);
+        router.push(paths.dashboard.event.root);
       }
+
+      toast.success(currentEvent ? 'Event updated!' : 'Event created!');
     } catch (error) {
-      console.error('Form submission error:', error);
-      toast.error(error.message || 'An unexpected error occurred');
+      console.error('Error saving event:', error);
+      toast.error('Failed to save event');
     }
   };
 
@@ -182,6 +196,8 @@ export function EventNewEditForm({ event: currentEvent }) {
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text name="title" label="Titre de l'événement" required />
 
+        <Field.DatePicker name="date" label="Date de l'événement" required />
+
         <Field.Select fullWidth name="status" label="Statut">
           {[
             { value: 'draft', label: 'Brouillon' },
@@ -203,6 +219,8 @@ export function EventNewEditForm({ event: currentEvent }) {
           ))}
         </Field.Select>
 
+        <Field.Text name="description" label="Description" multiline rows={4} required />
+
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Images</Typography>
           <Field.Upload
@@ -213,7 +231,6 @@ export function EventNewEditForm({ event: currentEvent }) {
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
             onDrop={handleUpload}
-            disabled={isUploading}
             helperText="Format accepté : images uniquement. Taille maximale : 3MB"
             files={values.images.map((url) => ({
               preview: url,
@@ -289,24 +306,20 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const renderActions = (
     <Stack spacing={3} direction="row" alignItems="center" flexWrap="wrap">
-      <LoadingButton
+      <Button
         type="submit"
-        variant="contained"
+        variant="outlined"
         size="large"
-        onClick={onSubmit}
-        loading={isSubmitting}
+        disabled={isSubmitting}
+        sx={{ color: 'error.main' }}
       >
-        {!currentEvent ? "Créer l'événement" : 'Enregistrer les modifications'}
-      </LoadingButton>
-
-      {/* <Button variant="outlined" size="large" onClick={onSubmit}>
-        {!currentEvent ? "Créer l'événement" : 'Enregistrer les modifications'}
-      </Button> */}
+        {!currentEvent ? 'Create event' : 'Save changes'}
+      </Button>
     </Stack>
   );
 
   return (
-    <Form methods={methods} onSubmit={onSubmit}>
+    <Form methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 880 } }}>
         {renderDetails}
 
