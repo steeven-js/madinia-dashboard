@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { doc, query, limit, setDoc, orderBy, getDocs, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
-import { db } from 'src/utils/firebase';
+import { db, storage } from 'src/utils/firebase';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 // Obtenir la liste des factures
 export function useEvents() {
@@ -184,3 +185,15 @@ export function useEventsServices() {
 
   return { eventsServices, loading };
 }
+
+export const uploadImage = async (file) => {
+  try {
+    const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+};

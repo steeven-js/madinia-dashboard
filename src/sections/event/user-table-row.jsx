@@ -1,9 +1,8 @@
-import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
+import { Typography } from '@mui/material';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
@@ -13,57 +12,71 @@ import IconButton from '@mui/material/IconButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { fDateTime } from 'src/utils/format-time';
+import { fCurrency } from 'src/utils/format-number';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
-import { UserQuickEditForm } from './user-quick-edit-form';
-
 // ----------------------------------------------------------------------
 
-export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
+export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
   const confirm = useBoolean();
-
   const popover = usePopover();
-
-  const quickEdit = useBoolean();
 
   return (
     <>
-      <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
+      <TableRow hover selected={selected}>
         <TableCell padding="checkbox">
-          <Checkbox id={row.id} checked={selected} onClick={onSelectRow} />
+          <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
         <TableCell>
           <Stack spacing={2} direction="row" alignItems="center">
-            <Avatar alt={row.name} src={row.avatarUrl} />
+            <Avatar
+              alt={row.title}
+              src={row.images[0]}
+              variant="rounded"
+              sx={{ width: 64, height: 64 }}
+            />
 
-            <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
-              <Link color="inherit" onClick={onEditRow} sx={{ cursor: 'pointer' }}>
-                {row.name}
+            <Stack spacing={0.5}>
+              <Link
+                color="inherit"
+                onClick={onEditRow}
+                sx={{ cursor: 'pointer', typography: 'subtitle2' }}
+              >
+                {row.title}
               </Link>
-              <Box component="span" sx={{ color: 'text.disabled' }}>
-                {row.email}
-              </Box>
+
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {row.description.length > 25
+                  ? `${row.description.slice(0, 25)}...`
+                  : row.description}
+              </Typography>
             </Stack>
           </Stack>
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
+        <TableCell>{fDateTime(row.date)}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.company}</TableCell>
+        <TableCell>{row.location}</TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.role}</TableCell>
+        <TableCell>
+          {row.participants.current}/{row.participants.max}
+        </TableCell>
+
+        <TableCell>{fCurrency(row.price)}</TableCell>
 
         <TableCell>
           <Label
             variant="soft"
             color={
-              (row.status === 'active' && 'success') ||
-              (row.status === 'pending' && 'warning') ||
-              (row.status === 'banned' && 'error') ||
+              (row.status === 'current' && 'success') ||
+              (row.status === 'past' && 'warning') ||
+              (row.status === 'cancelled' && 'error') ||
               'default'
             }
           >
@@ -72,32 +85,24 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         </TableCell>
 
         <TableCell>
-          <Stack direction="row" alignItems="center">
-            <Tooltip title="Quick Edit" placement="top" arrow>
-              <IconButton
-                color={quickEdit.value ? 'inherit' : 'default'}
-                onClick={quickEdit.onTrue}
-              >
-                <Iconify icon="solar:pen-bold" />
-              </IconButton>
-            </Tooltip>
-
-            <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
-              <Iconify icon="eva:more-vertical-fill" />
-            </IconButton>
-          </Stack>
+          <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
+            <Iconify icon="eva:more-vertical-fill" />
+          </IconButton>
         </TableCell>
       </TableRow>
 
-      <UserQuickEditForm currentUser={row} open={quickEdit.value} onClose={quickEdit.onFalse} />
-
-      <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={popover.onClose}
-        slotProps={{ arrow: { placement: 'right-top' } }}
-      >
+      <CustomPopover open={popover.open} anchorEl={popover.anchorEl} onClose={popover.onClose}>
         <MenuList>
+          <MenuItem
+            onClick={() => {
+              onEditRow();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="solar:pen-bold" />
+            Edit
+          </MenuItem>
+
           <MenuItem
             onClick={() => {
               confirm.onTrue();
@@ -108,16 +113,6 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
             <Iconify icon="solar:trash-bin-trash-bold" />
             Delete
           </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              onEditRow();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            Edit
-          </MenuItem>
         </MenuList>
       </CustomPopover>
 
@@ -125,7 +120,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure want to delete?"
+        content="Are you sure want to delete this event?"
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
             Delete

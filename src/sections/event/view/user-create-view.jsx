@@ -4,7 +4,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { UserNewEditForm } from '../user-new-edit-form';
+import { EventNewEditForm } from '../user-new-edit-form';
 
 // ----------------------------------------------------------------------
 
@@ -12,16 +12,16 @@ export function UserCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Create a new user"
+        heading="Create a new event"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.root },
-          { name: 'New user' },
+          { name: 'Event', href: paths.dashboard.event.root },
+          { name: 'New event' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <UserNewEditForm />
+      <EventNewEditForm />
     </DashboardContent>
   );
 }

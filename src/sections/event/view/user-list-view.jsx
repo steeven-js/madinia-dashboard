@@ -19,7 +19,6 @@ import { useSetState } from 'src/hooks/use-set-state';
 
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _roles, _userList, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -39,35 +38,37 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { UserTableRow } from '../user-table-row';
-import { UserTableToolbar } from '../user-table-toolbar';
-import { UserTableFiltersResult } from '../user-table-filters-result';
+import { EventTableRow } from '../user-table-row';
+import { EventTableToolbar } from '../user-table-toolbar';
+import { EventTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'current', label: 'Current' },
+  { value: 'past', label: 'Past' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name' },
-  { id: 'phoneNumber', label: 'Phone number', width: 180 },
-  { id: 'company', label: 'Company', width: 220 },
-  { id: 'role', label: 'Role', width: 180 },
+  { id: 'title', label: 'Event' },
+  { id: 'date', label: 'Date', width: 180 },
+  { id: 'location', label: 'Location', width: 180 },
+  { id: 'participants', label: 'Participants', width: 140 },
+  { id: 'price', label: 'Price', width: 120 },
   { id: 'status', label: 'Status', width: 100 },
   { id: '', width: 88 },
 ];
 
 // ----------------------------------------------------------------------
 
-export function UserListView() {
+export function EventListView({ events }) {
   const table = useTable();
-
   const router = useRouter();
-
   const confirm = useBoolean();
-
-  const [tableData, setTableData] = useState(_userList);
-
-  const filters = useSetState({ name: '', role: [], status: 'all' });
+  const [tableData, setTableData] = useState(events);
+  const filters = useSetState({ title: '', status: 'all' });
 
   const dataFiltered = applyFilter({
     inputData: tableData,
@@ -76,41 +77,32 @@ export function UserListView() {
   });
 
   const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
-
-  const canReset =
-    !!filters.state.name || filters.state.role.length > 0 || filters.state.status !== 'all';
-
+  const canReset = !!filters.state.title || filters.state.status !== 'all';
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
   const handleDeleteRow = useCallback(
     (id) => {
       const deleteRow = tableData.filter((row) => row.id !== id);
-
-      toast.success('Delete success!');
-
       setTableData(deleteRow);
-
       table.onUpdatePageDeleteRow(dataInPage.length);
+      toast.success('Event deleted!');
     },
     [dataInPage.length, table, tableData]
   );
 
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-
-    toast.success('Delete success!');
-
     setTableData(deleteRows);
-
     table.onUpdatePageDeleteRows({
       totalRowsInPage: dataInPage.length,
       totalRowsFiltered: dataFiltered.length,
     });
+    toast.success('Events deleted!');
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
 
   const handleEditRow = useCallback(
     (id) => {
-      router.push(paths.dashboard.user.edit(id));
+      router.push(paths.dashboard.event.edit(id));
     },
     [router]
   );
@@ -127,20 +119,20 @@ export function UserListView() {
     <>
       <DashboardContent>
         <CustomBreadcrumbs
-          heading="List"
+          heading="Events"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'User', href: paths.dashboard.user.root },
+            { name: 'Events', href: paths.dashboard.event.root },
             { name: 'List' },
           ]}
           action={
             <Button
               component={RouterLink}
-              href={paths.dashboard.user.new}
+              href={paths.dashboard.event.new}
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New user
+              New Event
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -159,7 +151,6 @@ export function UserListView() {
             {STATUS_OPTIONS.map((tab) => (
               <Tab
                 key={tab.value}
-                iconPosition="end"
                 value={tab.value}
                 label={tab.label}
                 icon={
@@ -169,32 +160,28 @@ export function UserListView() {
                       'soft'
                     }
                     color={
-                      (tab.value === 'active' && 'success') ||
-                      (tab.value === 'pending' && 'warning') ||
-                      (tab.value === 'banned' && 'error') ||
+                      (tab.value === 'current' && 'success') ||
+                      (tab.value === 'past' && 'warning') ||
+                      (tab.value === 'cancelled' && 'error') ||
                       'default'
                     }
                   >
-                    {['active', 'pending', 'banned', 'rejected'].includes(tab.value)
-                      ? tableData.filter((user) => user.status === tab.value).length
-                      : tableData.length}
+                    {tab.value === 'all'
+                      ? tableData.length
+                      : tableData.filter((event) => event.status === tab.value).length}
                   </Label>
                 }
               />
             ))}
           </Tabs>
 
-          <UserTableToolbar
-            filters={filters}
-            onResetPage={table.onResetPage}
-            options={{ roles: _roles }}
-          />
+          <EventTableToolbar filters={filters} onResetPage={table.onResetPage} />
 
           {canReset && (
-            <UserTableFiltersResult
+            <EventTableFiltersResult
               filters={filters}
-              totalResults={dataFiltered.length}
               onResetPage={table.onResetPage}
+              totalResults={dataFiltered.length}
               sx={{ p: 2.5, pt: 0 }}
             />
           )}
@@ -243,7 +230,7 @@ export function UserListView() {
                       table.page * table.rowsPerPage + table.rowsPerPage
                     )
                     .map((row) => (
-                      <UserTableRow
+                      <EventTableRow
                         key={row.id}
                         row={row}
                         selected={table.selected.includes(row.id)}
@@ -282,7 +269,7 @@ export function UserListView() {
         title="Delete"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> items?
+            Are you sure want to delete <strong> {table.selected.length} </strong> events?
           </>
         }
         action={
@@ -303,7 +290,7 @@ export function UserListView() {
 }
 
 function applyFilter({ inputData, comparator, filters }) {
-  const { name, status, role } = filters;
+  const { title, status } = filters;
 
   const stabilizedThis = inputData.map((el, index) => [el, index]);
 
@@ -315,19 +302,51 @@ function applyFilter({ inputData, comparator, filters }) {
 
   inputData = stabilizedThis.map((el) => el[0]);
 
-  if (name) {
+  // Filter by title
+  if (title) {
     inputData = inputData.filter(
-      (user) => user.name.toLowerCase().indexOf(name.toLowerCase()) !== -1
+      (event) => event.title.toLowerCase().indexOf(title.toLowerCase()) !== -1
     );
   }
 
+  // Filter by status
   if (status !== 'all') {
-    inputData = inputData.filter((user) => user.status === status);
+    inputData = inputData.filter((event) => event.status === status);
   }
 
-  if (role.length) {
-    inputData = inputData.filter((user) => role.includes(user.role));
-  }
+  // Sort events by date (most recent first)
+  inputData.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return inputData;
+}
+
+// Helper function to compare values for sorting
+export function getComparatorData(order, orderBy) {
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
+
+// Helper function for descending sort
+function descendingComparator(a, b, orderBy) {
+  if (orderBy === 'date') {
+    return new Date(b.date) - new Date(a.date);
+  }
+
+  if (orderBy === 'price') {
+    return b.price - a.price;
+  }
+
+  if (orderBy === 'participants') {
+    return b.participants.current - a.participants.current;
+  }
+
+  // Default string comparison for other fields
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
+  }
+  return 0;
 }

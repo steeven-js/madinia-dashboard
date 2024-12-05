@@ -1,247 +1,303 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, Controller } from 'react-hook-form';
-import { isValidPhoneNumber } from 'react-phone-number-input/input';
+import { useMemo, useEffect, useCallback } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
-import Grid from '@mui/material/Unstable_Grid2';
+import Divider from '@mui/material/Divider';
+import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import InputAdornment from '@mui/material/InputAdornment';
+import { Button, MenuItem, IconButton } from '@mui/material';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { fData } from 'src/utils/format-number';
+import { createOrUpdateEvent } from 'src/hooks/use-event';
 
-import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
+import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import useImageUpload from 'src/hooks/use-event-image';
+import { db, storage } from 'src/utils/firebase';
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 // ----------------------------------------------------------------------
 
-export const NewUserSchema = zod.object({
-  avatarUrl: schemaHelper.file({
-    message: { required_error: 'Avatar is required!' },
-  }),
-  name: zod.string().min(1, { message: 'Name is required!' }),
-  email: zod
-    .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
-  phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
-  country: schemaHelper.objectOrNull({
-    message: { required_error: 'Country is required!' },
-  }),
-  address: zod.string().min(1, { message: 'Address is required!' }),
-  company: zod.string().min(1, { message: 'Company is required!' }),
-  state: zod.string().min(1, { message: 'State is required!' }),
-  city: zod.string().min(1, { message: 'City is required!' }),
-  role: zod.string().min(1, { message: 'Role is required!' }),
-  zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
-  // Not required
+export const NewEventSchema = zod.object({
+  title: zod.string().min(1, { message: 'Title is required!' }),
   status: zod.string(),
-  isVerified: zod.boolean(),
+  date: schemaHelper.date({
+    message: { required_error: 'Date is required!' },
+  }),
+  location: zod.string().min(1, { message: 'Location is required!' }),
+  price: zod.number().min(0, { message: 'Price must be 0 or more' }),
+  description: zod.string().min(1, { message: 'Description is required!' }),
+  images: schemaHelper.files({
+    message: { required_error: 'Images is required!' },
+  }),
+  speakers: zod.array(zod.string()),
+  participants: zod.object({
+    max: zod.number().min(1, { message: 'Maximum participants must be more than 0' }),
+    current: zod.number(),
+  }),
 });
 
 // ----------------------------------------------------------------------
 
-export function UserNewEditForm({ currentUser }) {
+export function EventNewEditForm({ event: currentEvent }) {
   const router = useRouter();
+
+  const { removeImage, removeAllImages, isUploading } = useImageUpload(currentEvent?.id);
 
   const defaultValues = useMemo(
     () => ({
-      status: currentUser?.status || '',
-      avatarUrl: currentUser?.avatarUrl || null,
-      isVerified: currentUser?.isVerified || true,
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      address: currentUser?.address || '',
-      zipCode: currentUser?.zipCode || '',
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      title: currentEvent?.title || '',
+      status: currentEvent?.status || 'draft',
+      date: currentEvent?.date || null,
+      location: currentEvent?.location || '',
+      price: currentEvent?.price || 0,
+      description: currentEvent?.description || '',
+      images: currentEvent?.images || [],
+      speakers: currentEvent?.speakers || [],
+      participants: {
+        max: currentEvent?.participants?.max || 10,
+        current: currentEvent?.participants?.current || 0,
+      },
     }),
-    [currentUser]
+    [currentEvent]
   );
 
   const methods = useForm({
-    mode: 'onSubmit',
-    resolver: zodResolver(NewUserSchema),
+    resolver: zodResolver(NewEventSchema),
     defaultValues,
+  });
+
+  const { control } = methods;
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'speakers',
   });
 
   const {
     reset,
     watch,
-    control,
-    handleSubmit,
+    setValue,
     formState: { isSubmitting },
   } = methods;
 
   const values = watch();
 
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      reset();
-      toast.success(currentUser ? 'Update success!' : 'Create success!');
-      router.push(paths.dashboard.user.list);
-      console.info('DATA', data);
-    } catch (error) {
-      console.error(error);
+  useEffect(() => {
+    if (currentEvent) {
+      reset(defaultValues);
     }
-  });
+  }, [currentEvent, defaultValues, reset]);
+
+  const handleUpload = async (files) => {
+    // Ensure files is an array
+    const acceptedFiles = Array.isArray(files) ? files : [files];
+
+    try {
+      const uploadedUrls = await Promise.all(
+        acceptedFiles.map(async (file) => {
+          // Check if the file is actually a string/URL (meaning it's already uploaded)
+          if (typeof file === 'string') return file;
+
+          const fileName = `events/${currentEvent?.id || 'temp'}/${Date.now()}_${file.name}`;
+          const storageRef = ref(storage, fileName);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+
+          if (currentEvent) {
+            const eventRef = doc(db, 'events', currentEvent.id);
+            await updateDoc(eventRef, {
+              images: arrayUnion(url),
+            });
+          }
+
+          return url;
+        })
+      );
+
+      // Update the form value with new images
+      setValue('images', [...values.images, ...uploadedUrls]);
+      toast.success('Images uploaded successfully!');
+      return uploadedUrls;
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error('Failed to upload images');
+      throw error;
+    }
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      // Appel à la fonction createOrUpdateEvent
+      const response = await createOrUpdateEvent(data, currentEvent?.id);
+      if (response.success) {
+        toast.success(currentEvent ? 'Update success!' : 'Create success!');
+        // Reset avec les nouvelles données
+        if (response.data) {
+          reset(response.data);
+        }
+        // Redirection
+        // router.push(paths.dashboard.event.root);
+      } else {
+        toast.error(response.error || 'Operation failed');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast.error(error.message || 'An unexpected error occurred');
+    }
+  };
+
+  const handleRemoveFile = useCallback(
+    async (inputFile) => {
+      await removeImage(inputFile);
+      const filtered = values.images?.filter((file) => file !== inputFile);
+      setValue('images', filtered);
+    },
+    [setValue, values.images, removeImage]
+  );
+
+  const handleRemoveAllFiles = useCallback(async () => {
+    await removeAllImages();
+    setValue('images', []);
+  }, [setValue, removeAllImages]);
+
+  const renderDetails = (
+    <Card>
+      <CardHeader title="Details" subheader="Title, short description, image..." sx={{ mb: 3 }} />
+
+      <Divider />
+
+      <Stack spacing={3} sx={{ p: 3 }}>
+        <Field.Text name="title" label="Event Title" required />
+
+        <Field.Select fullWidth name="status" label="Status">
+          {['draft', 'current', 'past', 'cancelled'].map((option) => (
+            <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
+              {option}
+            </MenuItem>
+          ))}
+        </Field.Select>
+
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2">Images</Typography>
+          <Field.Upload
+            multiple
+            thumbnail
+            name="images"
+            maxSize={3145728}
+            onRemove={handleRemoveFile}
+            onRemoveAll={handleRemoveAllFiles}
+            onDrop={handleUpload} // Changed from onUpload to onDrop
+            files={values.images.map((url) => ({
+              preview: url,
+              url: url,
+            }))}
+          />
+        </Stack>
+      </Stack>
+    </Card>
+  );
+
+  const renderProperties = (
+    <Card>
+      <CardHeader
+        title="Properties"
+        subheader="Additional functions and attributes..."
+        sx={{ mb: 3 }}
+      />
+
+      <Divider />
+
+      <Stack spacing={2} sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
+          Speakers:
+        </Typography>
+
+        {fields.map((field, index) => (
+          <Stack key={field.id} direction="row" spacing={2} alignItems="center">
+            <Field.Text name={`speakers.${index}`} label={`Speaker ${index + 1}`} required />
+            <IconButton onClick={() => remove(index)} color="error">
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          </Stack>
+        ))}
+
+        <Button
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={() => append('')}
+          variant="soft"
+        >
+          Add Speaker
+        </Button>
+      </Stack>
+    </Card>
+  );
+
+  const renderPricing = (
+    <Card>
+      <CardHeader title="Pricing" subheader="Price related inputs" sx={{ mb: 3 }} />
+
+      <Divider />
+
+      <Stack spacing={3} sx={{ p: 3 }}>
+        <Field.Text
+          name="price"
+          label="Regular price"
+          placeholder="0.00"
+          type="number"
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Box component="span" sx={{ color: 'text.disabled' }}>
+                  $
+                </Box>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Stack>
+    </Card>
+  );
+
+  const renderActions = (
+    <Stack spacing={3} direction="row" alignItems="center" flexWrap="wrap">
+      <LoadingButton
+        type="submit"
+        variant="contained"
+        size="large"
+        onClick={onSubmit}
+        loading={isSubmitting}
+      >
+        {!currentEvent ? 'Create event' : 'Save changes'}
+      </LoadingButton>
+
+      <Button variant="outlined" size="large" onClick={onSubmit}>
+        {!currentEvent ? 'Create event' : 'Save changes'}
+      </Button>
+    </Stack>
+  );
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
-      <Grid container spacing={3}>
-        <Grid xs={12} md={4}>
-          <Card sx={{ pt: 10, pb: 5, px: 3 }}>
-            {currentUser && (
-              <Label
-                color={
-                  (values.status === 'active' && 'success') ||
-                  (values.status === 'banned' && 'error') ||
-                  'warning'
-                }
-                sx={{ position: 'absolute', top: 24, right: 24 }}
-              >
-                {values.status}
-              </Label>
-            )}
+      <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 880 } }}>
+        {renderDetails}
 
-            <Box sx={{ mb: 5 }}>
-              <Field.UploadAvatar
-                name="avatarUrl"
-                maxSize={3145728}
-                helperText={
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      mt: 3,
-                      mx: 'auto',
-                      display: 'block',
-                      textAlign: 'center',
-                      color: 'text.disabled',
-                    }}
-                  >
-                    Allowed *.jpeg, *.jpg, *.png, *.gif
-                    <br /> max size of {fData(3145728)}
-                  </Typography>
-                }
-              />
-            </Box>
+        {renderProperties}
 
-            {currentUser && (
-              <FormControlLabel
-                labelPlacement="start"
-                control={
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Switch
-                        {...field}
-                        checked={field.value !== 'active'}
-                        onChange={(event) =>
-                          field.onChange(event.target.checked ? 'banned' : 'active')
-                        }
-                      />
-                    )}
-                  />
-                }
-                label={
-                  <>
-                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Banned
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Apply disable account
-                    </Typography>
-                  </>
-                }
-                sx={{
-                  mx: 0,
-                  mb: 3,
-                  width: 1,
-                  justifyContent: 'space-between',
-                }}
-              />
-            )}
+        {renderPricing}
 
-            <Field.Switch
-              name="isVerified"
-              labelPlacement="start"
-              label={
-                <>
-                  <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Email verified
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Disabling this will automatically send the user a verification email
-                  </Typography>
-                </>
-              }
-              sx={{ mx: 0, width: 1, justifyContent: 'space-between' }}
-            />
-
-            {currentUser && (
-              <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
-                <Button variant="soft" color="error">
-                  Delete user
-                </Button>
-              </Stack>
-            )}
-          </Card>
-        </Grid>
-
-        <Grid xs={12} md={8}>
-          <Card sx={{ p: 3 }}>
-            <Box
-              rowGap={3}
-              columnGap={2}
-              display="grid"
-              gridTemplateColumns={{
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-              }}
-            >
-              <Field.Text name="name" label="Full name" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone name="phoneNumber" label="Phone number" />
-
-              <Field.CountrySelect
-                fullWidth
-                name="country"
-                label="Country"
-                placeholder="Choose a country"
-              />
-
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="address" label="Address" />
-              <Field.Text name="zipCode" label="Zip/code" />
-              <Field.Text name="company" label="Company" />
-              <Field.Text name="role" label="Role" />
-            </Box>
-
-            <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-              <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create user' : 'Save changes'}
-              </LoadingButton>
-            </Stack>
-          </Card>
-        </Grid>
-      </Grid>
+        {renderActions}
+      </Stack>
     </Form>
   );
 }
