@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { storage, db } from 'src/utils/firebase';
+import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
+
+import { db } from 'src/utils/firebase';
+
 import { toast } from 'src/components/snackbar';
 
 const useImageUpload = (eventId) => {

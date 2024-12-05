@@ -1,10 +1,10 @@
 // src/services/events.js
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, query, limit, setDoc, orderBy, getDocs, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 // Obtenir la liste des factures
 export function useEvents() {

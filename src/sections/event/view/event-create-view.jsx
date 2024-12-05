@@ -4,11 +4,11 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { EventNewEditForm } from '../user-new-edit-form';
+import { EventNewEditForm } from '../event-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function UserCreateView() {
+export function EventCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs

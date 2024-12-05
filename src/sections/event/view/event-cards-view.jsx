@@ -9,11 +9,11 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { UserCardList } from '../user-card-list';
+import { EventCardList } from '../event-card-list';
 
 // ----------------------------------------------------------------------
 
-export function UserCardsView() {
+export function EventCardsView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
@@ -36,7 +36,7 @@ export function UserCardsView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <UserCardList users={_userCards} />
+      <EventCardList users={_userCards} />
     </DashboardContent>
   );
 }

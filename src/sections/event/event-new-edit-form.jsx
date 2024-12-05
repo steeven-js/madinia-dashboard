@@ -2,6 +2,8 @@ import { z as zod } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -16,33 +18,34 @@ import { Button, MenuItem, IconButton } from '@mui/material';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import useImageUpload from 'src/hooks/use-event-image';
 import { createOrUpdateEvent } from 'src/hooks/use-event';
+
+import { db, storage } from 'src/utils/firebase';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
-import useImageUpload from 'src/hooks/use-event-image';
-import { db, storage } from 'src/utils/firebase';
-import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 // ----------------------------------------------------------------------
 
 export const NewEventSchema = zod.object({
-  title: zod.string().min(1, { message: 'Title is required!' }),
+  title: zod.string().min(1, { message: 'Le titre est requis !' }),
   status: zod.string(),
+  location: zod.string().min(1, { message: 'Le lieu est requis !' }),
   date: schemaHelper.date({
-    message: { required_error: 'Date is required!' },
+    message: { required_error: 'La date est requise !' },
   }),
-  location: zod.string().min(1, { message: 'Location is required!' }),
-  price: zod.number().min(0, { message: 'Price must be 0 or more' }),
-  description: zod.string().min(1, { message: 'Description is required!' }),
+  price: zod.number().min(0, { message: 'Le prix doit être de 0 ou plus' }),
+  description: zod.string().min(1, { message: 'La description est requise !' }),
   images: schemaHelper.files({
-    message: { required_error: 'Images is required!' },
+    message: { required_error: 'Les images sont requises !' },
   }),
   speakers: zod.array(zod.string()),
   participants: zod.object({
-    max: zod.number().min(1, { message: 'Maximum participants must be more than 0' }),
+    max: zod
+      .number()
+      .min(1, { message: 'Le nombre maximum de participants doit être supérieur à 0' }),
     current: zod.number(),
   }),
 });
@@ -172,16 +175,29 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const renderDetails = (
     <Card>
-      <CardHeader title="Details" subheader="Title, short description, image..." sx={{ mb: 3 }} />
+      <CardHeader title="Détails" subheader="Titre, description courte, image..." sx={{ mb: 3 }} />
 
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
-        <Field.Text name="title" label="Event Title" required />
+        <Field.Text name="title" label="Titre de l'événement" required />
 
-        <Field.Select fullWidth name="status" label="Status">
-          {['draft', 'current', 'past', 'cancelled'].map((option) => (
-            <MenuItem key={option} value={option} sx={{ textTransform: 'capitalize' }}>
+        <Field.Select fullWidth name="status" label="Statut">
+          {[
+            { value: 'draft', label: 'Brouillon' },
+            { value: 'current', label: 'En cours' },
+            { value: 'past', label: 'Terminé' },
+            { value: 'cancelled', label: 'Annulé' },
+          ].map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Field.Select>
+
+        <Field.Select fullWidth name="location" label="Lieu">
+          {['Martinique', 'Guadeloupe', 'Paris'].map((option) => (
+            <MenuItem key={option} value={option}>
               {option}
             </MenuItem>
           ))}
@@ -198,9 +214,10 @@ export function EventNewEditForm({ event: currentEvent }) {
             onRemoveAll={handleRemoveAllFiles}
             onDrop={handleUpload}
             disabled={isUploading}
+            helperText="Format accepté : images uniquement. Taille maximale : 3MB"
             files={values.images.map((url) => ({
               preview: url,
-              url: url,
+              url,
             }))}
           />
         </Stack>
@@ -211,8 +228,8 @@ export function EventNewEditForm({ event: currentEvent }) {
   const renderProperties = (
     <Card>
       <CardHeader
-        title="Properties"
-        subheader="Additional functions and attributes..."
+        title="Propriétés"
+        subheader="Fonctions et attributs additionnels..."
         sx={{ mb: 3 }}
       />
 
@@ -220,12 +237,12 @@ export function EventNewEditForm({ event: currentEvent }) {
 
       <Stack spacing={2} sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
-          Speakers:
+          Intervenants :
         </Typography>
 
         {fields.map((field, index) => (
           <Stack key={field.id} direction="row" spacing={2} alignItems="center">
-            <Field.Text name={`speakers.${index}`} label={`Speaker ${index + 1}`} required />
+            <Field.Text name={`speakers.${index}`} label={`Intervenant ${index + 1}`} required />
             <IconButton onClick={() => remove(index)} color="error">
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -237,7 +254,7 @@ export function EventNewEditForm({ event: currentEvent }) {
           onClick={() => append('')}
           variant="soft"
         >
-          Add Speaker
+          Ajouter un intervenant
         </Button>
       </Stack>
     </Card>
@@ -245,14 +262,14 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const renderPricing = (
     <Card>
-      <CardHeader title="Pricing" subheader="Price related inputs" sx={{ mb: 3 }} />
+      <CardHeader title="Tarification" subheader="Informations sur les prix" sx={{ mb: 3 }} />
 
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text
           name="price"
-          label="Regular price"
+          label="Prix régulier"
           placeholder="0.00"
           type="number"
           InputLabelProps={{ shrink: true }}
@@ -260,7 +277,7 @@ export function EventNewEditForm({ event: currentEvent }) {
             startAdornment: (
               <InputAdornment position="start">
                 <Box component="span" sx={{ color: 'text.disabled' }}>
-                  $
+                  €
                 </Box>
               </InputAdornment>
             ),
@@ -279,12 +296,12 @@ export function EventNewEditForm({ event: currentEvent }) {
         onClick={onSubmit}
         loading={isSubmitting}
       >
-        {!currentEvent ? 'Create event' : 'Save changes'}
+        {!currentEvent ? "Créer l'événement" : 'Enregistrer les modifications'}
       </LoadingButton>
 
-      <Button variant="outlined" size="large" onClick={onSubmit}>
-        {!currentEvent ? 'Create event' : 'Save changes'}
-      </Button>
+      {/* <Button variant="outlined" size="large" onClick={onSubmit}>
+        {!currentEvent ? "Créer l'événement" : 'Enregistrer les modifications'}
+      </Button> */}
     </Stack>
   );
 

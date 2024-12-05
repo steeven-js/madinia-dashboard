@@ -18,7 +18,7 @@ import { Image } from 'src/components/image';
 
 // ----------------------------------------------------------------------
 
-export function UserCard({ user, sx, ...other }) {
+export function EventCard({ user, sx, ...other }) {
   return (
     <Card sx={{ textAlign: 'center', ...sx }} {...other}>
       <Box sx={{ position: 'relative' }}>

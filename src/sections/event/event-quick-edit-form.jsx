@@ -21,7 +21,7 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-export const UserQuickEditSchema = zod.object({
+export const EventQuickEditSchema = zod.object({
   name: zod.string().min(1, { message: 'Name is required!' }),
   email: zod
     .string()
@@ -43,27 +43,27 @@ export const UserQuickEditSchema = zod.object({
 
 // ----------------------------------------------------------------------
 
-export function UserQuickEditForm({ currentUser, open, onClose }) {
+export function EventQuickEditForm({ currentEvent, open, onClose }) {
   const defaultValues = useMemo(
     () => ({
-      name: currentUser?.name || '',
-      email: currentUser?.email || '',
-      phoneNumber: currentUser?.phoneNumber || '',
-      address: currentUser?.address || '',
-      country: currentUser?.country || '',
-      state: currentUser?.state || '',
-      city: currentUser?.city || '',
-      zipCode: currentUser?.zipCode || '',
-      status: currentUser?.status,
-      company: currentUser?.company || '',
-      role: currentUser?.role || '',
+      name: currentEvent?.name || '',
+      email: currentEvent?.email || '',
+      phoneNumber: currentEvent?.phoneNumber || '',
+      address: currentEvent?.address || '',
+      country: currentEvent?.country || '',
+      state: currentEvent?.state || '',
+      city: currentEvent?.city || '',
+      zipCode: currentEvent?.zipCode || '',
+      status: currentEvent?.status,
+      company: currentEvent?.company || '',
+      role: currentEvent?.role || '',
     }),
-    [currentUser]
+    [currentEvent]
   );
 
   const methods = useForm({
     mode: 'all',
-    resolver: zodResolver(UserQuickEditSchema),
+    resolver: zodResolver(EventQuickEditSchema),
     defaultValues,
   });
 

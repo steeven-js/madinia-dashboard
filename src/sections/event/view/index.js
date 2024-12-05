@@ -1,7 +1,7 @@
-export * from './user-edit-view';
+export * from './event-edit-view';
 
-export * from './user-list-view';
+export * from './event-list-view';
 
-export * from './user-cards-view';
+export * from './event-cards-view';
 
-export * from './user-create-view';
+export * from './event-create-view';

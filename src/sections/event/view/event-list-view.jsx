@@ -38,9 +38,9 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { EventTableRow } from '../user-table-row';
-import { EventTableToolbar } from '../user-table-toolbar';
-import { EventTableFiltersResult } from '../user-table-filters-result';
+import { EventTableRow } from '../event-table-row';
+import { EventTableToolbar } from '../event-table-toolbar';
+import { EventTableFiltersResult } from '../event-table-filters-result';
 
 // ----------------------------------------------------------------------
 

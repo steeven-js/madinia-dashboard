@@ -3,11 +3,11 @@ import { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Pagination from '@mui/material/Pagination';
 
-import { UserCard } from './user-card';
+import { EventCard } from './event-card';
 
 // ----------------------------------------------------------------------
 
-export function UserCardList({ users }) {
+export function EventCardList({ users }) {
   const [page, setPage] = useState(1);
 
   const rowsPerPage = 12;
@@ -26,7 +26,7 @@ export function UserCardList({ users }) {
         {users
           .slice((page - 1) * rowsPerPage, (page - 1) * rowsPerPage + rowsPerPage)
           .map((user) => (
-            <UserCard key={user.id} user={user} />
+            <EventCard key={user.id} user={user} />
           ))}
       </Box>
 
