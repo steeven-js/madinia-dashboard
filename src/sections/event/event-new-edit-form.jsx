@@ -126,7 +126,7 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const onSubmit = async (data) => {
     try {
-      console.log('Form data:', data);
+      // console.log('Form data:', data);
 
       // Validation supplémentaire si nécessaire
       if (!data.title || !data.location) {
