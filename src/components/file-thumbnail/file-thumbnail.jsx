@@ -18,11 +18,13 @@ export function FileThumbnail({
   className,
   ...other
 }) {
-  const previewUrl = typeof file === 'string' ? file : URL.createObjectURL(file);
+  const isUrl = typeof file === 'string';
+  const previewUrl = isUrl ? file : URL.createObjectURL(file);
 
-  const { name, path } = fileData(file);
+  const { name } = fileData(file);
 
-  const format = fileFormat(path || previewUrl);
+  // Pour les URLs, on force le format image
+  const format = isUrl ? 'image' : fileFormat(previewUrl);
 
   const renderImg = (
     <Box
@@ -69,7 +71,7 @@ export function FileThumbnail({
 
       {onRemove && (
         <RemoveButton
-          onClick={onRemove}
+          onClick={() => onRemove(file)}
           className={fileThumbnailClasses.removeBtn}
           sx={slotProps?.removeBtn}
         />
@@ -77,7 +79,7 @@ export function FileThumbnail({
 
       {onDownload && (
         <DownloadButton
-          onClick={onDownload}
+          onClick={() => onDownload(file)}
           className={fileThumbnailClasses.downloadBtn}
           sx={slotProps?.downloadBtn}
         />
