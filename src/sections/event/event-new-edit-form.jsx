@@ -1,28 +1,33 @@
 import { z as zod } from 'zod';
-import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import { toast } from 'sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useEffect, useCallback } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc, updateDoc, collection } from 'firebase/firestore';
+
 import {
   Box,
-  Button,
   Card,
-  CardHeader,
-  Divider,
-  IconButton,
-  InputAdornment,
-  MenuItem,
   Stack,
+  Button,
+  Divider,
+  MenuItem,
+  CardHeader,
+  IconButton,
   Typography,
+  InputAdornment,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
-import { Iconify } from 'src/components/iconify';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { db, storage } from 'src/utils/firebase';
-import { toast } from 'sonner';
-import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
-import useImageUpload from 'src/hooks/use-event-image';
+
 import { paths } from 'src/routes/paths';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useRouter } from 'src/routes/hooks';
+
+import useImageUpload from 'src/hooks/use-event-image';
+
+import { db, storage } from 'src/utils/firebase';
+
+import { Iconify } from 'src/components/iconify';
+import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
@@ -67,7 +72,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       location: currentEvent?.location || '',
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
-      image: currentEvent?.image || '', // Initialiser avec l'image existante
+      image: currentEvent?.image || '',
       images: currentEvent?.images || [],
       speakers: currentEvent?.speakers || [],
       participants: {
@@ -161,7 +166,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       };
 
       if (currentEvent) {
-        const eventRef = doc(db, 'events', currentEvent.id);
+        const eventRef = doc(db, 'events', currentEvent?.id);
         await updateDoc(eventRef, eventData);
         router.push(paths.dashboard.event.root);
       } else {
@@ -235,8 +240,8 @@ export function EventNewEditForm({ event: currentEvent }) {
             onRemove={() => setValue('image', '')}
             helperText="Format accepté : image uniquement. Taille maximale : 3MB"
             file={{
-              preview: currentEvent.image,
-              url: currentEvent.image,
+              preview: currentEvent?.image,
+              url: currentEvent?.image,
               type: 'image/*',
             }}
             accept={{

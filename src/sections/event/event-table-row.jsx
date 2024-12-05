@@ -37,7 +37,7 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
           <Stack spacing={2} direction="row" alignItems="center">
             <Avatar
               alt={row.title}
-              src={row.images[0]}
+              src={row.image}
               variant="rounded"
               sx={{ width: 64, height: 64 }}
             />
