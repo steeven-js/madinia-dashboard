@@ -146,7 +146,7 @@ export function EventNewEditForm({ event: currentEvent }) {
           reset(response.data);
         }
         // Redirection
-        // router.push(paths.dashboard.event.root);
+        router.push(paths.dashboard.event.root);
       } else {
         toast.error(response.error || 'Operation failed');
       }
@@ -196,7 +196,8 @@ export function EventNewEditForm({ event: currentEvent }) {
             maxSize={3145728}
             onRemove={handleRemoveFile}
             onRemoveAll={handleRemoveAllFiles}
-            onDrop={handleUpload} // Changed from onUpload to onDrop
+            onDrop={handleUpload}
+            disabled={isUploading}
             files={values.images.map((url) => ({
               preview: url,
               url: url,
