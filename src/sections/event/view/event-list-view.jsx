@@ -14,6 +14,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
+import { deleteEvent } from 'src/hooks/use-event';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
@@ -23,7 +24,6 @@ import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
-import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/custom-dialog';
@@ -43,24 +43,23 @@ import {
 import { EventTableRow } from '../event-table-row';
 import { EventTableToolbar } from '../event-table-toolbar';
 import { EventTableFiltersResult } from '../event-table-filters-result';
-import { deleteEvent } from 'src/hooks/use-event';
 
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'current', label: 'Current' },
-  { value: 'past', label: 'Past' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'all', label: 'Tous' },
+  { value: 'current', label: 'En cours' },
+  { value: 'past', label: 'Passés' },
+  { value: 'cancelled', label: 'Annulés' },
 ];
 
 const TABLE_HEAD = [
-  { id: 'title', label: 'Event' },
+  { id: 'title', label: 'Événement' },
   { id: 'date', label: 'Date', width: 180 },
-  { id: 'location', label: 'Location', width: 180 },
+  { id: 'location', label: 'Lieu', width: 180 },
   { id: 'participants', label: 'Participants', width: 140 },
-  { id: 'price', label: 'Price', width: 120 },
-  { id: 'status', label: 'Status', width: 100 },
+  { id: 'price', label: 'Prix', width: 120 },
+  { id: 'status', label: 'Statut', width: 100 },
   { id: '', width: 88 },
 ];
 
@@ -93,7 +92,7 @@ export function EventListView({ events }) {
         }
         await deleteEvent(id);
 
-        const deleteRow = tableData.filter((row) => row.id !== id);
+        const deleteRow = tableData.filter((_row) => _row.id !== id);
         setTableData(deleteRow);
         table.onUpdatePageDeleteRow(dataInPage.length);
       } catch (error) {
@@ -145,11 +144,11 @@ export function EventListView({ events }) {
     <>
       <DashboardContent>
         <CustomBreadcrumbs
-          heading="Events"
+          heading="Événements"
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Events', href: paths.dashboard.event.root },
-            { name: 'List' },
+            { name: 'Tableau de bord', href: paths.dashboard.root },
+            { name: 'Événements', href: paths.dashboard.event.root },
+            { name: 'Liste' },
           ]}
           action={
             <Button
@@ -158,7 +157,7 @@ export function EventListView({ events }) {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              New Event
+              Nouvel événement
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -292,10 +291,11 @@ export function EventListView({ events }) {
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title="Supprimer"
         content={
           <>
-            Are you sure want to delete <strong> {table.selected.length} </strong> events?
+            Êtes-vous sûr de vouloir supprimer <strong> {table.selected.length} </strong> événements
+            ?
           </>
         }
         action={
@@ -307,7 +307,7 @@ export function EventListView({ events }) {
               confirm.onFalse();
             }}
           >
-            Delete
+            Supprimer
           </Button>
         }
       />

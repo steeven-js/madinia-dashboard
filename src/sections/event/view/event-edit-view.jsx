@@ -12,10 +12,10 @@ export function EventEditView({ event }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Edit"
+        heading="Modifier"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Event', href: paths.dashboard.event.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Événement', href: paths.dashboard.event.root },
           { name: event?.title },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

@@ -49,6 +49,7 @@ export const NewEventSchema = zod.object({
     // Changé de 'images' à 'images' pour correspondre au nom du champ
     message: { required_error: 'Les images sont requises !' },
   }),
+  isFree: zod.boolean(),
   speakers: zod.array(zod.string()),
   participants: zod.object({
     max: zod
@@ -71,6 +72,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       status: currentEvent?.status || 'draft',
       date: currentEvent?.date || null,
       location: currentEvent?.location || '',
+      isFree: currentEvent?.isFree ?? false,
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
       image: currentEvent?.image || '',
@@ -153,7 +155,6 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const onSubmit = async (data) => {
     try {
-      // Validation supplémentaire si nécessaire
       if (!data.title || !data.location) {
         toast.error('Veuillez remplir tous les champs requis');
         return;
@@ -164,34 +165,27 @@ export function EventNewEditForm({ event: currentEvent }) {
         images: data.images || [],
       };
 
-      let stripeEventId = currentEvent?.stripeEventId; // Add this field to your event data
+      let stripeEventId = currentEvent?.stripeEventId;
 
-      if (currentEvent) {
-        // Update existing event
-        if (stripeEventId) {
-          // Update Stripe product if it exists
-          await stripeService.updateEvent(stripeEventId, data.title, data.price);
+      if (!data.isFree) {
+        if (currentEvent) {
+          if (stripeEventId) {
+            await stripeService.updateEvent(stripeEventId, data.title, data.price);
+          } else {
+            const stripeEvent = await stripeService.createEvent(data.title, data.price);
+            stripeEventId = stripeEvent.id;
+          }
         } else {
-          // Create new Stripe product if it doesn't exist
           const stripeEvent = await stripeService.createEvent(data.title, data.price);
           stripeEventId = stripeEvent.id;
         }
+        eventData.stripeEventId = stripeEventId;
+      }
 
-        const eventRef = doc(db, 'events', currentEvent.id);
-        await updateDoc(eventRef, {
-          ...eventData,
-          stripeEventId,
-        });
+      if (currentEvent) {
+        await updateDoc(doc(db, 'events', currentEvent.id), eventData);
       } else {
-        // Create new event
-        const stripeEvent = await stripeService.createEvent(data.title, data.price);
-        stripeEventId = stripeEvent.id;
-
-        const eventsRef = collection(db, 'events');
-        await setDoc(doc(eventsRef), {
-          ...eventData,
-          stripeEventId,
-        });
+        await setDoc(doc(collection(db, 'events')), eventData);
       }
 
       router.push(paths.dashboard.event.root);
@@ -240,15 +234,9 @@ export function EventNewEditForm({ event: currentEvent }) {
           ))}
         </Field.Select>
 
-        <Field.Select fullWidth name="location" label="Lieu">
-          {['Martinique', 'Guadeloupe', 'Paris'].map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </Field.Select>
+        <Field.Text name="location" label="Lieu" required />
 
-        <Field.Text name="description" label="Description" multiline rows={4} required />
+        <Field.Editor name="description" label="Description" sx={{ maxHeight: 480 }} required />
 
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Image Principale</Typography>
@@ -339,21 +327,35 @@ export function EventNewEditForm({ event: currentEvent }) {
 
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text
-          name="price"
-          label="Prix régulier"
-          placeholder="0.00"
+          name="participants.max"
+          label="Nombre maximum de participants"
           type="number"
-          InputLabelProps={{ shrink: true }}
+          required
           InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Box component="span" sx={{ color: 'text.disabled' }}>
-                  €
-                </Box>
-              </InputAdornment>
-            ),
+            inputProps: { min: 1 },
           }}
         />
+
+        <Field.Switch name="isFree" label="Événement gratuit" />
+
+        {!values.isFree && (
+          <Field.Text
+            name="price"
+            label="Prix régulier"
+            placeholder="0.00"
+            type="number"
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Box component="span" sx={{ color: 'text.disabled' }}>
+                    €
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
       </Stack>
     </Card>
   );

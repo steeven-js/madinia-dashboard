@@ -1,7 +1,7 @@
 // src/services/events.js
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
+import { ref, listAll, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';

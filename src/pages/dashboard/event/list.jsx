@@ -10,7 +10,7 @@ import { EventListView } from 'src/sections/event/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Events list | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Evènements Madin.IA | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   const { events, loading } = useEvents();

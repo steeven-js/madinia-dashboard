@@ -22,10 +22,38 @@ export const formatStr = {
     dateTime: 'DD-MM-YYYY h:mm a', // 17-04-2022 12:00 am
     date: 'DD-MM-YYYY', // 17-04-2022
   },
+  european: {
+    dateTime: 'DD/MM/YYYY HH:mm',
+    date: 'DD/MM/YYYY',
+    time: 'HH:mm'
+  }
 };
 
 export function today(format) {
   return dayjs(new Date()).startOf('day').format(format);
+}
+
+// ----------------------------------------------------------------------
+
+export function fEuroDateTime(date) {
+  if (!date) return null;
+
+  const isValid = dayjs(date).isValid();
+  return isValid ? dayjs(date).format(formatStr.european.dateTime) : 'Invalid time value';
+}
+
+export function fEuroDate(date) {
+  if (!date) return null;
+
+  const isValid = dayjs(date).isValid();
+  return isValid ? dayjs(date).format(formatStr.european.date) : 'Invalid time value';
+}
+
+export function fEuroTime(date) {
+  if (!date) return null;
+
+  const isValid = dayjs(date).isValid();
+  return isValid ? dayjs(date).format(formatStr.european.time) : 'Invalid time value';
 }
 
 // ----------------------------------------------------------------------

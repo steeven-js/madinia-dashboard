@@ -12,11 +12,12 @@ import IconButton from '@mui/material/IconButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { fDateTime } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
+import { fEuroDateTime } from 'src/utils/format-time';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Markdown } from 'src/components/markdown';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
@@ -52,15 +53,37 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
               </Link>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {row.description.length > 25
-                  ? `${row.description.slice(0, 25)}...`
-                  : row.description}
+                {row.description.length > 25 ? (
+                  <Markdown
+                    children={`${row.description.slice(0, 25)}...`}
+                    sx={{
+                      '& pre': { m: 0 },
+                      '& p': { m: 0 },
+                      '& code': {
+                        color: 'text.secondary',
+                        bgcolor: 'background.neutral',
+                      },
+                    }}
+                  />
+                ) : (
+                  <Markdown
+                    children={row.description}
+                    sx={{
+                      '& pre': { m: 0 },
+                      '& p': { m: 0 },
+                      '& code': {
+                        color: 'text.secondary',
+                        bgcolor: 'background.neutral',
+                      },
+                    }}
+                  />
+                )}
               </Typography>
             </Stack>
           </Stack>
         </TableCell>
 
-        <TableCell>{fDateTime(row.date)}</TableCell>
+        <TableCell>{fEuroDateTime(row.date)}</TableCell>
 
         <TableCell>{row.location}</TableCell>
 
