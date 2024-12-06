@@ -219,7 +219,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text name="title" label="Titre de l'événement" required />
 
-        <Field.DatePicker name="date" label="Date de l'événement" required />
+        <Field.MobileDateTimePicker name="date" label="Date de l'événement" required />
 
         <Field.Select fullWidth name="status" label="Statut">
           {[
