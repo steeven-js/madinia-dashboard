@@ -25,6 +25,7 @@ import { useRouter } from 'src/routes/hooks';
 import useImageUpload from 'src/hooks/use-event-image';
 
 import { db, storage } from 'src/utils/firebase';
+import { stripeService } from 'src/utils/stripe';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
@@ -75,6 +76,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       image: currentEvent?.image || '',
       images: currentEvent?.images || [],
       speakers: currentEvent?.speakers || [],
+      stripeEventId: currentEvent?.stripeEventId || '',
       participants: {
         max: currentEvent?.participants?.max || 10,
         current: currentEvent?.participants?.current || 0,
@@ -151,30 +153,48 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const onSubmit = async (data) => {
     try {
-      // console.log('Form data:', data);
-
       // Validation supplémentaire si nécessaire
       if (!data.title || !data.location) {
         toast.error('Veuillez remplir tous les champs requis');
         return;
       }
 
-      // Les images sont déjà sous forme d'URLs à ce stade
       const eventData = {
         ...data,
-        images: data.images || [], // S'assurer que images n'est jamais undefined
+        images: data.images || [],
       };
 
+      let stripeEventId = currentEvent?.stripeEventId; // Add this field to your event data
+
       if (currentEvent) {
-        const eventRef = doc(db, 'events', currentEvent?.id);
-        await updateDoc(eventRef, eventData);
-        router.push(paths.dashboard.event.root);
+        // Update existing event
+        if (stripeEventId) {
+          // Update Stripe product if it exists
+          await stripeService.updateEvent(stripeEventId, data.title, data.price);
+        } else {
+          // Create new Stripe product if it doesn't exist
+          const stripeEvent = await stripeService.createEvent(data.title, data.price);
+          stripeEventId = stripeEvent.id;
+        }
+
+        const eventRef = doc(db, 'events', currentEvent.id);
+        await updateDoc(eventRef, {
+          ...eventData,
+          stripeEventId,
+        });
       } else {
+        // Create new event
+        const stripeEvent = await stripeService.createEvent(data.title, data.price);
+        stripeEventId = stripeEvent.id;
+
         const eventsRef = collection(db, 'events');
-        await setDoc(doc(eventsRef), eventData);
-        router.push(paths.dashboard.event.root);
+        await setDoc(doc(eventsRef), {
+          ...eventData,
+          stripeEventId,
+        });
       }
 
+      router.push(paths.dashboard.event.root);
       toast.success(currentEvent ? 'Event updated!' : 'Event created!');
     } catch (error) {
       console.error('Error saving event:', error);

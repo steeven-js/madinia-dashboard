@@ -1,7 +1,7 @@
 // src/services/events.js
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
 import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
@@ -103,18 +103,29 @@ export async function createOrUpdateEvent(event, eventId) {
   }
 }
 
-// Supprimer une facture
 export async function deleteEvent(eventId) {
   try {
-    const eventRef = doc(db, 'events', eventId);
-    await deleteDoc(eventRef);
-    toast.success('Event deleted');
-    return { success: true };
-  } catch (error) {
-    console.error('Error deleting event:', error);
-    toast.error(error.message || 'Operation failed');
-    return { success: false, error: error.message };
-  }
+   // Supprimer le document
+   const eventRef = doc(db, 'events', eventId);
+   await deleteDoc(eventRef);
+
+   // Supprimer le dossier d'images dans Storage
+   const storageRef = ref(storage, `events/${eventId}`);
+   const filesList = await listAll(storageRef);
+
+   // Supprimer tous les fichiers du dossier
+   await Promise.all(
+     filesList.items.map(fileRef => deleteObject(fileRef))
+   );
+
+   toast.success('Event deleted');
+   return { success: true };
+
+ } catch (error) {
+   console.error('Error deleting event:', error);
+   toast.error(error.message || 'Operation failed');
+   return { success: false, error: error.message };
+ }
 }
 
 export const uploadImage = async (file) => {

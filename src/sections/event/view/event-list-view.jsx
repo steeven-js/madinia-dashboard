@@ -17,6 +17,8 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
+import { stripeService } from 'src/utils/stripe';
+
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -41,6 +43,7 @@ import {
 import { EventTableRow } from '../event-table-row';
 import { EventTableToolbar } from '../event-table-toolbar';
 import { EventTableFiltersResult } from '../event-table-filters-result';
+import { deleteEvent } from 'src/hooks/use-event';
 
 // ----------------------------------------------------------------------
 
@@ -81,23 +84,46 @@ export function EventListView({ events }) {
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
   const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-      setTableData(deleteRow);
-      table.onUpdatePageDeleteRow(dataInPage.length);
-      toast.success('Event deleted!');
+    async (id) => {
+      try {
+        const row = tableData.find((item) => item.id === id);
+
+        if (row.stripeEventId) {
+          await stripeService.deleteEvent(row.stripeEventId);
+        }
+        await deleteEvent(id);
+
+        const deleteRow = tableData.filter((row) => row.id !== id);
+        setTableData(deleteRow);
+        table.onUpdatePageDeleteRow(dataInPage.length);
+      } catch (error) {
+        console.error(error);
+      }
     },
     [dataInPage.length, table, tableData]
   );
 
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
-    setTableData(deleteRows);
-    table.onUpdatePageDeleteRows({
-      totalRowsInPage: dataInPage.length,
-      totalRowsFiltered: dataFiltered.length,
-    });
-    toast.success('Events deleted!');
+  const handleDeleteRows = useCallback(async () => {
+    try {
+      await Promise.all(
+        table.selected.map(async (id) => {
+          const row = tableData.find((item) => item.id === id);
+          if (row.stripeEventId) {
+            await stripeService.deleteEvent(row.stripeEventId);
+          }
+          await deleteEvent(id);
+        })
+      );
+
+      const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
+      setTableData(deleteRows);
+      table.onUpdatePageDeleteRows({
+        totalRowsInPage: dataInPage.length,
+        totalRowsFiltered: dataFiltered.length,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }, [dataFiltered.length, dataInPage.length, table, tableData]);
 
   const handleEditRow = useCallback(
