@@ -22,7 +22,7 @@ import {
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import useImageUpload from 'src/hooks/use-event-image';
+// import useImageUpload from 'src/hooks/use-event-image';
 
 import { db, storage } from 'src/utils/firebase';
 import { stripeService } from 'src/utils/stripe';
@@ -45,10 +45,7 @@ export const NewEventSchema = zod.object({
   image: schemaHelper.file({
     message: { required_error: 'Single upload is required!' },
   }),
-  images: schemaHelper.files({
-    // Changé de 'images' à 'images' pour correspondre au nom du champ
-    message: { required_error: 'Les images sont requises !' },
-  }),
+  // images: schemaHelper.files(),
   isFree: zod.boolean(),
   speakers: zod.array(zod.string()),
   participants: zod.object({
@@ -64,7 +61,7 @@ export const NewEventSchema = zod.object({
 export function EventNewEditForm({ event: currentEvent }) {
   const router = useRouter();
 
-  const { removeImage, removeAllImages } = useImageUpload(currentEvent?.id);
+  // const { removeImage, removeAllImages } = useImageUpload(currentEvent?.id);
 
   const defaultValues = useMemo(
     () => ({
@@ -76,7 +73,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
       image: currentEvent?.image || '',
-      images: currentEvent?.images || [],
+      // images: currentEvent?.images || [],
       speakers: currentEvent?.speakers || [],
       stripeEventId: currentEvent?.stripeEventId || '',
       participants: {
@@ -131,27 +128,27 @@ export function EventNewEditForm({ event: currentEvent }) {
     }
   };
 
-  const handleUpload = async (acceptedFiles) => {
-    try {
-      // Upload des nouveaux fichiers
-      const uploadedUrls = await Promise.all(
-        acceptedFiles.map(async (file) => {
-          const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
-          const storageRef = ref(storage, fileName);
-          await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(storageRef);
-          return url;
-        })
-      );
+  // const handleUpload = async (acceptedFiles) => {
+  //   try {
+  //     // Upload des nouveaux fichiers
+  //     const uploadedUrls = await Promise.all(
+  //       acceptedFiles.map(async (file) => {
+  //         const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
+  //         const storageRef = ref(storage, fileName);
+  //         await uploadBytes(storageRef, file);
+  //         const url = await getDownloadURL(storageRef);
+  //         return url;
+  //       })
+  //     );
 
-      // Ajouter les nouvelles URLs aux images existantes
-      setValue('images', [...values.images, ...uploadedUrls]);
-      toast.success('Images uploadées avec succès!');
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      toast.error("Échec de l'upload des images");
-    }
-  };
+  //     // Ajouter les nouvelles URLs aux images existantes
+  //     setValue('images', [...values.images, ...uploadedUrls]);
+  //     toast.success('Images uploadées avec succès!');
+  //   } catch (error) {
+  //     console.error('Error uploading images:', error);
+  //     toast.error("Échec de l'upload des images");
+  //   }
+  // };
 
   const onSubmit = async (data) => {
     try {
@@ -196,19 +193,19 @@ export function EventNewEditForm({ event: currentEvent }) {
     }
   };
 
-  const handleRemoveFile = useCallback(
-    async (inputFile) => {
-      await removeImage(inputFile);
-      const filtered = values.images?.filter((file) => file !== inputFile);
-      setValue('images', filtered);
-    },
-    [setValue, values.images, removeImage]
-  );
+  // const handleRemoveFile = useCallback(
+  //   async (inputFile) => {
+  //     await removeImage(inputFile);
+  //     const filtered = values.images?.filter((file) => file !== inputFile);
+  //     setValue('images', filtered);
+  //   },
+  //   [setValue, values.images, removeImage]
+  // );
 
-  const handleRemoveAllFiles = useCallback(async () => {
-    await removeAllImages();
-    setValue('images', []);
-  }, [setValue, removeAllImages]);
+  // const handleRemoveAllFiles = useCallback(async () => {
+  //   await removeAllImages();
+  //   setValue('images', []);
+  // }, [setValue, removeAllImages]);
 
   const renderDetails = (
     <Card>
@@ -236,7 +233,7 @@ export function EventNewEditForm({ event: currentEvent }) {
 
         <Field.Text name="location" label="Lieu" required />
 
-        <Field.Editor name="description" label="Description" sx={{ maxHeight: 480 }} required />
+        <Field.Text name="description" label="Description" multiline rows={4} required />
 
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Image Principale</Typography>
@@ -258,7 +255,7 @@ export function EventNewEditForm({ event: currentEvent }) {
           />
         </Stack>
 
-        <Stack spacing={1.5}>
+        {/* <Stack spacing={1.5}>
           <Typography variant="subtitle2">Images</Typography>
           <Field.Upload
             multiple
@@ -279,7 +276,7 @@ export function EventNewEditForm({ event: currentEvent }) {
               'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
             }}
           />
-        </Stack>
+        </Stack> */}
       </Stack>
     </Card>
   );

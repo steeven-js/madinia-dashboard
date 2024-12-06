@@ -53,31 +53,9 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
               </Link>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {row.description.length > 25 ? (
-                  <Markdown
-                    children={`${row.description.slice(0, 25)}...`}
-                    sx={{
-                      '& pre': { m: 0 },
-                      '& p': { m: 0 },
-                      '& code': {
-                        color: 'text.secondary',
-                        bgcolor: 'background.neutral',
-                      },
-                    }}
-                  />
-                ) : (
-                  <Markdown
-                    children={row.description}
-                    sx={{
-                      '& pre': { m: 0 },
-                      '& p': { m: 0 },
-                      '& code': {
-                        color: 'text.secondary',
-                        bgcolor: 'background.neutral',
-                      },
-                    }}
-                  />
-                )}
+                {row.description.length > 25
+                  ? `${row.description.slice(0, 25)}...`
+                  : row.description}
               </Typography>
             </Stack>
           </Stack>
