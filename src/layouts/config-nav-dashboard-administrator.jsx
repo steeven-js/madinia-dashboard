@@ -70,6 +70,23 @@ export const navDataAdmin = [
     ],
   },
   /**
+   * Event
+   */
+  {
+    subheader: 'Event',
+    items: [
+      {
+        title: 'Event',
+        path: paths.dashboard.event.root,
+        icon: ICONS.blog,
+        children: [
+          { title: 'List', path: paths.dashboard.event.root },
+          { title: 'Create', path: paths.dashboard.event.new },
+        ],
+      },
+    ],
+  },
+  /**
    * Management
    */
   {
@@ -94,8 +111,6 @@ export const navDataAdmin = [
           { title: 'New', path: paths.dashboard.autoEcole.new },
         ],
       },
-      { title: 'Calendar', path: paths.dashboard.calendar, icon: ICONS.calendar },
-      { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
     ],
   },
 ];
