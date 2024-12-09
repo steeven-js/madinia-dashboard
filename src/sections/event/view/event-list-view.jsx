@@ -49,8 +49,10 @@ import { EventTableFiltersResult } from '../event-table-filters-result';
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tous' },
   { value: 'current', label: 'En cours' },
+  { value: 'pending', label: 'Programmé' },
   { value: 'past', label: 'Passés' },
   { value: 'cancelled', label: 'Annulés' },
+  { value: 'draft', label: 'Brouillon' },
 ];
 
 const TABLE_HEAD = [
@@ -74,7 +76,10 @@ export function EventListView({ events }) {
 
   const dataFiltered = applyFilter({
     inputData: tableData,
-    comparator: getComparator(table.order, table.orderBy),
+    comparator: (a, b) => {
+      const order = table.order === 'desc' ? 1 : -1;
+      return order * extendedDescendingComparator(a, b, table.orderBy);
+    },
     filters: filters.state,
   });
 
@@ -185,9 +190,11 @@ export function EventListView({ events }) {
                       'soft'
                     }
                     color={
+                      (tab.value === 'pending' && 'warning') ||
                       (tab.value === 'current' && 'success') ||
                       (tab.value === 'past' && 'warning') ||
                       (tab.value === 'cancelled' && 'error') ||
+                      (tab.value === 'draft' && 'default') ||
                       'default'
                     }
                   >
@@ -315,10 +322,67 @@ export function EventListView({ events }) {
   );
 }
 
+// Extension de la fonction de tri existante
+function extendedDescendingComparator(a, b, orderBy) {
+  // Gestion spéciale des propriétés imbriquées
+  if (orderBy === 'participants') {
+    return (b.participants?.current || 0) - (a.participants?.current || 0);
+  }
+
+  // Gestion spéciale des dates
+  if (orderBy === 'date') {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  }
+
+  // Gestion spéciale des prix
+  if (orderBy === 'price') {
+    const priceA = typeof a.price === 'number' ? a.price : 0;
+    const priceB = typeof b.price === 'number' ? b.price : 0;
+    return priceB - priceA;
+  }
+
+  // Gestion spéciale des statuts
+  if (orderBy === 'status') {
+    const statusOrder = {
+      current: 1,
+      pending: 2,
+      draft: 3,
+      past: 4,
+      cancelled: 5,
+    };
+    return (statusOrder[b.status] || 999) - (statusOrder[a.status] || 999);
+  }
+
+  // Gestion des valeurs null ou undefined
+  const valueA = a[orderBy] == null ? '' : a[orderBy];
+  const valueB = b[orderBy] == null ? '' : b[orderBy];
+
+  // Comparaison de chaînes pour les autres champs
+  if (typeof valueA === 'string' && typeof valueB === 'string') {
+    return valueB.localeCompare(valueA, undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  // Par défaut pour les autres types
+  if (valueB < valueA) return -1;
+  if (valueB > valueA) return 1;
+  return 0;
+}
+
 function applyFilter({ inputData, comparator, filters }) {
   const { title, status } = filters;
+  let filteredData = [...inputData];
 
-  const stabilizedThis = inputData.map((el, index) => [el, index]);
+  if (title) {
+    filteredData = filteredData.filter(
+      (event) => event.title.toLowerCase().indexOf(title.toLowerCase()) !== -1
+    );
+  }
+
+  if (status !== 'all') {
+    filteredData = filteredData.filter((event) => event.status === status);
+  }
+
+  const stabilizedThis = filteredData.map((el, index) => [el, index]);
 
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -326,53 +390,5 @@ function applyFilter({ inputData, comparator, filters }) {
     return a[1] - b[1];
   });
 
-  inputData = stabilizedThis.map((el) => el[0]);
-
-  // Filter by title
-  if (title) {
-    inputData = inputData.filter(
-      (event) => event.title.toLowerCase().indexOf(title.toLowerCase()) !== -1
-    );
-  }
-
-  // Filter by status
-  if (status !== 'all') {
-    inputData = inputData.filter((event) => event.status === status);
-  }
-
-  // Sort events by date (most recent first)
-  inputData.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  return inputData;
-}
-
-// Helper function to compare values for sorting
-export function getComparatorData(order, orderBy) {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-// Helper function for descending sort
-function descendingComparator(a, b, orderBy) {
-  if (orderBy === 'date') {
-    return new Date(b.date) - new Date(a.date);
-  }
-
-  if (orderBy === 'price') {
-    return b.price - a.price;
-  }
-
-  if (orderBy === 'participants') {
-    return b.participants.current - a.participants.current;
-  }
-
-  // Default string comparison for other fields
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
+  return stabilizedThis.map((el) => el[0]);
 }
