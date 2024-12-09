@@ -111,7 +111,8 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     const eventData = {
       title: data.title,
       scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
-      is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending')
+      is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending'),
+      status: data.status,
     };
 
     // Configuration pour Axios

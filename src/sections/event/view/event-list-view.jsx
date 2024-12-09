@@ -18,8 +18,6 @@ import { deleteEvent } from 'src/hooks/use-event';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 
-import { stripeService } from 'src/utils/stripe';
-
 import { varAlpha } from 'src/theme/styles';
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -89,11 +87,6 @@ export function EventListView({ events }) {
   const handleDeleteRow = useCallback(
     async (id) => {
       try {
-        const row = tableData.find((item) => item.id === id);
-
-        if (row.stripeEventId) {
-          await stripeService.deleteEvent(row.stripeEventId);
-        }
         await deleteEvent(id);
 
         const deleteRow = tableData.filter((_row) => _row.id !== id);
@@ -110,10 +103,6 @@ export function EventListView({ events }) {
     try {
       await Promise.all(
         table.selected.map(async (id) => {
-          const row = tableData.find((item) => item.id === id);
-          if (row.stripeEventId) {
-            await stripeService.deleteEvent(row.stripeEventId);
-          }
           await deleteEvent(id);
         })
       );
