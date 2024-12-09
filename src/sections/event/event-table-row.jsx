@@ -17,7 +17,6 @@ import { fEuroDateTime } from 'src/utils/format-time';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Markdown } from 'src/components/markdown';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
@@ -76,12 +75,18 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
             variant="soft"
             color={
               (row.status === 'current' && 'success') ||
+              (row.status === 'pending' && 'warning') ||
               (row.status === 'past' && 'warning') ||
+              (row.status === 'draft' && 'default') ||
               (row.status === 'cancelled' && 'error') ||
               'default'
             }
           >
-            {row.status}
+            {row.status === 'current' && 'En cours'}
+            {row.status === 'pending' && 'Programmé'}
+            {row.status === 'past' && 'Terminé'}
+            {row.status === 'draft' && 'Brouillon'}
+            {row.status === 'cancelled' && 'Annulé'}
           </Label>
         </TableCell>
 

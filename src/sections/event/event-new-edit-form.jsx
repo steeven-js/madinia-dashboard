@@ -40,12 +40,15 @@ export const NewEventSchema = zod.object({
   date: schemaHelper.date({
     message: { required_error: 'La date est requise !' },
   }),
+  isScheduledDate: zod.boolean(),
+  scheduledDate: schemaHelper.date({
+    message: { required_error: 'La date programmée est requise !' },
+  }),
   price: zod.number().min(0, { message: 'Le prix doit être de 0 ou plus' }),
   description: zod.string().min(1, { message: 'La description est requise !' }),
   image: schemaHelper.file({
     message: { required_error: 'Single upload is required!' },
   }),
-  // images: schemaHelper.files(),
   isFree: zod.boolean(),
   speakers: zod.array(zod.string()),
   participants: zod.object({
@@ -68,6 +71,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       title: currentEvent?.title || '',
       status: currentEvent?.status || 'draft',
       date: currentEvent?.date || null,
+      scheduledDate: currentEvent?.scheduledDate || null,
       location: currentEvent?.location || '',
       isFree: currentEvent?.isFree ?? false,
       price: currentEvent?.price || 0,
@@ -80,6 +84,8 @@ export function EventNewEditForm({ event: currentEvent }) {
         max: currentEvent?.participants?.max || 10,
         current: currentEvent?.participants?.current || 0,
       },
+      isScheduledDate: currentEvent?.isScheduledDate || false,
+      isActive: currentEvent?.isActive || false,
     }),
     [currentEvent]
   );
@@ -160,6 +166,8 @@ export function EventNewEditForm({ event: currentEvent }) {
       const eventData = {
         ...data,
         images: data.images || [],
+        // Set isActive to false when isScheduledDate is true
+        isActive: data.isScheduledDate ? false : data.isActive || false,
       };
 
       let stripeEventId = currentEvent?.stripeEventId;
@@ -218,9 +226,16 @@ export function EventNewEditForm({ event: currentEvent }) {
 
         <Field.MobileDateTimePicker name="date" label="Date de l'événement" required />
 
+        <Field.Switch name="isScheduledDate" label="Date Programmée" />
+
+        {values.isScheduledDate && (
+          <Field.MobileDateTimePicker name="scheduledDate" label="Date programmée" required />
+        )}
+
         <Field.Select fullWidth name="status" label="Statut">
           {[
             { value: 'draft', label: 'Brouillon' },
+            { value: 'pending', label: 'Programmé' },
             { value: 'current', label: 'En cours' },
             { value: 'past', label: 'Terminé' },
             { value: 'cancelled', label: 'Annulé' },
