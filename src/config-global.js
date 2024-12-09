@@ -6,12 +6,18 @@ import packageJson from '../package.json';
 
 export const CONFIG = {
   name: 'Madin.IA Admin',
+  apiUrl: import.meta.env.VITE_API_URL_DEV ||'',
   serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
   assetsDir: import.meta.env.VITE_ASSET_URL ?? '',
   basePath: import.meta.env.VITE_BASE_PATH ?? '',
   sitePath: import.meta.env.VITE_SITE_URL ?? '',
   maintenance: import.meta.env.VITE_MAINTENANCE ?? false,
   version: packageJson.version,
+  headers: {
+    'Accept': 'application/json',
+    'Access-Control-Allow-Origin': 'application/json',
+    Authorization: `Bearer ${import.meta.env.VITE_BEARER_TOKEN ?? ''}`,
+  },
   /**
    * Auth
    * @method jwt | amplify | firebase | supabase | auth0
@@ -68,4 +74,8 @@ export const CONFIG = {
     admin: 'admin',
     user: 'user',
   },
+};
+
+export const ENDPOINTS = {
+  API_EVENT_URL: `${CONFIG.apiUrl}/api/events`,
 };

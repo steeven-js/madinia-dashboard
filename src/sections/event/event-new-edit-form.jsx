@@ -1,10 +1,9 @@
 import { z as zod } from 'zod';
 import { toast } from 'sonner';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useEffect, useCallback } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, updateDoc, collection } from 'firebase/firestore';
 
 import {
   Box,
@@ -24,8 +23,11 @@ import { useRouter } from 'src/routes/hooks';
 
 // import useImageUpload from 'src/hooks/use-event-image';
 
+import { doc, updateDoc } from 'firebase/firestore';
+
+import { deleteEventImage, handleEventSubmit } from 'src/hooks/use-event';
+
 import { db, storage } from 'src/utils/firebase';
-import { stripeService } from 'src/utils/stripe';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
@@ -117,103 +119,56 @@ export function EventNewEditForm({ event: currentEvent }) {
     }
   }, [currentEvent, defaultValues, reset]);
 
+  /**
+   * Supprime l'image actuelle
+   */
+  const handleRemoveFile = useCallback(() => {
+    setValue('image', null);
+  }, [setValue]);
+
+  /**
+   * Gère l'upload d'une seule image
+   * @param {File|File[]} acceptedFile - Fichier ou tableau de fichiers
+   * @returns {Promise<string>} URL de l'image uploadée
+   */
   const handleOneUpload = async (acceptedFile) => {
     try {
-      const file = acceptedFile[0]; // Prendre le premier fichier car c'est un upload unique
+      // Si on reçoit un tableau, prendre le premier fichier
+      const file = Array.isArray(acceptedFile) ? acceptedFile[0] : acceptedFile;
+
       const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
       const storageRef = ref(storage, fileName);
+
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
 
-      // Définir l'URL comme valeur de l'image
       setValue('image', url);
       toast.success('Image uploadée avec succès!');
+      return url;
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error("Échec de l'upload de l'image");
+      throw error;
     }
   };
 
-  // const handleUpload = async (acceptedFiles) => {
-  //   try {
-  //     // Upload des nouveaux fichiers
-  //     const uploadedUrls = await Promise.all(
-  //       acceptedFiles.map(async (file) => {
-  //         const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
-  //         const storageRef = ref(storage, fileName);
-  //         await uploadBytes(storageRef, file);
-  //         const url = await getDownloadURL(storageRef);
-  //         return url;
-  //       })
-  //     );
-
-  //     // Ajouter les nouvelles URLs aux images existantes
-  //     setValue('images', [...values.images, ...uploadedUrls]);
-  //     toast.success('Images uploadées avec succès!');
-  //   } catch (error) {
-  //     console.error('Error uploading images:', error);
-  //     toast.error("Échec de l'upload des images");
-  //   }
-  // };
-
+  // Modifier le onSubmit
   const onSubmit = async (data) => {
     try {
-      if (!data.title || !data.location) {
-        toast.error('Veuillez remplir tous les champs requis');
-        return;
-      }
+      // L'image est déjà uploadée par handleOneUpload, pas besoin de le refaire
+      const result = await handleEventSubmit(data, currentEvent);
 
-      const eventData = {
-        ...data,
-        images: data.images || [],
-        // Set isActive to false when isScheduledDate is true
-        isActive: data.isScheduledDate ? false : data.isActive || false,
-      };
-
-      let stripeEventId = currentEvent?.stripeEventId;
-
-      if (!data.isFree) {
-        if (currentEvent) {
-          if (stripeEventId) {
-            await stripeService.updateEvent(stripeEventId, data.title, data.price);
-          } else {
-            const stripeEvent = await stripeService.createEvent(data.title, data.price);
-            stripeEventId = stripeEvent.id;
-          }
-        } else {
-          const stripeEvent = await stripeService.createEvent(data.title, data.price);
-          stripeEventId = stripeEvent.id;
-        }
-        eventData.stripeEventId = stripeEventId;
-      }
-
-      if (currentEvent) {
-        await updateDoc(doc(db, 'events', currentEvent.id), eventData);
+      if (result.success) {
+        toast.success(result.message);
+        router.push(paths.dashboard.event.root);
       } else {
-        await setDoc(doc(collection(db, 'events')), eventData);
+        toast.error(result.error);
       }
-
-      router.push(paths.dashboard.event.root);
-      toast.success(currentEvent ? 'Event updated!' : 'Event created!');
     } catch (error) {
       console.error('Error saving event:', error);
       toast.error('Failed to save event');
     }
   };
-
-  // const handleRemoveFile = useCallback(
-  //   async (inputFile) => {
-  //     await removeImage(inputFile);
-  //     const filtered = values.images?.filter((file) => file !== inputFile);
-  //     setValue('images', filtered);
-  //   },
-  //   [setValue, values.images, removeImage]
-  // );
-
-  // const handleRemoveAllFiles = useCallback(async () => {
-  //   await removeAllImages();
-  //   setValue('images', []);
-  // }, [setValue, removeAllImages]);
 
   const renderDetails = (
     <Card>
@@ -257,41 +212,22 @@ export function EventNewEditForm({ event: currentEvent }) {
             name="image"
             maxSize={3145728}
             onDrop={handleOneUpload}
-            onRemove={() => setValue('image', '')}
+            onDelete={handleRemoveFile}
             helperText="Format accepté : image uniquement. Taille maximale : 3MB"
-            file={{
-              preview: currentEvent?.image,
-              url: currentEvent?.image,
-              type: 'image/*',
-            }}
+            file={
+              values.image
+                ? {
+                    preview: values.image,
+                    url: values.image,
+                    type: 'image/*',
+                  }
+                : null
+            }
             accept={{
               'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
             }}
           />
         </Stack>
-
-        {/* <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Images</Typography>
-          <Field.Upload
-            multiple
-            thumbnail
-            name="images"
-            maxSize={3145728}
-            onDrop={handleUpload}
-            onRemove={handleRemoveFile}
-            onRemoveAll={handleRemoveAllFiles}
-            helperText="Format accepté : images uniquement. Taille maximale : 3MB"
-            files={values.images.map((url) => ({
-              preview: url,
-              url,
-              type: 'image/*',
-            }))}
-            // Ajouter ces props pour plus de contrôle
-            accept={{
-              'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
-            }}
-          />
-        </Stack> */}
       </Stack>
     </Card>
   );
