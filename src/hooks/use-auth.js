@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth';
 
 import { db, auth } from 'src/utils/firebase';
+
 import { setUser, setRole, setError, clearAuth } from 'src/store/slices/authSlice';
 
 /**
