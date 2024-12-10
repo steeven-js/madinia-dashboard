@@ -4,9 +4,18 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth';
 
 import { db, auth } from 'src/utils/firebase';
-
 import { setUser, setRole, setError, clearAuth } from 'src/store/slices/authSlice';
 
+/**
+ * Hook principal de gestion de l'authentification
+ * Gère l'état de connexion de l'utilisateur et synchronise les données entre Firebase et Redux
+ * @returns {{
+ *   user: Object|null, // Utilisateur Firebase Auth
+ *   userId: string|null, // ID de l'utilisateur
+ *   userProfile: Object|null, // Profil utilisateur depuis Firestore
+ *   loading: boolean // État du chargement
+ * }}
+ */
 export function useAuth() {
   const dispatch = useDispatch();
   const [user, setLocalUser] = useState(null);
@@ -15,56 +24,63 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Helper function to serialize timestamps
+    /**
+     * Convertit les timestamps Firestore en millisecondes
+     * @param {Date|FirebaseTimestamp|number|null} timestamp - Timestamp à convertir
+     * @returns {number|null} Timestamp en millisecondes ou null
+     */
     const serializeTimestamp = (timestamp) => {
       if (!timestamp) return null;
-      // If it's a Firestore Timestamp, convert to milliseconds
+      // Conversion depuis Timestamp Firestore
       if (timestamp?.toMillis) {
         return timestamp.toMillis();
       }
-      // If it's already a Date object, convert to milliseconds
+      // Conversion depuis Date
       if (timestamp instanceof Date) {
         return timestamp.getTime();
       }
-      // If it's already a number (milliseconds), return as is
+      // Déjà en millisecondes
       if (typeof timestamp === 'number') {
         return timestamp;
       }
       return null;
     };
 
-    // Helper function to serialize the entire user profile
+    /**
+     * Sérialise l'ensemble du profil utilisateur en convertissant les timestamps
+     * @param {Object|null} profile - Profil utilisateur brut
+     * @returns {Object|null} Profil sérialisé
+     */
     const serializeProfile = (profile) => {
       if (!profile) return null;
 
       const serialized = { ...profile };
 
-      // Convert any timestamp fields to milliseconds
-      if (profile.createdAt) {
-        serialized.createdAt = serializeTimestamp(profile.createdAt);
-      }
-      if (profile.updatedAt) {
-        serialized.updatedAt = serializeTimestamp(profile.updatedAt);
-      }
-      if (profile.lastConnection) {
-        serialized.lastConnection = serializeTimestamp(profile.lastConnection);
-      }
+      // Conversion des champs temporels
+      ['createdAt', 'updatedAt', 'lastConnection'].forEach(field => {
+        if (profile[field]) {
+          serialized[field] = serializeTimestamp(profile[field]);
+        }
+      });
 
       return serialized;
     };
 
+    // Souscription aux changements d'état d'authentification
     const unsubscribe = onAuthStateChanged(auth, async (_user) => {
       if (_user) {
+        // Utilisateur connecté
         setLocalUser(_user);
         setUserId(_user.uid);
 
         try {
+          // Récupération du profil Firestore
           const userProfileDoc = await getDoc(doc(db, 'users', _user.uid));
           if (userProfileDoc.exists()) {
             const profileData = userProfileDoc.data();
             setUserProfile(profileData);
 
-            // Serialize the user data before dispatching to Redux
+            // Préparation des données pour Redux
             const serializedUserData = {
               id: _user.uid,
               email: _user.email,
@@ -73,10 +89,8 @@ export function useAuth() {
               ...serializeProfile(profileData)
             };
 
-            // Dispatch serialized user data to Redux
+            // Mise à jour du store Redux
             dispatch(setUser(serializedUserData));
-
-            // Dispatch role to Redux
             dispatch(setRole(profileData?.role || 'user'));
           } else {
             console.log("Le profil utilisateur n'existe pas");
@@ -87,6 +101,7 @@ export function useAuth() {
           dispatch(setError(error.message));
         }
       } else {
+        // Utilisateur déconnecté
         setLocalUser(null);
         setUserId(null);
         setUserProfile(null);
@@ -95,17 +110,31 @@ export function useAuth() {
       setLoading(false);
     });
 
+    // Nettoyage de la souscription
     return unsubscribe;
   }, [dispatch]);
 
   return { user, userId, userProfile, loading };
 }
 
+/**
+ * Hook pour la mise à jour du profil utilisateur
+ * Gère la mise à jour simultanée dans Firebase Auth et Firestore
+ * @returns {{
+ *   updateUserProfile: (newData: Object) => Promise<void>, // Fonction de mise à jour
+ *   isUpdating: boolean, // État de la mise à jour
+ *   error: string|null // Message d'erreur éventuel
+ * }}
+ */
 export function useUpdateUserProfile() {
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setUpdateError] = useState(null);
 
+  /**
+   * Met à jour le profil utilisateur
+   * @param {Object} newData - Nouvelles données du profil
+   */
   const updateUserProfile = async (newData) => {
     if (!user) {
       setUpdateError('User not authenticated');
@@ -116,7 +145,7 @@ export function useUpdateUserProfile() {
     setUpdateError(null);
 
     try {
-      // Update Firebase Auth user profile
+      // Mise à jour du profil Firebase Auth
       const authUpdateData = {};
       if (newData.displayName) authUpdateData.displayName = newData.displayName;
       if (newData.photoUrl) authUpdateData.photoUrl = newData.photoUrl;
@@ -125,13 +154,9 @@ export function useUpdateUserProfile() {
         await updateProfile(auth.currentUser, authUpdateData);
       }
 
-      // Update Firestore user profile
+      // Mise à jour du profil Firestore
       const userProfileRef = doc(db, 'users', user.uid);
       await updateDoc(userProfileRef, newData);
-
-      // You might want to refresh the userProfile state here
-      // This depends on how you've set up your useAuth hook
-      // For example, you could add a refreshUserProfile function to useAuth
     } catch (err) {
       setUpdateError(err.message);
     } finally {
@@ -142,11 +167,22 @@ export function useUpdateUserProfile() {
   return { updateUserProfile, isUpdating, error };
 }
 
-// UpdateFirebasePassword de l'utilisateur connecté
+/**
+ * Hook pour la mise à jour du mot de passe Firebase
+ * @returns {{
+ *   updateFirebasePassword: (newPassword: string) => Promise<void>, // Fonction de mise à jour
+ *   isUpdating: boolean, // État de la mise à jour
+ *   error: string|null // Message d'erreur éventuel
+ * }}
+ */
 export function useUpdateFirebasePassword() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setFirebaseError] = useState(null);
 
+  /**
+   * Met à jour le mot de passe de l'utilisateur
+   * @param {string} newPassword - Nouveau mot de passe
+   */
   const updateFirebasePassword = async (newPassword) => {
     setIsUpdating(true);
     setFirebaseError(null);

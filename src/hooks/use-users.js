@@ -4,17 +4,30 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, addDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
-
 import { toast } from 'src/components/snackbar';
 
+/**
+ * Récupère l'ID de l'utilisateur actuellement connecté
+ * @returns {string|undefined} L'ID de l'utilisateur ou undefined si non connecté
+ */
 const getCurrentUserUid = () => auth.currentUser?.uid;
 
+/**
+ * Hook pour récupérer la liste des utilisateurs avec mise à jour en temps réel
+ * @returns {{
+ *   users: Array<{id: string, [key: string]: any}>, // Liste des utilisateurs
+ *   loading: boolean // État du chargement
+ * }}
+ */
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Référence à la collection users
     const usersRef = collection(db, 'users');
+
+    // Souscription aux changements en temps réel
     const unsubscribe = onSnapshot(
       usersRef,
       (snapshot) => {
@@ -31,12 +44,21 @@ export const useUsers = () => {
       }
     );
 
+    // Nettoyage de la souscription
     return () => unsubscribe();
   }, []);
 
   return { users, loading };
 };
 
+/**
+ * Hook étendu pour gérer les données utilisateurs avec fonction de mise à jour
+ * @returns {{
+ *   users: Array<{id: string, [key: string]: any}>, // Liste des utilisateurs
+ *   loading: boolean, // État du chargement
+ *   updateUsersList: (newUsers: Array) => void // Fonction pour mettre à jour la liste
+ * }}
+ */
 export const useUsersData = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,11 +84,20 @@ export const useUsersData = () => {
     return () => unsubscribe();
   }, []);
 
+  // Fonction mémorisée pour mettre à jour la liste des utilisateurs
   const updateUsersList = useCallback((newUsers) => setUsers(newUsers), []);
 
   return { users, loading, updateUsersList };
 };
 
+/**
+ * Hook pour récupérer un utilisateur spécifique par son ID
+ * @param {string} id - ID de l'utilisateur à récupérer
+ * @returns {{
+ *   user: {id: string, [key: string]: any} | null, // Données de l'utilisateur
+ *   loading: boolean // État du chargement
+ * }}
+ */
 export const useUserById = (id) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,11 +106,13 @@ export const useUserById = (id) => {
     if (!id) {
       setUser(null);
       setLoading(false);
-      // Return a no-op cleanup function
-      return () => {};
+      return () => { };
     }
 
+    // Référence au document utilisateur
     const userDocRef = doc(db, 'users', id);
+
+    // Souscription aux changements en temps réel
     const unsubscribe = onSnapshot(
       userDocRef,
       (docSnapshot) => {
@@ -103,16 +136,26 @@ export const useUserById = (id) => {
   return { user, loading };
 };
 
+/**
+ * Met à jour ou crée un utilisateur avec gestion de l'avatar
+ * @param {Object} params - Paramètres de la fonction
+ * @param {Object} params.data - Données de l'utilisateur
+ * @param {string|null} [params.id=null] - ID de l'utilisateur (null pour création)
+ * @returns {Promise<{
+ *   success: boolean,
+ *   id: string,
+ *   data: Object
+ * }>}
+ */
 export const updateOrCreateUserData = async ({ data, id = null }) => {
+  // Extraction de l'avatar et des autres données
   const { avatarUrl: newAvatarFile, ...otherData } = data;
   let avatarUrl = newAvatarFile;
-  let userRef;
 
   try {
-    // Gestion de l'avatar si c'est un nouveau fichier
+    // Gestion du téléchargement de l'avatar si c'est un nouveau fichier
     if (newAvatarFile instanceof File) {
       const fileExtension = newAvatarFile.name.split('.').pop().toLowerCase();
-      // Si pas d'ID, on en génère un pour le stockage de l'avatar
       const avatarId = id;
       const fileName = `avatars/${avatarId}/avatar.${fileExtension}`;
       const storageRef = ref(storage, fileName);
@@ -121,7 +164,7 @@ export const updateOrCreateUserData = async ({ data, id = null }) => {
       avatarUrl = await getDownloadURL(storageRef);
     }
 
-    // Préparation des données pour Firestore
+    // Préparation des données utilisateur
     const userData = {
       ...otherData,
       updatedAt: Date.now(),
@@ -131,13 +174,14 @@ export const updateOrCreateUserData = async ({ data, id = null }) => {
       userData.avatarUrl = avatarUrl;
     }
 
-    // Création ou mise à jour selon la présence de l'ID
+    let { id: userId } = { id };
+
     if (id) {
-      // Mise à jour
-      userRef = doc(db, 'users', id);
+      // Mise à jour d'un utilisateur existant
+      const userRef = doc(db, 'users', id);
       await updateDoc(userRef, userData);
 
-      // Mise à jour du profil auth si l'utilisateur est connecté
+      // Mise à jour du profil auth si nécessaire
       if (auth.currentUser && (otherData.name || avatarUrl)) {
         const profileUpdates = {};
 
@@ -152,19 +196,18 @@ export const updateOrCreateUserData = async ({ data, id = null }) => {
         await updateProfile(auth.currentUser, profileUpdates);
       }
     } else {
-      // Création
+      // Création d'un nouvel utilisateur
       userData.createdAt = Date.now();
       userData.status = 'active';
       const newUserRef = await addDoc(collection(db, 'users'), userData);
-      userRef = newUserRef;
-      id = newUserRef.id;
+      userId = newUserRef.id;
     }
 
-    toast.success(id ? 'Mise à jour réussie !' : 'Création réussie !');
+    toast.success(userId ? 'Mise à jour réussie !' : 'Création réussie !');
 
     return {
       success: true,
-      id,
+      id: userId,
       data: userData
     };
 
@@ -175,6 +218,13 @@ export const updateOrCreateUserData = async ({ data, id = null }) => {
   }
 };
 
+/**
+ * Met à jour rapidement les données d'un utilisateur
+ * @param {Object} params - Paramètres de la fonction
+ * @param {Object} params.data - Données à mettre à jour
+ * @throws {Error} Si aucun utilisateur n'est connecté
+ * @returns {Promise<void>}
+ */
 export const updateFastUsers = async ({ data }) => {
   const uid = getCurrentUserUid();
   if (!uid) {

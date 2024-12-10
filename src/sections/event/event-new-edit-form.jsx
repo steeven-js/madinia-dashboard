@@ -1,7 +1,7 @@
 import { z as zod } from 'zod';
 import { toast } from 'sonner';
-import { useMemo, useEffect, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -23,11 +23,10 @@ import { useRouter } from 'src/routes/hooks';
 
 // import useImageUpload from 'src/hooks/use-event-image';
 
-import { doc, updateDoc } from 'firebase/firestore';
 
-import { deleteEventImage, handleEventSubmit } from 'src/hooks/use-event';
+import { handleEventSubmit } from 'src/hooks/use-event';
 
-import { db, storage } from 'src/utils/firebase';
+import { storage } from 'src/utils/firebase';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
