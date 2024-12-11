@@ -20,7 +20,7 @@ export function useEvents() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
 
     setLoading(true);
     const eventsRef = collection(db, 'events');
@@ -44,7 +44,7 @@ export function useEvents() {
     return () => unsubscribe();
   }, []);
 
-return { events, loading };
+  return { events, loading };
 }
 
 /**
@@ -70,28 +70,28 @@ export function useEventById(eventId) {
     setLoading(true);
     const eventRef = doc(db, 'events', eventId);
     const unsubscribe = onSnapshot(
-          eventRef,
-          (docSnapshot) => {
-            if (docSnapshot.exists()) {
-              setEvent({ id: docSnapshot.id, ...docSnapshot.data() });
-              setLoading(false);
-            } else {
-              setError('Event not found');
-              setLoading(false);
-            }
-          },
-          (_error) => {
-            console.error('Error fetching event:', _error);
-            setError(_error.message);
-            setLoading(false);
-          }
-        );
+      eventRef,
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          setEvent({ id: docSnapshot.id, ...docSnapshot.data() });
+          setLoading(false);
+        } else {
+          setError('Event not found');
+          setLoading(false);
+        }
+      },
+      (_error) => {
+        console.error('Error fetching event:', _error);
+        setError(_error.message);
+        setLoading(false);
+      }
+    );
 
-        // eslint-disable-next-line consistent-return
-        return () => unsubscribe();
-      }, [eventId]);
+    // eslint-disable-next-line consistent-return
+    return () => unsubscribe();
+  }, [eventId]);
 
-      return { event, loading, error };
+  return { event, loading, error };
 }
 
 /**
@@ -179,7 +179,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
  * - error: Message d'erreur (si échec)
  */
 export async function deleteEvent(eventId) {
-    try {
+  try {
     // Supprimer le document
     const eventRef = doc(db, 'events', eventId);
     await deleteDoc(eventRef);
