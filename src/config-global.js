@@ -79,4 +79,5 @@ export const CONFIG = {
 
 export const ENDPOINTS = {
   API_EVENT_URL: `${CONFIG.apiUrl}/api/events`,
+  API_STRIPE_EVENT_URL: `${CONFIG.apiUrl}/api/stripe`,
 };

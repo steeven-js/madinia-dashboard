@@ -95,7 +95,7 @@ export function useEventById(eventId) {
 }
 
 /**
- * Crée ou met à jour un événement dans Firebase et SQL
+ * Crée ou met à jour un événement dans Firebase, SQL et Stripe
  * @param {Object} data - Les données de l'événement
  * @param {Object|null} currentEvent - L'événement existant si c'est une mise à jour
  * @returns {Promise<Object>} Un objet contenant:
@@ -107,55 +107,123 @@ export function useEventById(eventId) {
  */
 export const handleEventSubmit = async (data, currentEvent = null) => {
   try {
-    // Préparation des données pour Firebase et SQL
-    const eventData = {
+    const shouldStoreInSQL = data.price != null && data.price > 0;
+
+    // Préparation des données pour Firebase et SQL selon le modèle Laravel
+    const sqlEventData = {
+      firebaseId: '', // Sera défini plus tard
       title: data.title,
       scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
-      is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending'),
       status: data.status,
+      is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending'),
     };
 
-    // Configuration pour Axios
     const config = {
       headers: CONFIG.headers
     };
 
-    let response;
+    let response = null;
     let firebaseId;
+    let stripeData = null;
 
-    // Gestion Firebase
     if (currentEvent) {
       // Mise à jour Firebase
       await updateDoc(doc(db, 'events', currentEvent.id), data);
       firebaseId = currentEvent.id;
+      sqlEventData.firebaseId = firebaseId;
 
-      // Mise à jour SQL via API
-      response = await axios.put(
-        `${ENDPOINTS.API_EVENT_URL}/${firebaseId}`,
-        eventData,
-        config
-      );
+      if (shouldStoreInSQL) {
+        // Gestion Stripe si nécessaire
+        if (currentEvent.stripeEventId) {
+          stripeData = await axios.put(
+            `${ENDPOINTS.API_STRIPE_EVENT_URL}/update-event/${currentEvent.stripeEventId}`,
+            {
+              name: data.title,
+              price: data.price
+            },
+            config
+          );
+        } else {
+          stripeData = await axios.post(
+            `${ENDPOINTS.API_STRIPE_EVENT_URL}/create-event`,
+            {
+              name: data.title,
+              price: data.price
+            },
+            config
+          );
+        }
+
+        // Mise à jour SQL
+        response = await axios.put(
+          `${ENDPOINTS.API_EVENT_URL}/${firebaseId}`,
+          {
+            ...sqlEventData,
+            stripe_event_id: stripeData?.data?.id,
+            stripe_price_id: stripeData?.data?.price_id,
+          },
+          config
+        );
+      } else if (currentEvent.price > 0) {
+        // Si l'événement était payant avant et ne l'est plus
+        if (currentEvent.stripeEventId) {
+          await axios.delete(
+            `${ENDPOINTS.API_STRIPE_EVENT_URL}/delete-event/${currentEvent.stripeEventId}`,
+            config
+          );
+        }
+        try {
+          await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${firebaseId}`, config);
+        } catch (deleteError) {
+          console.error('Erreur lors de la suppression SQL:', deleteError);
+        }
+      }
     } else {
       // Création dans Firebase
       const newDocRef = doc(collection(db, 'events'));
       firebaseId = newDocRef.id;
-      await setDoc(newDocRef, { ...data, id: firebaseId });
+      sqlEventData.firebaseId = firebaseId;
 
-      // Création dans SQL via API
-      response = await axios.post(
-        ENDPOINTS.API_EVENT_URL,
-        {
-          ...eventData,
-          firebaseId
-        },
-        config
-      );
+      if (shouldStoreInSQL) {
+        // Création Stripe
+        stripeData = await axios.post(
+          `${ENDPOINTS.API_STRIPE_EVENT_URL}/create-event`,
+          {
+            name: data.title,
+            price: data.price
+          },
+          config
+        );
+
+        // Création dans Firebase avec les IDs Stripe
+        await setDoc(newDocRef, {
+          ...data,
+          id: firebaseId,
+          stripeEventId: stripeData.data.id,
+          stripePriceId: stripeData.data.price_id
+        });
+
+        // Création dans SQL
+        response = await axios.post(
+          ENDPOINTS.API_EVENT_URL,
+          {
+            ...sqlEventData,
+            stripe_event_id: stripeData.data.id,
+            stripe_price_id: stripeData.data.price_id,
+          },
+          config
+        );
+      } else {
+        // Création dans Firebase uniquement
+        await setDoc(newDocRef, { ...data, id: firebaseId });
+      }
     }
 
     return {
-      success: response.status === 201 || response.status === 200,
-      data: response.data,
+      success: !shouldStoreInSQL || (response && (response.status === 201 || response.status === 200)),
+      data: response?.data || null,
       firebaseId,
+      stripeData: stripeData?.data || null,
       message: currentEvent ? 'Événement mis à jour!' : 'Événement créé!'
     };
 
@@ -166,7 +234,8 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
       success: false,
       error: error.response?.data?.message || 'Échec de la sauvegarde',
       firebaseId: null,
-      data: null
+      data: null,
+      stripeData: null
     };
   }
 };

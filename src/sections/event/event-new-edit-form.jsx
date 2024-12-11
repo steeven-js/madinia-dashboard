@@ -23,7 +23,6 @@ import { useRouter } from 'src/routes/hooks';
 
 // import useImageUpload from 'src/hooks/use-event-image';
 
-
 import { handleEventSubmit } from 'src/hooks/use-event';
 
 import { storage } from 'src/utils/firebase';
@@ -35,37 +34,36 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 
 // Schema definition remains the same...
 export const NewEventSchema = zod.object({
-  title: zod.string().min(1, { message: 'Le titre est requis !' }),
-  status: zod.string(),
-  location: zod.string().min(1, { message: 'Le lieu est requis !' }),
-  date: schemaHelper.date({
-    message: { required_error: 'La date est requise !' },
-  }),
-  isScheduledDate: zod.boolean(),
-  scheduledDate: schemaHelper.date({
-    message: { required_error: 'La date programmée est requise !' },
-  }),
-  price: zod.number().min(0, { message: 'Le prix doit être de 0 ou plus' }),
-  description: zod.string().min(1, { message: 'La description est requise !' }),
-  image: schemaHelper.file({
-    message: { required_error: 'Single upload is required!' },
-  }),
-  isFree: zod.boolean(),
-  speakers: zod.array(zod.string()),
-  participants: zod.object({
-    max: zod
-      .number()
-      .min(1, { message: 'Le nombre maximum de participants doit être supérieur à 0' }),
-    current: zod.number(),
-  }),
+  title: zod.string().optional(),
+  status: zod.string().optional(),
+  location: zod.string().optional(),
+  date: schemaHelper.date().optional(),
+  isScheduledDate: zod.boolean().optional(),
+  scheduledDate: schemaHelper.date().optional().nullable(),
+  price: zod.number().optional(),
+  description: zod.string().optional(),
+  image: schemaHelper.file().optional(),
+  isFree: zod.boolean().optional(),
+  links: zod
+    .array(
+      zod.object({
+        url: zod.string().url('URL invalide').optional(),
+        label: zod.string().optional(),
+      })
+    )
+    .optional(),
+  participants: zod
+    .object({
+      max: zod.number().optional(),
+      current: zod.number().optional(),
+    })
+    .optional(),
 });
 
 // ----------------------------------------------------------------------
 
 export function EventNewEditForm({ event: currentEvent }) {
   const router = useRouter();
-
-  // const { removeImage, removeAllImages } = useImageUpload(currentEvent?.id);
 
   const defaultValues = useMemo(
     () => ({
@@ -78,8 +76,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
       image: currentEvent?.image || '',
-      // images: currentEvent?.images || [],
-      speakers: currentEvent?.speakers || [],
+      links: currentEvent?.links || [{ url: '', label: '' }],
       stripeEventId: currentEvent?.stripeEventId || '',
       participants: {
         max: currentEvent?.participants?.max || 10,
@@ -99,7 +96,7 @@ export function EventNewEditForm({ event: currentEvent }) {
   const { control } = methods;
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'speakers',
+    name: 'links',
   });
 
   const {
@@ -112,29 +109,54 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const values = watch();
 
+  // Reset form when currentEvent changes
   useEffect(() => {
     if (currentEvent) {
       reset(defaultValues);
     }
   }, [currentEvent, defaultValues, reset]);
 
-  /**
-   * Supprime l'image actuelle
-   */
+  // Combined date synchronization logic
+  useEffect(() => {
+    if (!values.isScheduledDate) {
+      // When isScheduledDate is false, always sync scheduledDate with date
+      if (values.date !== values.scheduledDate) {
+        setValue('scheduledDate', values.date);
+      }
+    } else if (!values.scheduledDate) {
+      // When isScheduledDate is true and scheduledDate is not set, initialize it with date
+      setValue('scheduledDate', values.date);
+    }
+  }, [values.isScheduledDate, values.date, values.scheduledDate, setValue]);
+
+  const handleDateChange = useCallback(
+    (newDate) => {
+      setValue('date', newDate);
+      if (!values.isScheduledDate) {
+        setValue('scheduledDate', newDate);
+      }
+    },
+    [setValue, values.isScheduledDate]
+  );
+
+  const handleScheduledToggle = useCallback(
+    (e) => {
+      const checked = e.target.checked;
+      setValue('isScheduledDate', checked);
+      if (!checked) {
+        setValue('scheduledDate', values.date);
+      }
+    },
+    [setValue, values.date]
+  );
+
   const handleRemoveFile = useCallback(() => {
     setValue('image', null);
   }, [setValue]);
 
-  /**
-   * Gère l'upload d'une seule image
-   * @param {File|File[]} acceptedFile - Fichier ou tableau de fichiers
-   * @returns {Promise<string>} URL de l'image uploadée
-   */
   const handleOneUpload = async (acceptedFile) => {
     try {
-      // Si on reçoit un tableau, prendre le premier fichier
       const file = Array.isArray(acceptedFile) ? acceptedFile[0] : acceptedFile;
-
       const fileName = `events/${currentEvent?.id || Date.now()}/${Date.now()}_${file.name}`;
       const storageRef = ref(storage, fileName);
 
@@ -151,10 +173,8 @@ export function EventNewEditForm({ event: currentEvent }) {
     }
   };
 
-  // Modifier le onSubmit
   const onSubmit = async (data) => {
     try {
-      // L'image est déjà uploadée par handleOneUpload, pas besoin de le refaire
       const result = await handleEventSubmit(data, currentEvent);
 
       if (result.success) {
@@ -172,20 +192,22 @@ export function EventNewEditForm({ event: currentEvent }) {
   const renderDetails = (
     <Card>
       <CardHeader title="Détails" subheader="Titre, description courte, image..." sx={{ mb: 3 }} />
-
       <Divider />
-
       <Stack spacing={3} sx={{ p: 3 }}>
-        <Field.Text name="title" label="Titre de l'événement" required />
-
-        <Field.MobileDateTimePicker name="date" label="Date de l'événement" required />
-
-        <Field.Switch name="isScheduledDate" label="Date Programmée" />
-
+        <Field.Text name="title" label="Titre de l'événement" />
+        <Field.MobileDateTimePicker
+          name="date"
+          label="Date de l'événement"
+          onChange={handleDateChange}
+        />
+        <Field.Switch
+          name="isScheduledDate"
+          label="Date Programmée"
+          onChange={handleScheduledToggle}
+        />
         {values.isScheduledDate && (
-          <Field.MobileDateTimePicker name="scheduledDate" label="Date programmée" required />
+          <Field.MobileDateTimePicker name="scheduledDate" label="Date programmée" />
         )}
-
         <Field.Select fullWidth name="status" label="Statut">
           {[
             { value: 'draft', label: 'Brouillon' },
@@ -199,11 +221,8 @@ export function EventNewEditForm({ event: currentEvent }) {
             </MenuItem>
           ))}
         </Field.Select>
-
-        <Field.Text name="location" label="Lieu" required />
-
-        <Field.Text name="description" label="Description" multiline rows={4} required />
-
+        <Field.Text name="location" label="Lieu" />
+        <Field.Text name="description" label="Description" multiline rows={4} />
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Image Principale</Typography>
           <Field.Upload
@@ -238,29 +257,36 @@ export function EventNewEditForm({ event: currentEvent }) {
         subheader="Fonctions et attributs additionnels..."
         sx={{ mb: 3 }}
       />
-
       <Divider />
-
       <Stack spacing={2} sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
-          Intervenants :
+          Liens :
         </Typography>
-
         {fields.map((field, index) => (
           <Stack key={field.id} direction="row" spacing={2} alignItems="center">
-            <Field.Text name={`speakers.${index}`} label={`Intervenant ${index + 1}`} required />
-            <IconButton onClick={() => remove(index)} color="error">
+            <Field.Text
+              name={`links.${index}.label`}
+              label="Label"
+              placeholder="Ex: Site web, Facebook..."
+              sx={{ width: '30%' }}
+            />
+            <Field.Text
+              name={`links.${index}.url`}
+              label="URL"
+              placeholder="https://"
+              sx={{ flex: 1 }}
+            />
+            <IconButton onClick={() => remove(index)} color="error" sx={{ mt: 2 }}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
           </Stack>
         ))}
-
         <Button
           startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => append('')}
+          onClick={() => append({ url: '', label: '' })}
           variant="soft"
         >
-          Ajouter un intervenant
+          Ajouter un lien
         </Button>
       </Stack>
     </Card>
@@ -269,22 +295,17 @@ export function EventNewEditForm({ event: currentEvent }) {
   const renderPricing = (
     <Card>
       <CardHeader title="Tarification" subheader="Informations sur les prix" sx={{ mb: 3 }} />
-
       <Divider />
-
       <Stack spacing={3} sx={{ p: 3 }}>
         <Field.Text
           name="participants.max"
           label="Nombre maximum de participants"
           type="number"
-          required
           InputProps={{
             inputProps: { min: 1 },
           }}
         />
-
         <Field.Switch name="isFree" label="Événement gratuit" />
-
         {!values.isFree && (
           <Field.Text
             name="price"
@@ -325,11 +346,8 @@ export function EventNewEditForm({ event: currentEvent }) {
     <Form methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 880 } }}>
         {renderDetails}
-
         {renderProperties}
-
         {renderPricing}
-
         {renderActions}
       </Stack>
     </Form>
