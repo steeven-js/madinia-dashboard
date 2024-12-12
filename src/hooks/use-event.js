@@ -188,6 +188,8 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending')
           };
 
+          console.log('SQL Payload:', sqlPayload);
+
           if (eventResponse.data.exists) {
             response = await axios.put(
               `${ENDPOINTS.API_EVENT_URL}/${firebaseId}`,
@@ -293,15 +295,17 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     };
 
   } catch (error) {
-    console.error('Error details:', error);
+    console.error('Error details:', error.response?.data || error);
     let errorMessage = 'Échec de la sauvegarde';
 
     if (error.response?.status === 422) {
       const validationErrors = error.response.data.errors;
       console.log('Validation errors:', validationErrors);
-      errorMessage = Object.values(validationErrors)
-        .flat()
+      errorMessage = Object.entries(validationErrors)
+        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
         .join('\n');
+    } else {
+      errorMessage = error.response?.data?.message || error.message;
     }
 
     toast.error(errorMessage);
