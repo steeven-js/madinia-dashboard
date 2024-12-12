@@ -2,7 +2,6 @@ import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-import { Typography } from '@mui/material';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
@@ -48,14 +47,8 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
                 onClick={onEditRow}
                 sx={{ cursor: 'pointer', typography: 'subtitle2' }}
               >
-                {row.title}
+                {row.title.length > 30 ? `${row.title.slice(0, 30)}...` : row.title}
               </Link>
-
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {row.description.length > 25
-                  ? `${row.description.slice(0, 25)}...`
-                  : row.description}
-              </Typography>
             </Stack>
           </Stack>
         </TableCell>
@@ -106,7 +99,7 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
             }}
           >
             <Iconify icon="solar:pen-bold" />
-            Edit
+            Modifier
           </MenuItem>
 
           <MenuItem
@@ -117,7 +110,7 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            Supprimer
           </MenuItem>
         </MenuList>
       </CustomPopover>
@@ -125,11 +118,11 @@ export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteR
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
-        content="Are you sure want to delete this event?"
+        title="Supprimer"
+        content="Êtes-vous sûr de vouloir supprimer cet événement ?"
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            Supprimer
           </Button>
         }
       />

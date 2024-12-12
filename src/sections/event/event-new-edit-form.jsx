@@ -27,8 +27,9 @@ import { handleEventSubmit } from 'src/hooks/use-event';
 
 import { storage } from 'src/utils/firebase';
 
-import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
+import { FacebookIcon, InstagramIcon, LinkedinIcon, TwitterIcon } from 'src/assets/icons';
+import { LoadingButton } from '@mui/lab';
 
 // ----------------------------------------------------------------------
 
@@ -43,14 +44,10 @@ export const NewEventSchema = zod.object({
   description: zod.string().optional(),
   image: schemaHelper.file().optional(),
   isFree: zod.boolean().optional(),
-  links: zod
-    .array(
-      zod.object({
-        url: zod.string().url('URL invalide').optional(),
-        label: zod.string().optional(),
-      })
-    )
-    .optional(),
+  facebook: zod.string().optional().nullable(),
+  instagram: zod.string().optional().nullable(),
+  linkedin: zod.string().optional().nullable(),
+  twitter: zod.string().optional().nullable(),
   participants: zod
     .object({
       max: zod.number().optional(),
@@ -74,8 +71,11 @@ export function EventNewEditForm({ event: currentEvent }) {
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
       image: currentEvent?.image || '',
-      links: currentEvent?.links || [{ url: '', label: '' }],
       stripeEventId: currentEvent?.stripeEventId || '',
+      facebook: currentEvent.facebook || '',
+      instagram: currentEvent.instagram || '',
+      linkedin: currentEvent.linkedin || '',
+      twitter: currentEvent.twitter || '',
       participants: {
         max: currentEvent?.participants?.max || 10,
         current: currentEvent?.participants?.current || 0,
@@ -89,12 +89,6 @@ export function EventNewEditForm({ event: currentEvent }) {
   const methods = useForm({
     resolver: zodResolver(NewEventSchema),
     defaultValues,
-  });
-
-  const { control } = methods;
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'links',
   });
 
   const {
@@ -247,45 +241,30 @@ export function EventNewEditForm({ event: currentEvent }) {
     </Card>
   );
 
-  const renderProperties = (
-    <Card>
+  const renderSocialLink = (
+    <Card sx={{ p: 3, gap: 3, display: 'flex', flexDirection: 'column' }}>
       <CardHeader
-        title="Propriétés"
-        subheader="Fonctions et attributs additionnels..."
+        title="Liens Sociaux"
+        subheader="Liens vers les réseaux sociaux de l'événement"
         sx={{ mb: 3 }}
       />
       <Divider />
-      <Stack spacing={2} sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
-          Liens :
-        </Typography>
-        {fields.map((field, index) => (
-          <Stack key={field.id} direction="row" spacing={2} alignItems="center">
-            <Field.Text
-              name={`links.${index}.label`}
-              label="Label"
-              placeholder="Ex: Site web, Facebook..."
-              sx={{ width: '30%' }}
-            />
-            <Field.Text
-              name={`links.${index}.url`}
-              label="URL"
-              placeholder="https://"
-              sx={{ flex: 1 }}
-            />
-            <IconButton onClick={() => remove(index)} color="error" sx={{ mt: 2 }}>
-              <Iconify icon="solar:trash-bin-trash-bold" />
-            </IconButton>
-          </Stack>
-        ))}
-        <Button
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => append({ url: '', label: '' })}
-          variant="soft"
-        >
-          Ajouter un lien
-        </Button>
-      </Stack>
+      {['facebook', 'instagram', 'linkedin', 'twitter'].map((social) => (
+        <Field.Text
+          key={social}
+          name={social}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                {social === 'facebook' && <FacebookIcon width={24} />}
+                {social === 'instagram' && <InstagramIcon width={24} />}
+                {social === 'linkedin' && <LinkedinIcon width={24} />}
+                {social === 'twitter' && <TwitterIcon width={24} sx={{ color: 'text.primary' }} />}
+              </InputAdornment>
+            ),
+          }}
+        />
+      ))}
     </Card>
   );
 
@@ -327,15 +306,9 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const renderActions = (
     <Stack spacing={3} direction="row" alignItems="center" flexWrap="wrap">
-      <Button
-        type="submit"
-        variant="outlined"
-        size="large"
-        disabled={isSubmitting}
-        sx={{ color: 'error.main' }}
-      >
+      <LoadingButton type="submit" variant="contained" loading={isSubmitting} sx={{ ml: 'auto' }}>
         {!currentEvent ? 'Create event' : 'Save changes'}
-      </Button>
+      </LoadingButton>
     </Stack>
   );
 
@@ -343,7 +316,7 @@ export function EventNewEditForm({ event: currentEvent }) {
     <Form methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 880 } }}>
         {renderDetails}
-        {renderProperties}
+        {renderSocialLink}
         {renderPricing}
         {renderActions}
       </Stack>
