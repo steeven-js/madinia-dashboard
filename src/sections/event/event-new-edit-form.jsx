@@ -1,19 +1,17 @@
 import { z as zod } from 'zod';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMemo, useEffect, useCallback } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import {
   Box,
   Card,
   Stack,
-  Button,
   Divider,
   MenuItem,
   CardHeader,
-  IconButton,
   Typography,
   InputAdornment,
 } from '@mui/material';
@@ -23,13 +21,15 @@ import { useRouter } from 'src/routes/hooks';
 
 // import useImageUpload from 'src/hooks/use-event-image';
 
+import { LoadingButton } from '@mui/lab';
+
 import { handleEventSubmit } from 'src/hooks/use-event';
 
 import { storage } from 'src/utils/firebase';
 
+import { TwitterIcon, FacebookIcon, LinkedinIcon, InstagramIcon } from 'src/assets/icons';
+
 import { Form, Field, schemaHelper } from 'src/components/hook-form';
-import { FacebookIcon, InstagramIcon, LinkedinIcon, TwitterIcon } from 'src/assets/icons';
-import { LoadingButton } from '@mui/lab';
 
 // ----------------------------------------------------------------------
 
