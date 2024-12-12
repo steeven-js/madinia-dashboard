@@ -113,6 +113,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     const sqlEventData = {
       firebaseId: '', // Sera défini plus tard
       title: data.title,
+      price: data.price,
       scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
       status: data.status,
       is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending'),
