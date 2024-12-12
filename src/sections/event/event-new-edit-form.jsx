@@ -36,7 +36,6 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 export const NewEventSchema = zod.object({
   title: zod.string().optional(),
   status: zod.string().optional(),
-  location: zod.string().optional(),
   date: schemaHelper.date().optional(),
   isScheduledDate: zod.boolean().optional(),
   scheduledDate: schemaHelper.date().optional().nullable(),
@@ -71,7 +70,6 @@ export function EventNewEditForm({ event: currentEvent }) {
       status: currentEvent?.status || 'draft',
       date: currentEvent?.date || null,
       scheduledDate: currentEvent?.scheduledDate || null,
-      location: currentEvent?.location || '',
       isFree: currentEvent?.isFree ?? false,
       price: currentEvent?.price || 0,
       description: currentEvent?.description || '',
@@ -221,7 +219,6 @@ export function EventNewEditForm({ event: currentEvent }) {
             </MenuItem>
           ))}
         </Field.Select>
-        <Field.Text name="location" label="Lieu" />
         <Field.Text name="description" label="Description" multiline rows={4} />
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Image Principale</Typography>
