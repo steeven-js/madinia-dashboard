@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { ref, listAll, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, getDoc } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
 
@@ -324,7 +324,7 @@ export async function deleteEvent(eventId) {
   try {
     // Get event data to check if it exists in SQL
     const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await eventRef.get();
+    const eventSnap = await getDoc(eventRef); // Correction ici : utiliser getDoc au lieu de get()
     const event = eventSnap.exists() ? eventSnap.data() : null;
 
     // If event has Stripe data, delete from SQL
@@ -343,8 +343,7 @@ export async function deleteEvent(eventId) {
         // Then delete from SQL
         await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, config);
       } catch (sqlError) {
-        // console.error('Error deleting from SQL/Stripe:', sqlError);
-        // Continue with Firebase deletion even if SQL/Stripe deletion fails
+        console.error('Error deleting from SQL/Stripe:', sqlError);
       }
     }
 
@@ -364,7 +363,7 @@ export async function deleteEvent(eventId) {
     return { success: true };
 
   } catch (error) {
-    // console.error('Error deleting event:', error);
+    console.error('Error deleting event:', error);
     toast.error(error.message || 'Operation failed');
     return { success: false, error: error.message };
   }
