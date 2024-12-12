@@ -110,7 +110,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     const shouldStoreInSQL = data.price != null && data.price > 0;
     const config = { headers: CONFIG.headers };
 
-    // Préparation des données SQL
+    // Préparation des données SQL de base
     const sqlEventData = {
       firebaseId: '',
       title: data.title,
@@ -132,15 +132,14 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
 
       const method = isUpdate ? 'put' : 'post';
 
-      // Modification ici : on utilise title au lieu de name
-      return axios[method](
-        endpoint,
-        {
-          title: data.title,  // Assurez-vous d'utiliser title ici
-          price: data.price
-        },
-        config
-      );
+      const payload = {
+        title: data.title,
+        price: data.price
+      };
+
+      // Renommé 'response' en 'stripeResponse' pour éviter le conflit
+      const stripeResponse = await axios[method](endpoint, payload, config);
+      return stripeResponse;
     };
 
     // Mise à jour d'un événement existant
@@ -151,12 +150,13 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
       if (shouldStoreInSQL) {
         try {
           // Gestion Stripe
-          if (currentEvent.stripeEventId) {
-            // Mise à jour d'un événement payant existant
-            stripeData = await handleStripeOperation(true, currentEvent.stripeEventId);
-          } else {
-            // Conversion d'un événement gratuit en payant
-            stripeData = await handleStripeOperation();
+          stripeData = await handleStripeOperation(
+            !!currentEvent.stripeEventId,
+            currentEvent.stripeEventId
+          );
+
+          if (!stripeData?.data) {
+            throw new Error('Erreur lors de l\'opération Stripe');
           }
 
           const stripeIds = {
@@ -176,10 +176,16 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             config
           );
 
+          // Créer le payload SQL uniquement après avoir vérifié stripeData
           const sqlPayload = {
             ...sqlEventData,
-            stripe_event_id: stripeData.data.id,
-            stripe_price_id: stripeData.data.price_id,
+            stripe_event_id: stripeData?.data?.id,
+            stripe_price_id: stripeData?.data?.price_id,
+            scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
+            title: data.title,
+            price: data.price,
+            status: data.status,
+            is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending')
           };
 
           if (eventResponse.data.exists) {
@@ -241,6 +247,10 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
           // Création dans Stripe
           stripeData = await handleStripeOperation();
 
+          if (!stripeData?.data) {
+            throw new Error('Erreur lors de la création Stripe');
+          }
+
           const stripeIds = {
             stripeEventId: stripeData.data.id,
             stripePriceId: stripeData.data.price_id
@@ -283,27 +293,19 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     };
 
   } catch (error) {
-    console.error('Erreur lors de la sauvegarde:', error);
+    console.error('Error details:', error);
     let errorMessage = 'Échec de la sauvegarde';
 
-    // Gestion détaillée des erreurs de validation
     if (error.response?.status === 422) {
       const validationErrors = error.response.data.errors;
+      console.log('Validation errors:', validationErrors);
       errorMessage = Object.values(validationErrors)
         .flat()
         .join('\n');
-    } else {
-      errorMessage = error.response?.data?.message || error.message;
     }
 
     toast.error(errorMessage);
-    return {
-      success: false,
-      error: errorMessage,
-      firebaseId: null,
-      data: null,
-      stripeData: null
-    };
+    throw error;
   }
 };
 
