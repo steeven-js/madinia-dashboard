@@ -132,10 +132,11 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
 
       const method = isUpdate ? 'put' : 'post';
 
+      // Modification ici : on utilise title au lieu de name
       return axios[method](
         endpoint,
         {
-          title: data.title,
+          title: data.title,  // Assurez-vous d'utiliser title ici
           price: data.price
         },
         config
@@ -283,9 +284,19 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
 
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Échec de la sauvegarde';
-    toast.error(errorMessage);
+    let errorMessage = 'Échec de la sauvegarde';
 
+    // Gestion détaillée des erreurs de validation
+    if (error.response?.status === 422) {
+      const validationErrors = error.response.data.errors;
+      errorMessage = Object.values(validationErrors)
+        .flat()
+        .join('\n');
+    } else {
+      errorMessage = error.response?.data?.message || error.message;
+    }
+
+    toast.error(errorMessage);
     return {
       success: false,
       error: errorMessage,
