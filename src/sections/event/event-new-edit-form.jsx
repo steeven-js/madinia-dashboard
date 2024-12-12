@@ -141,7 +141,7 @@ export function EventNewEditForm({ event: currentEvent }) {
 
   const handleScheduledToggle = useCallback(
     (e) => {
-      const checked = e.target.checked;
+      const { checked } = e.target;
       setValue('isScheduledDate', checked);
       if (!checked) {
         setValue('scheduledDate', values.date);

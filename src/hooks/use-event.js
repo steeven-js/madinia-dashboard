@@ -365,6 +365,7 @@ export const uploadImage = async (file) => {
     return downloadURL;
   } catch (error) {
     // console.error('Error uploading image:', error);
+    toast.error(error.message || 'Operation failed');
     throw error;
   }
 };
