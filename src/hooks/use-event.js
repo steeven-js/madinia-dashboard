@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { ref, listAll, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
 
