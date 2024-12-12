@@ -219,7 +219,7 @@ export function EventNewEditForm({ event: currentEvent }) {
             </MenuItem>
           ))}
         </Field.Select>
-        <Field.Text name="description" label="Description" multiline rows={4} />
+        <Field.Editor name="description" label="Description" multiline rows={4} />
         <Stack spacing={1.5}>
           <Typography variant="subtitle2">Image Principale</Typography>
           <Field.Upload
