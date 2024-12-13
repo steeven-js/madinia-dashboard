@@ -98,55 +98,88 @@ export function useEventById(eventId) {
  * Crée ou met à jour un événement dans Firebase, SQL et Stripe
  * @param {Object} data - Les données de l'événement
  * @param {Object|null} currentEvent - L'événement existant si c'est une mise à jour
- * @returns {Promise<Object>} Un objet contenant:
- * - success: boolean indiquant si l'opération a réussi
- * - data: Les données retournées par l'API
- * - firebaseId: L'ID Firebase de l'événement
- * - message: Message de succès
- * - error: Message d'erreur (si échec)
+ * @returns {Promise<Object>} Résultat de l'opération
  */
 export const handleEventSubmit = async (data, currentEvent = null) => {
   try {
-    const shouldStoreInSQL = data.price != null && data.price > 0;
+    // Configuration de base
     const config = { headers: CONFIG.headers };
+    const shouldStoreInSQL = data.price != null && data.price > 0;
+    let response = null;
+    let firebaseId;
+    let stripeData = null;
 
     // Préparation des données SQL de base
     const sqlEventData = {
       firebaseId: '',
       title: data.title,
+      image_url: data.image,
       price: data.price,
       scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
       status: data.status,
       is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending'),
     };
 
-    let response = null;
-    let firebaseId;
-    let stripeData = null;
-
-    // Fonction utilitaire pour créer/mettre à jour dans Stripe
+    // Fonction utilitaire pour gérer les opérations Stripe
     const handleStripeOperation = async (isUpdate = false, stripeEventId = null) => {
+      // Validation de l'image
+      if (!data.image) {
+        console.warn('No image URL provided for Stripe product');
+      }
+
+      // Détermination de l'endpoint et de la méthode
       const endpoint = isUpdate
         ? `${ENDPOINTS.API_STRIPE_EVENT_URL}/update-event/${stripeEventId}`
         : `${ENDPOINTS.API_STRIPE_EVENT_URL}/create-event`;
 
       const method = isUpdate ? 'put' : 'post';
 
+      // Préparation du payload Stripe
       const payload = {
         title: data.title,
-        price: data.price
+        price: data.price,
+        imageUrl: data.image
       };
 
-      // Renommé 'response' en 'stripeResponse' pour éviter le conflit
+      console.log('Stripe operation:', { isUpdate, endpoint, payload });
+
+      // Appel à l'API Stripe
       const stripeResponse = await axios[method](endpoint, payload, config);
+
+      // Validation de la réponse
+      if (!stripeResponse.data?.id) {
+        throw new Error('Invalid Stripe response format');
+      }
+
+      // Vérification de l'image
+      const verificationResponse = await axios.get(
+        `${ENDPOINTS.API_STRIPE_EVENT_URL}/get-event/${stripeResponse.data.id}`,
+        config
+      );
+
+      // Mise à jour de l'image si nécessaire
+      if (!verificationResponse.data?.images?.includes(data.image)) {
+        console.warn('Image URL verification failed:', {
+          provided: data.image,
+          received: verificationResponse.data?.images
+        });
+
+        await axios.post(
+          `${ENDPOINTS.API_STRIPE_EVENT_URL}/update-image/${stripeResponse.data.id}`,
+          { imageUrl: data.image },
+          config
+        );
+      }
+
       return stripeResponse;
     };
 
-    // Mise à jour d'un événement existant
+    // CAS 1: Mise à jour d'un événement existant
     if (currentEvent) {
       firebaseId = currentEvent.id;
       sqlEventData.firebaseId = firebaseId;
 
+      // CAS 1.1: Événement payant (nouveau ou existant)
       if (shouldStoreInSQL) {
         try {
           // Gestion Stripe
@@ -159,12 +192,14 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             throw new Error('Erreur lors de l\'opération Stripe');
           }
 
+          // Mise à jour des IDs Stripe dans Firebase
           const stripeIds = {
             stripeEventId: stripeData.data.id,
-            stripePriceId: stripeData.data.price_id
+            stripePriceId: stripeData.data.price_id,
+            image: data.image
           };
 
-          // Mise à jour Firebase avec les données Stripe
+          // Mise à jour Firebase
           await updateDoc(doc(db, 'events', currentEvent.id), {
             ...data,
             ...stripeIds
@@ -176,20 +211,20 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             config
           );
 
-          // Créer le payload SQL uniquement après avoir vérifié stripeData
+          // Préparation du payload SQL complet
           const sqlPayload = {
             ...sqlEventData,
-            stripe_event_id: stripeData?.data?.id,
-            stripe_price_id: stripeData?.data?.price_id,
+            stripe_event_id: stripeData.data.id,
+            stripe_price_id: stripeData.data.price_id,
             scheduled_date: data.isScheduledDate ? data.scheduledDate : data.date,
             title: data.title,
             price: data.price,
+            image_url: data.image,
             status: data.status,
             is_active: !data.isScheduledDate && (data.status !== 'draft' && data.status !== 'pending')
           };
 
-          console.log('SQL Payload:', sqlPayload);
-
+          // Mise à jour ou création SQL selon l'existence
           if (eventResponse.data.exists) {
             response = await axios.put(
               `${ENDPOINTS.API_EVENT_URL}/${firebaseId}`,
@@ -206,9 +241,11 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
         } catch (error) {
           throw new Error(`Erreur lors de la mise à jour de l'événement payant: ${error.message}`);
         }
-      } else if (currentEvent.price > 0) {
-        // Conversion d'un événement payant en gratuit
+      }
+      // CAS 1.2: Conversion d'un événement payant en gratuit
+      else if (currentEvent.price > 0) {
         try {
+          // Suppression des données Stripe si elles existent
           if (currentEvent.stripeEventId) {
             await axios.delete(
               `${ENDPOINTS.API_STRIPE_EVENT_URL}/delete-event/${currentEvent.stripeEventId}`,
@@ -216,6 +253,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             );
           }
 
+          // Suppression des données SQL
           const eventResponse = await axios.get(
             `${ENDPOINTS.API_EVENT_URL}/${firebaseId}`,
             config
@@ -234,16 +272,19 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
         } catch (error) {
           throw new Error(`Erreur lors de la conversion en événement gratuit: ${error.message}`);
         }
-      } else {
-        // Mise à jour simple d'un événement gratuit
+      }
+      // CAS 1.3: Mise à jour d'un événement gratuit
+      else {
         await updateDoc(doc(db, 'events', currentEvent.id), data);
       }
-    } else {
-      // Création d'un nouvel événement
+    }
+    // CAS 2: Création d'un nouvel événement
+    else {
       const newDocRef = doc(collection(db, 'events'));
       firebaseId = newDocRef.id;
       sqlEventData.firebaseId = firebaseId;
 
+      // CAS 2.1: Création d'un événement payant
       if (shouldStoreInSQL) {
         try {
           // Création dans Stripe
@@ -258,11 +299,12 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             stripePriceId: stripeData.data.price_id
           };
 
-          // Création dans Firebase
+          // Création dans Firebase avec les données Stripe
           await setDoc(newDocRef, {
             ...data,
             id: firebaseId,
-            ...stripeIds
+            ...stripeIds,
+            image: data.image
           });
 
           // Création dans SQL
@@ -272,20 +314,28 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
               ...sqlEventData,
               stripe_event_id: stripeData.data.id,
               stripe_price_id: stripeData.data.price_id,
+              image_url: data.image
             },
             config
           );
         } catch (error) {
           throw new Error(`Erreur lors de la création de l'événement payant: ${error.message}`);
         }
-      } else {
-        // Création d'un événement gratuit dans Firebase uniquement
-        await setDoc(newDocRef, { ...data, id: firebaseId });
+      }
+      // CAS 2.2: Création d'un événement gratuit
+      else {
+        await setDoc(newDocRef, {
+          ...data,
+          id: firebaseId,
+          image: data.image
+        });
       }
     }
 
+    // Notification de succès
     toast.success(currentEvent ? 'Événement mis à jour!' : 'Événement créé!');
 
+    // Retour des données
     return {
       success: true,
       data: response?.data?.data || null,
@@ -295,9 +345,11 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
     };
 
   } catch (error) {
+    // Gestion des erreurs
     console.error('Error details:', error.response?.data || error);
     let errorMessage = 'Échec de la sauvegarde';
 
+    // Erreurs de validation
     if (error.response?.status === 422) {
       const validationErrors = error.response.data.errors;
       console.log('Validation errors:', validationErrors);
@@ -308,6 +360,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
       errorMessage = error.response?.data?.message || error.message;
     }
 
+    // Notification d'erreur
     toast.error(errorMessage);
     throw error;
   }
