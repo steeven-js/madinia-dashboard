@@ -141,7 +141,7 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
         imageUrl: data.image
       };
 
-      console.log('Stripe operation:', { isUpdate, endpoint, payload });
+      // console.log('Stripe operation:', { isUpdate, endpoint, payload });
 
       // Appel à l'API Stripe
       const stripeResponse = await axios[method](endpoint, payload, config);
