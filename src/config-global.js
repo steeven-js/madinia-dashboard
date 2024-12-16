@@ -16,7 +16,6 @@ export const CONFIG = {
   version: packageJson.version,
   headers: {
     'Accept': 'application/json',
-    'Access-Control-Allow-Origin': 'application/json',
     Authorization: `Bearer ${import.meta.env.VITE_BEARER_TOKEN ?? ''}`,
   },
   /**
