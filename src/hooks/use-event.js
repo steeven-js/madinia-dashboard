@@ -377,28 +377,21 @@ export async function deleteEvent(eventId) {
   try {
     // Get event data to check if it exists in SQL
     const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await getDoc(eventRef); // Correction ici : utiliser getDoc au lieu de get()
+    const eventSnap = await getDoc(eventRef);
     const event = eventSnap.exists() ? eventSnap.data() : null;
 
-    // If event has Stripe data, delete from SQL
-    if (event?.stripeEventId) {
-      const config = {
-        headers: CONFIG.headers
-      };
+    const config = {
+      headers: CONFIG.headers
+    };
 
-      try {
-        // Delete from Stripe first
-        await axios.delete(
-          `${ENDPOINTS.API_STRIPE_EVENT_URL}/delete-event/${event.stripeEventId}`,
-          config
-        );
+    // Delete from Stripe first
+    await axios.delete(
+      `${ENDPOINTS.API_STRIPE_EVENT_URL}/delete-event/${event.stripeEventId}`,
+      config
+    );
 
-        // Then delete from SQL
-        await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, config);
-      } catch (sqlError) {
-        console.error('Error deleting from SQL/Stripe:', sqlError);
-      }
-    }
+    // Then delete from SQL
+    await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, config);
 
     // Delete from Firebase
     await deleteDoc(eventRef);
