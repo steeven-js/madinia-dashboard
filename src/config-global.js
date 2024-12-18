@@ -6,7 +6,6 @@ import packageJson from '../package.json';
 
 export const CONFIG = {
   name: 'Madin.IA Admin',
-  // apiUrl: import.meta.env.VITE_API_URL_PROD || '',
   apiUrl: import.meta.env.VITE_API_URL_PROD || '',
   serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
   assetsDir: import.meta.env.VITE_ASSET_URL ?? '',

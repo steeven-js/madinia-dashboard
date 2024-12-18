@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { ref, listAll, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot, runTransaction } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 
 import { db, storage } from 'src/utils/firebase';
 
@@ -374,117 +374,75 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
  * - error: Message d'erreur (si échec)
  */
 export async function deleteEvent(eventId) {
-  if (!eventId) {
-    toast.error('Event ID is required');
-    return { success: false, error: 'Event ID is required' };
-  }
-
   try {
-    // Start a Firebase transaction
-    await runTransaction(db, async (transaction) => {
-      // 1. Get event data from Firestore
-      const eventRef = doc(db, 'events', eventId);
-      const eventDoc = await transaction.get(eventRef);
-
-      if (!eventDoc.exists()) {
-        throw new Error('Event not found in Firestore');
-      }
-
-      const event = eventDoc.data();
-      console.log('Event data retrieved from Firestore:', event);
-
-      // 2. Check if event exists in SQL database
-      try {
-        const sqlCheckResponse = await axios.get(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, {
-          headers: CONFIG.headers
-        });
-        const eventExists = sqlCheckResponse.data.exists;
-        console.log('Event exists in SQL:', eventExists);
-
-        // 3. Delete from Stripe if stripeEventId exists
-        if (event.stripeEventId) {
-          try {
-            // 3.1 Désactiver le produit Stripe
-            await axios.put(
-              `${ENDPOINTS.API_STRIPE_EVENT_URL}/archive-event/${event.stripeEventId}`,
-              {},
-              { headers: CONFIG.headers }
-            );
-            console.log('Event archived in Stripe');
-          } catch (stripeError) {
-            console.error('Stripe operation error:', stripeError);
-            throw new Error(`Stripe operation failed: ${stripeError.message}`);
-          }
-        }
-
-        // 4. Delete from SQL if event exists
-        if (eventExists) {
-          try {
-            await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, {
-              headers: CONFIG.headers
-            });
-            console.log('Event deleted from SQL database');
-          } catch (sqlError) {
-            console.error('SQL deletion error:', sqlError);
-            throw new Error(`SQL deletion failed: ${sqlError.message}`);
-          }
-        } else {
-          console.log('Event not found in SQL database, skipping SQL deletion');
-        }
-
-      } catch (checkError) {
-        console.error('Error checking SQL database:', checkError);
-        // Continue with deletion even if SQL check fails
-        console.log('Continuing with deletion process despite SQL check error');
-      }
-
-      // 5. Delete from Firestore
-      transaction.delete(eventRef);
-      console.log('Event marked for deletion in Firestore');
-    });
-
-    // 6. Delete files from Storage
-    const storageRef = ref(storage, `events/${eventId}`);
+    // Get event data to check if it exists in SQL
+    const eventRef = doc(db, 'events', eventId);
+    const eventSnap = await getDoc(eventRef);
+    const event = eventSnap.exists() ? eventSnap.data() : null;
 
     try {
-      const filesList = await listAll(storageRef);
-      console.log(`Found ${filesList.items.length} files to delete`);
+      const sqlCheckResponse = await axios.get(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, {
+        headers: CONFIG.headers
+      });
+      const eventExists = sqlCheckResponse.data.exists;
+      console.log('Event exists in SQL:', eventExists);
 
-      if (filesList.items.length > 0) {
-        await Promise.all(
-          filesList.items.map(async (fileRef) => {
-            try {
-              console.log('Deleting file:', fileRef.fullPath);
-              await deleteObject(fileRef);
-            } catch (fileError) {
-              console.error(`Error deleting file ${fileRef.fullPath}:`, fileError);
-              throw fileError;
-            }
-          })
-        );
+      // 3. Delete from Stripe if stripeEventId exists
+      if (event.stripeEventId) {
+        try {
+          // 3.1 Désactiver le produit Stripe
+          await axios.put(
+            `${ENDPOINTS.API_STRIPE_EVENT_URL}/archive-event/${event.stripeEventId}`,
+            {},
+            { headers: CONFIG.headers }
+          );
+          console.log('Event archived in Stripe');
+        } catch (stripeError) {
+          console.error('Stripe operation error:', stripeError);
+          throw new Error(`Stripe operation failed: ${stripeError.message}`);
+        }
       }
 
-      console.log('All files deleted successfully');
-    } catch (storageError) {
-      console.error('Storage deletion error:', storageError);
-      // We don't throw here as the main event data is already deleted
-      toast.warning('Some event files may not have been deleted properly');
+      // 4. Delete from SQL if event exists
+      if (eventExists) {
+        try {
+          await axios.delete(`${ENDPOINTS.API_EVENT_URL}/${eventId}`, {
+            headers: CONFIG.headers
+          });
+          console.log('Event deleted from SQL database');
+        } catch (sqlError) {
+          console.error('SQL deletion error:', sqlError);
+          throw new Error(`SQL deletion failed: ${sqlError.message}`);
+        }
+      } else {
+        console.log('Event not found in SQL database, skipping SQL deletion');
+      }
+
+    } catch (checkError) {
+      console.error('Error checking SQL database:', checkError);
+      // Continue with deletion even if SQL check fails
+      console.log('Continuing with deletion process despite SQL check error');
     }
 
-    toast.success('Event deleted successfully');
+    // Delete from Firebase
+    await deleteDoc(eventRef);
+
+    // Delete images from Storage
+    const storageRef = ref(storage, `events/${eventId}`);
+    const filesList = await listAll(storageRef);
+
+    // Delete all files in the folder
+    await Promise.all(
+      filesList.items.map(fileRef => deleteObject(fileRef))
+    );
+
+    toast.success('Event deleted');
     return { success: true };
 
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message || 'Operation failed';
-    console.error('Detailed error:', {
-      message: error.message,
-      code: error.code,
-      response: error.response?.data,
-      stack: error.stack
-    });
-
-    toast.error(errorMessage);
-    return { success: false, error: errorMessage };
+    console.error('Error deleting event:', error);
+    toast.error(error.message || 'Operation failed');
+    return { success: false, error: error.message };
   }
 }
 
