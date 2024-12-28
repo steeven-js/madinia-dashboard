@@ -197,5 +197,12 @@ export const paths = {
         edit: `${ROOTS.DASHBOARD}/tour/${MOCK_ID}/edit`,
       },
     },
+    eventOrder: {
+      root: `${ROOTS.DASHBOARD}/event-order`,
+      details: (id) => `${ROOTS.DASHBOARD}/event-order/${id}`,
+      demo: {
+        details: `${ROOTS.DASHBOARD}/event-order/${MOCK_ID}`,
+      },
+    },
   },
 };

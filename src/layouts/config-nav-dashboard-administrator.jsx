@@ -87,6 +87,23 @@ export const navDataAdmin = [
     ],
   },
   /**
+   * Event Orders
+   */
+  {
+    subheader: 'Event Orders',
+    items: [
+      {
+        title: 'Event Orders',
+        path: paths.dashboard.eventOrder.root,
+        icon: ICONS.order,
+        children: [
+          { title: 'List', path: paths.dashboard.eventOrder.root },
+          // Ajoutez d'autres sous-éléments si nécessaire
+        ],
+      },
+    ],
+  },
+  /**
    * Management
    */
   {
