@@ -82,7 +82,7 @@ export const dashboardRoutes = [
         ],
       },
       {
-        path: 'event-order',
+        path: 'ev_order',
         children: [
           { element: <EventOrderPage />, index: true },
           // { path: ':id', element: <EventOrderDetailsPage /> },
