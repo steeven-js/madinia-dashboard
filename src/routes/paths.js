@@ -201,5 +201,8 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/ev_order`,
       details: (id) => `${ROOTS.DASHBOARD}/ev_order/${id}`,
     },
+    qrScanner: {
+      root: `${ROOTS.DASHBOARD}/qr-scanner`,
+    },
   },
 };

@@ -44,6 +44,8 @@ const EventOrderPage = lazy(() => import('src/pages/dashboard/event-order/event-
 const EventOrderDetailsPage = lazy(
   () => import('src/pages/dashboard/event-order/event-order-detail')
 );
+// Qr Scanner
+const QrScannerPage = lazy(() => import('src/pages/dashboard/app/qr-coder-scanner'));
 
 // ----------------------------------------------------------------------
 
@@ -112,6 +114,10 @@ export const dashboardRoutes = [
           { path: ':id/edit', element: <BlogEditPostPage /> },
           { path: 'new', element: <BlogNewPostPage /> },
         ],
+      },
+      {
+        path: 'qr-scanner',
+        children: [{ element: <QrScannerPage />, index: true }],
       },
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'kanban', element: <KanbanPage /> },

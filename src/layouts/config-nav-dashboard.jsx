@@ -50,6 +50,7 @@ export const navData = [
     items: [
       { title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard },
       // { title: 'plantmed', path: paths.dashboard.general.plantmed, icon: ICONS.dashboard },
+      { title: 'Qr Scanner', path: paths.dashboard.qrScanner.root, icon: ICONS.dashboard },
     ],
   },
   /**
