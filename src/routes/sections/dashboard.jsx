@@ -41,7 +41,9 @@ const CalendarPage = lazy(() => import('src/pages/dashboard/calendar'));
 const KanbanPage = lazy(() => import('src/pages/dashboard/kanban'));
 // Event Order
 const EventOrderPage = lazy(() => import('src/pages/dashboard/event-order/event-order'));
-// const EventOrderDetailsPage = lazy(() => import('src/pages/dashboard/event-order/details'));
+const EventOrderDetailsPage = lazy(
+  () => import('src/pages/dashboard/event-order/event-order-detail')
+);
 
 // ----------------------------------------------------------------------
 
@@ -85,7 +87,8 @@ export const dashboardRoutes = [
         path: 'ev_order',
         children: [
           { element: <EventOrderPage />, index: true },
-          // { path: ':id', element: <EventOrderDetailsPage /> },
+          { path: 'list', element: <EventOrderPage /> },
+          { path: ':id', element: <EventOrderDetailsPage /> },
         ],
       },
       {

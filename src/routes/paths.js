@@ -200,9 +200,6 @@ export const paths = {
     eventOrder: {
       root: `${ROOTS.DASHBOARD}/ev_order`,
       details: (id) => `${ROOTS.DASHBOARD}/ev_order/${id}`,
-      demo: {
-        details: `${ROOTS.DASHBOARD}/ev_order/${MOCK_ID}`,
-      },
     },
   },
 };

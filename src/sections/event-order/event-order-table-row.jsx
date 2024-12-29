@@ -8,6 +8,9 @@ import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 
+import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { fDate } from 'src/utils/format-time';
@@ -21,6 +24,11 @@ export function EventOrderTableRow({ row, selected, onSelectRow, onViewRow, onDe
     row;
 
   const quickEdit = useBoolean();
+  const router = useRouter();
+
+  const handleViewRow = () => {
+    router.push(paths.dashboard.eventOrder.details(row.id));
+  };
 
   return (
     <TableRow hover selected={selected}>
@@ -29,7 +37,7 @@ export function EventOrderTableRow({ row, selected, onSelectRow, onViewRow, onDe
       </TableCell>
 
       <TableCell>
-        <Link color="inherit" onClick={onViewRow} underline="always" sx={{ cursor: 'pointer' }}>
+        <Link color="inherit" onClick={handleViewRow} underline="always" sx={{ cursor: 'pointer' }}>
           {orderNumber}
         </Link>
       </TableCell>
