@@ -14,11 +14,9 @@ import {
   Alert,
   Stack,
   Button,
-  useTheme,
   Container,
   Typography,
   CardContent,
-  useMediaQuery,
 } from '@mui/material';
 
 import { fCurrency } from 'src/utils/format-number';
@@ -27,13 +25,10 @@ import { fEuroDateTime } from 'src/utils/format-time';
 // Imports locaux
 import { CONFIG } from 'src/config-global';
 
-import { Iconify } from 'src/components/iconify';
-
 export function QrScannerView() {
   // États
   const [qrCode, setQrCode] = useState(''); // Code QR détecté
   const [scanning, setScanning] = useState(true); // État du scan
-  const [cameraEnabled, setCameraEnabled] = useState(true); // État de la caméra
   const [error, setError] = useState(null); // Message d'erreur
   const [scanResult, setScanResult] = useState(null); // Résultat du scan
   const [qrResult, setQrResult] = useState(''); // Données brutes du QR
@@ -41,11 +36,6 @@ export function QrScannerView() {
 
   // Refs
   const webcamRef = useRef(null);
-  const videoRef = useRef(null);
-
-  // Theme et responsive
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Configuration de la caméra
   const videoConstraints = {
