@@ -8,12 +8,13 @@ import { Divider, Typography } from '@mui/material';
 import { paths } from 'src/routes/paths';
 import { useParams, useRouter } from 'src/routes/hooks';
 
+import { fCurrency } from 'src/utils/format-number';
+import { fEuroDateTime } from 'src/utils/format-time';
+
 import { EventOrderService } from 'src/services/event-order.service';
 
 import { useSettingsContext } from 'src/components/settings';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { fEuroDateTime } from 'src/utils/format-time';
-import { fCurrency } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
