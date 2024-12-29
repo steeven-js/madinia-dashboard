@@ -12,6 +12,8 @@ import { EventOrderService } from 'src/services/event-order.service';
 
 import { useSettingsContext } from 'src/components/settings';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { fEuroDateTime } from 'src/utils/format-time';
+import { fCurrency } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
@@ -76,10 +78,10 @@ export function EventOrderDetailsView() {
             </div>
             <div>
               <Typography variant="body2">
-                Created: {new Date(currentOrder.created_at).toLocaleString()}
+                Created: {fEuroDateTime(currentOrder.created_at)}
               </Typography>
               <Typography variant="body2">
-                Updated: {new Date(currentOrder.updated_at).toLocaleString()}
+                Updated: {fEuroDateTime(currentOrder.updated_at)}
               </Typography>
             </div>
           </Stack>
@@ -98,9 +100,9 @@ export function EventOrderDetailsView() {
             <Typography variant="h6">Event Information</Typography>
             <Typography>Title: {currentOrder.event.title}</Typography>
             <Typography>
-              Scheduled Date: {new Date(currentOrder.event.scheduled_date).toLocaleString()}
+              Scheduled Date: {fEuroDateTime(currentOrder.event.scheduled_date)}
             </Typography>
-            <Typography>Price: ${currentOrder.event.price}</Typography>
+            <Typography>Price: {fCurrency(currentOrder.event.price)}</Typography>
             <Typography>Event Status: {currentOrder.event.status}</Typography>
           </Stack>
 
@@ -108,7 +110,7 @@ export function EventOrderDetailsView() {
 
           <Stack spacing={2}>
             <Typography variant="h6">Payment Information</Typography>
-            <Typography>Total Amount: ${currentOrder.total_price}</Typography>
+            <Typography>Total Amount: {fCurrency(currentOrder.total_price)}</Typography>
             <Typography>Session ID: {currentOrder.session_id}</Typography>
           </Stack>
 
@@ -118,7 +120,7 @@ export function EventOrderDetailsView() {
               <Stack spacing={2}>
                 <Typography variant="h6">QR Code</Typography>
                 <img
-                  src={`data:image/png;base64,${currentOrder.qr_code}`}
+                  src={currentOrder.qr_code_url}
                   alt="QR Code"
                   style={{ width: 200, height: 200 }}
                 />
