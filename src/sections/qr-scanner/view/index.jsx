@@ -160,6 +160,14 @@ export function QrScannerView() {
     }
   };
 
+  const resetScan = () => {
+    setScanResult(null);
+    setQrResult('');
+    setError(null);
+    setShowWebcam(true);
+    setScanning(true); // Important: réactive le scanning
+  };
+
   // Rendu de l'interface
   return (
     <Container maxWidth="md">
@@ -188,12 +196,7 @@ export function QrScannerView() {
               <Button
                 variant="outlined"
                 color="primary"
-                onClick={() => {
-                  setScanResult(null);
-                  setQrResult('');
-                  setError(null);
-                  setShowWebcam(true);
-                }}
+                onClick={resetScan}
                 aria-label="Nouveau scan"
               >
                 Nouveau scan
