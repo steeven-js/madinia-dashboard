@@ -39,9 +39,26 @@ export function QrScannerView() {
 
   // Configuration de la caméra
   const videoConstraints = {
-    width: 720,
-    height: 720,
-    facingMode: 'environment',
+    width: { ideal: 720 },
+    height: { ideal: 720 },
+    facingMode: { ideal: 'environment' },
+    aspectRatio: { ideal: 1 },
+  };
+
+  const webcamConfig = {
+    ref: webcamRef,
+    audio: false,
+    screenshotFormat: 'image/jpeg',
+    videoConstraints,
+    forceScreenshotSourceSize: true,
+    imageSmoothing: true,
+    mirrored: false,
+    style: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      borderRadius: 8,
+    },
   };
 
   // Gestion du scan QR
@@ -102,21 +119,44 @@ export function QrScannerView() {
       );
 
       if (response.data.valid) {
-        toast.success(response.data.message);
+        toast.success('QR code validé avec succès');
         setScanResult({
           order: response.data.order,
           event: response.data.event,
         });
         setQrResult(_qrCode);
-      } else {
-        toast.error(response.data.message);
-        setError(response.data.message);
       }
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Erreur lors de la vérification du QR code';
+      const errorData = err.response?.data;
+      let errorMessage = 'Erreur lors de la vérification du QR code';
+      let errorDetails = null;
+
+      if (errorData) {
+        errorMessage = errorData.message;
+
+        // Ajout des détails spécifiques selon le type d'erreur
+        if (errorData.status) {
+          errorDetails = `Statut de la commande : ${errorData.status}`;
+        } else if (errorData.event_date) {
+          errorDetails = `Date de l'événement : ${fEuroDateTime(errorData.event_date)}
+                         Date d'expiration : ${fEuroDateTime(errorData.expiration_date)}`;
+        }
+      }
+
       toast.error(errorMessage);
-      setError(errorMessage);
+      setError(
+        <Stack spacing={1}>
+          <Typography color="error" variant="body1">
+            {errorMessage}
+          </Typography>
+          {errorDetails && (
+            <Typography color="error.light" variant="body2">
+              {errorDetails}
+            </Typography>
+          )}
+        </Stack>
+      );
+      setScanning(true);
     }
   };
 
@@ -175,18 +215,7 @@ export function QrScannerView() {
           >
             {showWebcam ? (
               <>
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: 8,
-                  }}
-                />
+                <Webcam {...webcamConfig} />
                 {/* Cadre de scan */}
                 <Box
                   sx={{
@@ -237,13 +266,21 @@ export function QrScannerView() {
           </Alert>
         )}
 
-        {/* Affichage des erreurs */}
+        {/* Affichage des erreurs amélioré */}
         {error && (
           <Alert
             severity="error"
             variant="outlined"
-            onClose={() => setError(null)}
-            sx={{ width: '100%' }}
+            onClose={() => {
+              setError(null);
+              setScanning(true);
+            }}
+            sx={{
+              width: '100%',
+              '& .MuiAlert-message': {
+                width: '100%',
+              },
+            }}
           >
             {error}
           </Alert>
