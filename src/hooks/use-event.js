@@ -304,7 +304,8 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
             ...data,
             id: firebaseId,
             ...stripeIds,
-            image: data.image
+            image: data.image,
+            isActive: true
           });
 
           // Création dans SQL
@@ -327,7 +328,8 @@ export const handleEventSubmit = async (data, currentEvent = null) => {
         await setDoc(newDocRef, {
           ...data,
           id: firebaseId,
-          image: data.image
+          image: data.image,
+          isActive: true
         });
       }
     }

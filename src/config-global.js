@@ -15,6 +15,7 @@ export const CONFIG = {
   version: packageJson.version,
   headers: {
     'Accept': 'application/json',
+    'Content-Type': 'application/json',
     Authorization: `Bearer ${import.meta.env.VITE_BEARER_TOKEN ?? ''}`,
   },
   /**
@@ -77,5 +78,6 @@ export const CONFIG = {
 
 export const ENDPOINTS = {
   API_EVENT_URL: `${CONFIG.apiUrl}/api/events`,
+  API_EVENT_ORDER_URL: `${CONFIG.apiUrl}/api/orders`,
   API_STRIPE_EVENT_URL: `${CONFIG.apiUrl}/api/stripe`,
 };
