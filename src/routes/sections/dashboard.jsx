@@ -7,11 +7,13 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { AuthGuard } from 'src/auth/guard';
+import { ProfileGuard } from 'src/auth/guard/profile-guard';
 
 // ----------------------------------------------------------------------
 
 // Overview
 const IndexPage = lazy(() => import('src/pages/dashboard'));
+const CompleteProfilePage = lazy(() => import('src/pages/dashboard/complete-profile'));
 // User
 const UserProfilePage = lazy(() => import('src/pages/dashboard/user/profile'));
 const UserCardsPage = lazy(() => import('src/pages/dashboard/user/cards'));
@@ -52,7 +54,9 @@ const QrScannerPage = lazy(() => import('src/pages/dashboard/app/qr-coder-scanne
 const layoutContent = (
   <DashboardLayout>
     <Suspense fallback={<LoadingScreen />}>
-      <Outlet />
+      <ProfileGuard>
+        <Outlet />
+      </ProfileGuard>
     </Suspense>
   </DashboardLayout>
 );
@@ -63,6 +67,7 @@ export const dashboardRoutes = [
     element: CONFIG.auth.skip ? <>{layoutContent}</> : <AuthGuard>{layoutContent}</AuthGuard>,
     children: [
       { element: <IndexPage />, index: true },
+      { path: 'complete-profile', element: <CompleteProfilePage /> },
       {
         path: 'user',
         children: [
