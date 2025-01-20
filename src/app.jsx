@@ -2,9 +2,8 @@ import 'src/global.css';
 
 // ----------------------------------------------------------------------
 
-import { Provider as ReduxProvider } from 'react-redux';
-import { BrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
+import { Provider as ReduxProvider } from 'react-redux';
 
 import { Router } from 'src/routes/sections';
 

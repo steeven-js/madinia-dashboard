@@ -7,8 +7,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
-import { EventOrderService } from 'src/services/event-order.service';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { EventOrderService } from 'src/services/event-order.service';
 
 import { toast } from 'src/components/snackbar';
 

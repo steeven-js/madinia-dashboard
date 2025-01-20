@@ -1,5 +1,5 @@
-import { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from 'src/routes/paths';

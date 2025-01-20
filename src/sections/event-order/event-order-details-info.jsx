@@ -4,7 +4,6 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
 
 import { Iconify } from 'src/components/iconify';
 
