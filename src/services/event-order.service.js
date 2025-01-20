@@ -63,4 +63,16 @@ export const EventOrderService = {
       throw error;
     }
   },
+
+  async regenerateQrCode(id) {
+    try {
+      const response = await axios.post(`${ENDPOINTS.API_EVENT_ORDER_URL}/${id}/regenerate-qr`, {}, {
+        headers: CONFIG.headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error regenerating QR code:', error);
+      throw error;
+    }
+  }
 };

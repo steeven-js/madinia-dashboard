@@ -2,7 +2,9 @@ import 'src/global.css';
 
 // ----------------------------------------------------------------------
 
-import { Provider } from 'react-redux';
+import { Provider as ReduxProvider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
+import { Suspense } from 'react';
 
 import { Router } from 'src/routes/sections';
 
@@ -41,7 +43,7 @@ export default function App() {
   useScrollToTop();
 
   return (
-    <Provider store={store}>
+    <ReduxProvider store={store}>
       <I18nProvider>
         <LocalizationProvider>
           <AuthProvider>
@@ -52,7 +54,9 @@ export default function App() {
                     <Snackbar />
                     <ProgressBar />
                     <SettingsDrawer />
-                    <Router />
+                    <Suspense>
+                      <Router />
+                    </Suspense>
                   </CheckoutProvider>
                 </MotionLazy>
               </ThemeProvider>
@@ -60,6 +64,6 @@ export default function App() {
           </AuthProvider>
         </LocalizationProvider>
       </I18nProvider>
-    </Provider>
+    </ReduxProvider>
   );
 }
