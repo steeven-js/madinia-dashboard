@@ -1,19 +1,22 @@
+import PropTypes from 'prop-types';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
+import Select from '@mui/material/Select';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { USER_ROLES_OPTIONS } from 'src/_mock';
+import { USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -24,76 +27,130 @@ import { UserQuickEditForm } from './user-quick-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
+export default function UserTableRow({
+  row,
+  selected,
+  onEditRow,
+  onSelectRow,
+  onDeleteRow,
+  roleOptions,
+  onChangeRole,
+  onChangeStatus,
+  isCurrentUser,
+}) {
+  const { firstName, lastName, role, status, email, phoneNumber, avatarUrl } = row;
+  const fullName = `${firstName} ${lastName}`;
+
   const confirm = useBoolean();
-
   const popover = usePopover();
-
   const quickEdit = useBoolean();
 
-  // Fonction pour obtenir le label du rôle
-  const getRoleLabel = (roleValue) => {
-    const role = USER_ROLES_OPTIONS.find((option) => option.value === roleValue);
-    return role ? role.label : roleValue;
+  const handleChangeRole = (event) => {
+    onChangeRole(event.target.value);
+  };
+
+  const handleChangeStatus = (event) => {
+    onChangeStatus(event.target.value);
+  };
+
+  const getStatusColor = (userStatus) => {
+    switch (userStatus) {
+      case 'active':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'banned':
+        return 'error';
+      case 'rejected':
+        return 'default';
+      default:
+        return 'default';
+    }
   };
 
   return (
     <>
-      <TableRow hover selected={selected} aria-checked={selected} tabIndex={-1}>
+      <TableRow hover selected={selected}>
         <TableCell padding="checkbox">
-          <Checkbox id={row.uid} checked={selected} onClick={onSelectRow} />
+          <Checkbox checked={selected} onClick={onSelectRow} />
         </TableCell>
 
-        <TableCell>
+        <TableCell sx={{ width: 280 }}>
           <Stack spacing={2} direction="row" alignItems="center">
-            <Avatar alt={row.name} src={row.avatarUrl} />
+            <Avatar alt={fullName} src={avatarUrl} />
 
             <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
-              <Link color="inherit" onClick={onEditRow} sx={{ cursor: 'pointer' }}>
-                {row.displayName}
+              <Link color="inherit" onClick={onEditRow} sx={{ cursor: 'pointer', typography: 'subtitle2' }}>
+                {fullName}
               </Link>
               <Box component="span" sx={{ color: 'text.disabled' }}>
-                {row.email}
+                {email}
               </Box>
             </Stack>
           </Stack>
         </TableCell>
 
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.phoneNumber}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.company}</TableCell>
-
-        <TableCell sx={{ whiteSpace: 'nowrap' }}>{getRoleLabel(row.role)}</TableCell>
-
-        <TableCell>
-          <Label
-            variant="soft"
-            color={
-              (row.status === 'active' && 'success') ||
-              (row.status === 'pending' && 'warning') ||
-              (row.status === 'banned' && 'error') ||
-              'default'
-            }
-          >
-            {row.status}
-          </Label>
+        <TableCell sx={{ width: 180 }}>
+          <ListItemText
+            primary={phoneNumber}
+            primaryTypographyProps={{ typography: 'body2', noWrap: true }}
+          />
         </TableCell>
 
-        <TableCell>
-          <Stack direction="row" alignItems="center">
-            <Tooltip title="Quick Edit" placement="top" arrow>
-              <IconButton
-                color={quickEdit.value ? 'inherit' : 'default'}
-                onClick={quickEdit.onTrue}
-              >
-                <Iconify icon="solar:pen-bold" />
-              </IconButton>
-            </Tooltip>
+        <TableCell sx={{ width: 180 }}>
+          <Select
+            value={role}
+            onChange={handleChangeRole}
+            disabled={isCurrentUser}
+            size="small"
+            sx={{ minWidth: 120 }}
+          >
+            {roleOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </TableCell>
 
-            <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
-              <Iconify icon="eva:more-vertical-fill" />
-            </IconButton>
-          </Stack>
+        <TableCell sx={{ width: 180 }}>
+          <Select
+            value={status}
+            onChange={handleChangeStatus}
+            size="small"
+            sx={{ minWidth: 120 }}
+            renderValue={(value) => (
+              <Label
+                variant="soft"
+                color={getStatusColor(value)}
+                sx={{ textTransform: 'capitalize' }}
+              >
+                {value}
+              </Label>
+            )}
+          >
+            {USER_STATUS_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                <Label
+                  variant="soft"
+                  color={getStatusColor(option.value)}
+                  sx={{ textTransform: 'capitalize', mx: 1 }}
+                >
+                  {option.label}
+                </Label>
+              </MenuItem>
+            ))}
+          </Select>
+        </TableCell>
+
+        <TableCell align="right" sx={{ width: 100, px: 1 }}>
+          <IconButton color={quickEdit.value ? 'inherit' : 'default'} onClick={quickEdit.onTrue}>
+            <Iconify icon="solar:pen-bold" />
+          </IconButton>
+
+          <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
+            <Iconify icon="eva:more-vertical-fill" />
+          </IconButton>
         </TableCell>
       </TableRow>
 
@@ -114,7 +171,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            Supprimer
           </MenuItem>
 
           <MenuItem
@@ -124,7 +181,7 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
             }}
           >
             <Iconify icon="solar:pen-bold" />
-            Edit
+            Modifier
           </MenuItem>
         </MenuList>
       </CustomPopover>
@@ -132,14 +189,40 @@ export function UserTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRo
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
-        content="Are you sure want to delete?"
+        title="Supprimer"
+        content="Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
         action={
           <Button variant="contained" color="error" onClick={onDeleteRow}>
-            Delete
+            Supprimer
           </Button>
         }
       />
     </>
   );
 }
+
+UserTableRow.propTypes = {
+  row: PropTypes.shape({
+    id: PropTypes.string,
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+    email: PropTypes.string,
+    phoneNumber: PropTypes.string,
+    role: PropTypes.string,
+    status: PropTypes.string,
+    avatarUrl: PropTypes.string,
+  }),
+  selected: PropTypes.bool,
+  onEditRow: PropTypes.func,
+  onSelectRow: PropTypes.func,
+  onDeleteRow: PropTypes.func,
+  roleOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ),
+  onChangeRole: PropTypes.func,
+  onChangeStatus: PropTypes.func,
+  isCurrentUser: PropTypes.bool,
+};

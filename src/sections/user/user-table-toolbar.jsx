@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { useCallback } from 'react';
 
 import Stack from '@mui/material/Stack';
@@ -12,37 +13,33 @@ import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { USER_ROLES_OPTIONS } from 'src/_mock';
+
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export function UserTableToolbar({ filters, options, onResetPage }) {
+export default function UserTableToolbar({
+  filters = { name: '', role: [] },
+  onFilterName,
+  onFilterRole,
+  roleOptions = USER_ROLES_OPTIONS,
+}) {
   const popover = usePopover();
 
   const handleFilterName = useCallback(
     (event) => {
-      onResetPage();
-      filters.setState({ name: event.target.value });
+      onFilterName(event.target.value);
     },
-    [filters, onResetPage]
+    [onFilterName]
   );
 
-  const handleFilterRole = useCallback(
-    (event) => {
-      const selectedValues =
-        typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value;
-
-      onResetPage();
-      filters.setState({ role: selectedValues });
-    },
-    [filters, onResetPage]
-  );
-
-  // Fonction pour obtenir le label d'un rôle
-  const getRoleLabel = (roleValue) => {
-    const role = options.roles.find((r) => r.value === roleValue);
-    return role ? role.label : roleValue;
+  const handleFilterRole = (event) => {
+    const {
+      target: { value },
+    } = event;
+    onFilterRole(typeof value === 'string' ? value.split(',') : value);
   };
 
   return (
@@ -50,26 +47,39 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
       <Stack
         spacing={2}
         alignItems={{ xs: 'flex-end', md: 'center' }}
-        direction={{ xs: 'column', md: 'row' }}
-        sx={{ p: 2.5, pr: { xs: 2.5, md: 1 } }}
+        direction={{
+          xs: 'column',
+          md: 'row',
+        }}
+        sx={{
+          p: 2.5,
+          pr: { xs: 2.5, md: 1 },
+        }}
       >
-        <FormControl sx={{ flexShrink: 0, width: { xs: 1, md: 200 } }}>
-          <InputLabel htmlFor="user-filter-role-select-label">Role</InputLabel>
+        <FormControl
+          sx={{
+            flexShrink: 0,
+            width: { xs: 1, md: 200 },
+          }}
+        >
+          <InputLabel>Rôle</InputLabel>
+
           <Select
             multiple
-            value={filters.state.role}
+            value={filters.role || []}
             onChange={handleFilterRole}
-            input={<OutlinedInput label="Role" />}
-            renderValue={(selected) => selected.map(getRoleLabel).join(', ')}
-            inputProps={{ id: 'user-filter-role-select-label' }}
-            MenuProps={{ PaperProps: { sx: { maxHeight: 240 } } }}
+            input={<OutlinedInput label="Rôle" />}
+            renderValue={(selected) => selected.map((value) => {
+              const role = roleOptions.find((option) => option.value === value);
+              return role ? role.label : value;
+            }).join(', ')}
           >
-            {options.roles.map((option) => (
+            {roleOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 <Checkbox
                   disableRipple
                   size="small"
-                  checked={filters.state.role.includes(option.value)}
+                  checked={(filters.role || []).includes(option.value)}
                 />
                 {option.label}
               </MenuItem>
@@ -77,25 +87,23 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
           </Select>
         </FormControl>
 
-        <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
-          <TextField
-            fullWidth
-            value={filters.state.name}
-            onChange={handleFilterName}
-            placeholder="Search..."
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
+        <TextField
+          fullWidth
+          value={filters.name || ''}
+          onChange={handleFilterName}
+          placeholder="Rechercher..."
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+              </InputAdornment>
+            ),
+          }}
+        />
 
-          <IconButton onClick={popover.onOpen}>
-            <Iconify icon="eva:more-vertical-fill" />
-          </IconButton>
-        </Stack>
+        <IconButton onClick={popover.onOpen}>
+          <Iconify icon="eva:more-vertical-fill" />
+        </IconButton>
       </Stack>
 
       <CustomPopover
@@ -136,3 +144,18 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
     </>
   );
 }
+
+UserTableToolbar.propTypes = {
+  filters: PropTypes.shape({
+    name: PropTypes.string,
+    role: PropTypes.arrayOf(PropTypes.string),
+  }),
+  onFilterName: PropTypes.func,
+  onFilterRole: PropTypes.func,
+  roleOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ),
+};

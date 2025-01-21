@@ -243,3 +243,55 @@ export const updateFastUsers = async ({ data }) => {
     throw error;
   }
 };
+
+/**
+ * Met à jour le rôle d'un utilisateur
+ * @param {string} userId - ID de l'utilisateur
+ * @param {string} newRole - Nouveau rôle à attribuer
+ * @returns {Promise<void>}
+ */
+export const updateUserRole = async (userId, newRole) => {
+  if (!userId) {
+    throw new Error("L'ID de l'utilisateur est requis");
+  }
+
+  const userRef = doc(db, 'users', userId);
+
+  try {
+    await updateDoc(userRef, {
+      role: newRole,
+      updatedAt: Date.now()
+    });
+    toast.success('Rôle mis à jour avec succès !');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du rôle:', error);
+    toast.error('Une erreur est survenue lors de la mise à jour du rôle');
+    throw error;
+  }
+};
+
+/**
+ * Met à jour le statut d'un utilisateur
+ * @param {string} userId - ID de l'utilisateur
+ * @param {string} newStatus - Nouveau statut à attribuer
+ * @returns {Promise<void>}
+ */
+export const updateUserStatus = async (userId, newStatus) => {
+  if (!userId) {
+    throw new Error("L'ID de l'utilisateur est requis");
+  }
+
+  const userRef = doc(db, 'users', userId);
+
+  try {
+    await updateDoc(userRef, {
+      status: newStatus,
+      updatedAt: Date.now()
+    });
+    toast.success('Statut mis à jour avec succès !');
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut:', error);
+    toast.error('Une erreur est survenue lors de la mise à jour du statut');
+    throw error;
+  }
+};

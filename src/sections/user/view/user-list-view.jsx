@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -16,10 +17,11 @@ import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
+import { updateUserRole, updateUserStatus } from 'src/hooks/use-users';
 
 import { varAlpha } from 'src/theme/styles';
+import { USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { USER_ROLES_OPTIONS, USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -41,21 +43,26 @@ import {
 
 import { RoleBasedGuard } from 'src/auth/guard';
 
-import { UserTableRow } from '../user-table-row';
-import { UserTableToolbar } from '../user-table-toolbar';
+import UserTableRow from '../user-table-row';
+import UserTableToolbar from '../user-table-toolbar';
 import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
+const ROLE_OPTIONS = [
+  { value: 'dev', label: 'Développeur' },
+  { value: 'admin', label: 'Administrateur' },
+  { value: 'user', label: 'Utilisateur' },
+];
+
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name' },
-  { id: 'phoneNumber', label: 'Phone number', width: 180 },
-  { id: 'company', label: 'Company', width: 220 },
-  { id: 'role', label: 'Role', width: 180 },
-  { id: 'status', label: 'Status', width: 100 },
-  { id: '', width: 88 },
+  { id: 'name', label: 'Utilisateur', align: 'left', width: 280 },
+  { id: 'phoneNumber', label: 'Téléphone', align: 'left', width: 180 },
+  { id: 'role', label: 'Rôle', align: 'left', width: 180 },
+  { id: 'status', label: 'Statut', align: 'left', width: 180 },
+  { id: 'actions', label: '', align: 'right', width: 100 },
 ];
 
 // ----------------------------------------------------------------------
@@ -127,6 +134,57 @@ export function UserListView({ users, currentAuthUser }) {
     [filters, table]
   );
 
+  const handleChangeRole = useCallback(async (userId, newRole) => {
+    try {
+      await updateUserRole(userId, newRole);
+      // Mettre à jour les données locales
+      setTableData((prevData) =>
+        prevData.map((user) =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du rôle:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour du rôle');
+    }
+  }, []);
+
+  const handleChangeStatus = useCallback(async (userId, newStatus) => {
+    try {
+      await updateUserStatus(userId, newStatus);
+      // Mettre à jour les données locales
+      setTableData((prevData) =>
+        prevData.map((user) =>
+          user.id === userId ? { ...user, status: newStatus } : user
+        )
+      );
+      toast.success('Statut mis à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour du statut');
+    }
+  }, []);
+
+  const handleFilterName = useCallback((value) => {
+    filters.setState({ name: value });
+  }, [filters]);
+
+  const handleFilterRole = useCallback((value) => {
+    filters.setState({ role: value });
+  }, [filters]);
+
+  const handleResetFilters = useCallback(() => {
+    filters.setState({ name: '', role: [], status: 'all' });
+  }, [filters]);
+
+  const handleSelectRow = useCallback((id) => {
+    table.onSelectRow(id);
+  }, [table]);
+
+  const handleSelectAllRows = useCallback(() => {
+    table.onSelectAllRows(true, dataFiltered.map((row) => row.id));
+  }, [table, dataFiltered]);
+
   return (
     <>
       <DashboardContent>
@@ -196,7 +254,11 @@ export function UserListView({ users, currentAuthUser }) {
             <UserTableToolbar
               filters={filters}
               onResetPage={table.onResetPage}
-              options={{ roles: USER_ROLES_OPTIONS }}
+              onFilterName={handleFilterName}
+              onFilterRole={handleFilterRole}
+              onFilterStatus={handleFilterStatus}
+              roleOptions={ROLE_OPTIONS}
+              onResetFilters={handleResetFilters}
             />
 
             {canReset && (
@@ -204,6 +266,7 @@ export function UserListView({ users, currentAuthUser }) {
                 filters={filters}
                 totalResults={dataFiltered.length}
                 onResetPage={table.onResetPage}
+                onResetFilters={handleResetFilters}
                 sx={{ p: 2.5, pt: 0 }}
               />
             )}
@@ -213,12 +276,7 @@ export function UserListView({ users, currentAuthUser }) {
                 dense={table.dense}
                 numSelected={table.selected.length}
                 rowCount={dataFiltered.length}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    dataFiltered.map((row) => row.id)
-                  )
-                }
+                onSelectAllRows={handleSelectAllRows}
                 action={
                   <Tooltip title="Delete">
                     <IconButton color="primary" onClick={confirm.onTrue}>
@@ -237,12 +295,7 @@ export function UserListView({ users, currentAuthUser }) {
                     rowCount={dataFiltered.length}
                     numSelected={table.selected.length}
                     onSort={table.onSort}
-                    onSelectAllRows={(checked) =>
-                      table.onSelectAllRows(
-                        checked,
-                        dataFiltered.map((row) => row.id)
-                      )
-                    }
+                    onSelectAllRows={handleSelectAllRows}
                   />
 
                   <TableBody>
@@ -256,9 +309,13 @@ export function UserListView({ users, currentAuthUser }) {
                           key={row.id}
                           row={row}
                           selected={table.selected.includes(row.id)}
-                          onSelectRow={() => table.onSelectRow(row.id)}
+                          onSelectRow={() => handleSelectRow(row.id)}
                           onDeleteRow={() => handleDeleteRow(row.id)}
                           onEditRow={() => handleEditRow(row.id)}
+                          roleOptions={ROLE_OPTIONS}
+                          onChangeRole={(newRole) => handleChangeRole(row.id, newRole)}
+                          onChangeStatus={(newStatus) => handleChangeStatus(row.id, newStatus)}
+                          isCurrentUser={currentAuthUser?.id === row.id}
                         />
                       ))}
 
@@ -346,3 +403,23 @@ function applyFilter({ inputData, comparator, filters }) {
       return true;
     });
 }
+
+UserListView.propTypes = {
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      firstName: PropTypes.string,
+      lastName: PropTypes.string,
+      email: PropTypes.string,
+      phoneNumber: PropTypes.string,
+      role: PropTypes.string,
+      status: PropTypes.string,
+      avatarUrl: PropTypes.string,
+    })
+  ),
+  currentAuthUser: PropTypes.shape({
+    id: PropTypes.string,
+    role: PropTypes.string,
+    email: PropTypes.string,
+  }),
+};
