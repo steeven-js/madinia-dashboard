@@ -14,6 +14,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
+import { auth } from 'src/utils/firebase';
 
 import { updateOrCreateUserData } from 'src/hooks/use-users';
 
@@ -50,19 +51,29 @@ export function AccountGeneral({ currentUser, userProfile }) {
   const router = useRouter();
   const [_isSubmitting, setIsSubmitting] = useState(false);
 
-  const defaultValues = {
-    displayName: userProfile?.displayName || '',
-    email: userProfile?.email || '',
-    avatarUrl: userProfile?.avatarUrl || null,
-    phoneNumber: userProfile?.phoneNumber || '',
-    country: userProfile?.country || '',
-    address: userProfile?.address || '',
-    state: userProfile?.state || '',
-    city: userProfile?.city || '',
-    zipCode: userProfile?.zipCode || '',
-    about: userProfile?.about || '',
-    isPublic: userProfile?.isPublic || false,
+  // S'assurer que currentUser a toujours un ID
+  const currentUserWithId = {
+    id: auth.currentUser?.uid,
+    ...currentUser
   };
+
+  console.log('currentUser avec ID:', currentUserWithId);
+
+  const defaultValues = {
+    displayName: currentUser?.displayName || '',
+    email: currentUser?.email || '',
+    avatarUrl: currentUser?.avatarUrl || null,
+    phoneNumber: currentUser?.phoneNumber || '',
+    country: currentUser?.country || '',
+    address: currentUser?.address || '',
+    state: currentUser?.state || '',
+    city: currentUser?.city || '',
+    zipCode: currentUser?.zipCode || '',
+    about: currentUser?.about || '',
+    isPublic: currentUser?.isPublic || false,
+  };
+
+  console.log('defaultValues:', defaultValues);
 
   const methods = useForm({
     mode: 'all',
@@ -78,7 +89,10 @@ export function AccountGeneral({ currentUser, userProfile }) {
   const onSubmit = handleSubmit(async (data) => {
     setIsSubmitting(true);
     try {
-      await updateOrCreateUserData({ currentUser, data });
+      await updateOrCreateUserData({
+        currentUser: currentUserWithId,
+        data
+      });
 
       router.push(paths.dashboard.root);
     } catch (error) {

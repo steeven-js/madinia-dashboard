@@ -1,7 +1,7 @@
 import { updateProfile } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, addDoc, updateDoc, onSnapshot, collection } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { doc, addDoc, updateDoc, onSnapshot, collection, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
 
@@ -140,84 +140,84 @@ export const useUserById = (id) => {
 /**
  * Met à jour ou crée un utilisateur avec gestion de l'avatar
  * @param {Object} params - Paramètres de la fonction
- * @param {Object} params.data - Données de l'utilisateur
- * @param {string|null} [params.id=null] - ID de l'utilisateur (null pour création)
- * @returns {Promise<{
- *   success: boolean,
- *   id: string,
- *   data: Object
- * }>}
+ * @param {Object} params.currentUser - Utilisateur actuel
+ * @param {Object} params.data - Données à mettre à jour
+ * @returns {Promise<void>}
  */
-export const updateOrCreateUserData = async ({ data, id = null }) => {
-  // Extraction de l'avatar et des autres données
-  const { avatarUrl: newAvatarFile, ...otherData } = data;
-  let avatarUrl = newAvatarFile;
+export async function updateOrCreateUserData({ currentUser, data }) {
+  if (!currentUser?.id) {
+    throw new Error('ID utilisateur manquant');
+  }
 
   try {
-    // Gestion du téléchargement de l'avatar si c'est un nouveau fichier
-    if (newAvatarFile instanceof File) {
-      const fileExtension = newAvatarFile.name.split('.').pop().toLowerCase();
-      const avatarId = id;
-      const fileName = `avatars/${avatarId}/avatar.${fileExtension}`;
-      const storageRef = ref(storage, fileName);
+    console.log('Début de la mise à jour:', { currentUser, data });
 
-      await uploadBytes(storageRef, newAvatarFile);
+    let avatarUrl = null;
+
+    // Gestion de l'avatar
+    if (data.avatarUrl instanceof File) {
+      // Supprimer l'ancienne image si elle existe
+      if (currentUser.avatarUrl) {
+        try {
+          const oldAvatarRef = ref(storage, currentUser.avatarUrl);
+          await deleteObject(oldAvatarRef);
+          console.log('Ancienne image supprimée avec succès');
+        } catch (error) {
+          console.warn('Erreur lors de la suppression de l\'ancienne image:', error);
+          // On continue même si la suppression échoue
+        }
+      }
+
+      // Upload du nouveau fichier avec un nom standardisé
+      const fileExtension = data.avatarUrl.name.split('.').pop();
+      const storageRef = ref(storage, `avatars/${currentUser.id}/avatar.${fileExtension}`);
+      await uploadBytes(storageRef, data.avatarUrl);
       avatarUrl = await getDownloadURL(storageRef);
+
+      // Mise à jour du profil Auth avec le nouvel avatar
+      await updateProfile(auth.currentUser, {
+        photoURL: avatarUrl
+      });
+    } else if (typeof data.avatarUrl === 'string' && data.avatarUrl.startsWith('http')) {
+      // Conserver l'URL existante
+      avatarUrl = data.avatarUrl;
     }
 
-    // Préparation des données utilisateur
+    // Préparation des données à mettre à jour
     const userData = {
-      ...otherData,
-      updatedAt: Date.now(),
+      ...data,
+      updatedAt: serverTimestamp(),
     };
 
     if (avatarUrl) {
       userData.avatarUrl = avatarUrl;
     }
 
-    let { id: userId } = { id };
+    // Mise à jour du document dans Firestore
+    const userRef = doc(db, 'users', currentUser.id);
+    await setDoc(userRef, userData, { merge: true });
 
-    if (id) {
-      // Mise à jour d'un utilisateur existant
-      const userRef = doc(db, 'users', id);
-      await updateDoc(userRef, userData);
+    // Mise à jour du profil Auth avec le nouveau displayName
+    await updateProfile(auth.currentUser, {
+      displayName: data.displayName
+    });
 
-      // Mise à jour du profil auth si nécessaire
-      if (auth.currentUser && (otherData.name || avatarUrl)) {
-        const profileUpdates = {};
+    toast.success('Profil mis à jour avec succès');
 
-        if (otherData.name) {
-          profileUpdates.displayName = otherData.name;
-        }
-
-        if (avatarUrl) {
-          profileUpdates.photoURL = avatarUrl;
-        }
-
-        await updateProfile(auth.currentUser, profileUpdates);
+    console.log('Mise à jour réussie:', {
+      firestoreData: userData,
+      authProfile: {
+        displayName: data.displayName,
+        photoURL: avatarUrl
       }
-    } else {
-      // Création d'un nouvel utilisateur
-      userData.createdAt = Date.now();
-      userData.status = 'active';
-      const newUserRef = await addDoc(collection(db, 'users'), userData);
-      userId = newUserRef.id;
-    }
-
-    toast.success(userId ? 'Mise à jour réussie !' : 'Création réussie !');
-
-    return {
-      success: true,
-      id: userId,
-      data: userData
-    };
+    });
 
   } catch (error) {
-    console.error('Erreur lors de la mise à jour/création de l\'utilisateur:', error);
-    toast.error('Une erreur est survenue lors de la mise à jour/création');
+    console.error('Erreur lors de la mise à jour:', error);
+    toast.error('Erreur lors de la mise à jour du profil');
     throw error;
   }
-};
+}
 
 /**
  * Met à jour rapidement les données d'un utilisateur

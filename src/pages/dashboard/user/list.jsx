@@ -18,6 +18,8 @@ const metadata = { title: `User list | Dashboard - ${CONFIG.appName}` };
 export default function Page() {
   const { users, loading } = useUsers();
 
+  console.log('users', users);
+
   const { userProfile: currentAuthUser } = useAuth();
 
   return (

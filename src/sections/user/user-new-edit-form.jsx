@@ -28,7 +28,9 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const NewUserSchema = zod.object({
-  photoUrl: schemaHelper.file().optional(),
+  avatarUrl: schemaHelper.file({
+    message: { required_error: 'Avatar is required!' },
+  }),
   displayName: zod.string(),
   email: zod.string().email({ message: 'Email must be a valid email address!' }).optional(),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }).optional(),
@@ -50,10 +52,12 @@ export const NewUserSchema = zod.object({
 export function UserNewEditForm({ currentUser }) {
   const router = useRouter();
 
+  console.log('currentUser', currentUser);
+
   const defaultValues = useMemo(
     () => ({
       status: currentUser?.status ?? '',
-      photoUrl: currentUser?.photoUrl ?? null,
+      avatarUrl: currentUser?.avatarUrl || null,
       isVerified: currentUser?.isVerified ?? false,
       isBanned: currentUser?.isBanned ?? false,
       displayName: currentUser?.displayName ?? '',
@@ -89,7 +93,7 @@ export function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      updateOrCreateUserData(data, currentUser?.id);
+      await updateOrCreateUserData({ currentUser,data });
       reset();
       toast.success(currentUser ? 'Mise à jour réussie !' : 'Création réussie !');
       router.push(paths.dashboard.user.list);

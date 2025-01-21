@@ -13,6 +13,7 @@ import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
+import Typography from '@mui/material/Typography';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -68,6 +69,16 @@ export default function UserTableRow({
     }
   };
 
+  const getDisplayName = (user) => {
+    if (user.displayName) {
+      return user.displayName;
+    }
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return 'N/A';
+  };
+
   return (
     <>
       <TableRow hover selected={selected}>
@@ -76,25 +87,24 @@ export default function UserTableRow({
         </TableCell>
 
         <TableCell sx={{ width: 280 }}>
-          <Stack spacing={2} direction="row" alignItems="center">
-            <Avatar alt={fullName} src={avatarUrl} />
-
-            <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
-              <Link color="inherit" onClick={onEditRow} sx={{ cursor: 'pointer', typography: 'subtitle2' }}>
-                {fullName}
-              </Link>
-              <Box component="span" sx={{ color: 'text.disabled' }}>
-                {email}
-              </Box>
-            </Stack>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar alt={getDisplayName(row)} src={row.avatarUrl || ''} />
+            <ListItemText
+              primary={getDisplayName(row)}
+              secondary={row.email}
+              primaryTypographyProps={{ typography: 'body2' }}
+              secondaryTypographyProps={{
+                component: 'span',
+                color: 'text.disabled',
+              }}
+            />
           </Stack>
         </TableCell>
 
         <TableCell sx={{ width: 180 }}>
-          <ListItemText
-            primary={phoneNumber}
-            primaryTypographyProps={{ typography: 'body2', noWrap: true }}
-          />
+          <Typography variant="body2" noWrap>
+            {row.phoneNumber || 'N/A'}
+          </Typography>
         </TableCell>
 
         <TableCell sx={{ width: 180 }}>
