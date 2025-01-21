@@ -74,7 +74,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
       <AccountButton
         onClick={handleOpenDrawer}
         photoURL={userAuth?.photoURL}
-        displayName={user?.displayName}
+        displayName={userAuth?.displayName}
         sx={sx}
         {...other}
       />
@@ -98,11 +98,11 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
             {renderAvatar}
 
             <Typography variant="subtitle1" noWrap sx={{ mt: 2 }}>
-              {user?.displayName}
+              {userAuth?.displayName}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
-              {user?.email}
+              {userAuth?.email}
             </Typography>
           </Stack>
 

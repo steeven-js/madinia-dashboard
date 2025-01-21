@@ -60,17 +60,17 @@ export function AccountGeneral({ currentUser, userProfile }) {
   // console.log('currentUser avec ID:', currentUserWithId);
 
   const defaultValues = {
-    displayName: currentUser?.displayName || '',
-    email: currentUser?.email || '',
-    avatarUrl: currentUser?.avatarUrl || null,
-    phoneNumber: currentUser?.phoneNumber || '',
-    country: currentUser?.country || '',
-    address: currentUser?.address || '',
-    state: currentUser?.state || '',
-    city: currentUser?.city || '',
-    zipCode: currentUser?.zipCode || '',
-    about: currentUser?.about || '',
-    isPublic: currentUser?.isPublic || false,
+    displayName: userProfile?.displayName || '',
+    email: userProfile?.email || '',
+    avatarUrl: userProfile?.avatarUrl || null,
+    phoneNumber: userProfile?.phoneNumber || '',
+    country: userProfile?.country || '',
+    address: userProfile?.address || '',
+    state: userProfile?.state || '',
+    city: userProfile?.city || '',
+    zipCode: userProfile?.zipCode || '',
+    about: userProfile?.about || '',
+    isPublic: userProfile?.isPublic || false,
   };
 
   // console.log('defaultValues:', defaultValues);
