@@ -3,6 +3,7 @@ import Card from '@mui/material/Card';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Timeline from '@mui/lab/Timeline';
+import { Typography } from '@mui/material';
 import TimelineDot from '@mui/lab/TimelineDot';
 import CardHeader from '@mui/material/CardHeader';
 import TimelineContent from '@mui/lab/TimelineContent';
@@ -10,7 +11,7 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineItem, { timelineItemClasses } from '@mui/lab/TimelineItem';
 
-import { fDateTime } from 'src/utils/format-time';
+import { fDateTime, fEuroDateTime } from 'src/utils/format-time';
 
 // ----------------------------------------------------------------------
 
@@ -32,13 +33,13 @@ export function EventOrderDetailsHistory({ createdAt, updatedAt, status }) {
     >
       <Stack spacing={0.5}>
         <Box sx={{ color: 'text.disabled' }}>Date de création</Box>
-        {fDateTime(createdAt)}
-      </Stack>
+        <Typography variant="body2">{fEuroDateTime(createdAt)}</Typography>
+        </Stack>
 
       <Stack spacing={0.5}>
         <Box sx={{ color: 'text.disabled' }}>Dernière mise à jour</Box>
-        {fDateTime(updatedAt)}
-      </Stack>
+        <Typography variant="body2">{fEuroDateTime(updatedAt)}</Typography>
+        </Stack>
     </Paper>
   );
 

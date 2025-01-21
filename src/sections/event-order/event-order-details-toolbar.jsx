@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useCallback } from 'react';
+// import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,19 +10,20 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
-import { paths } from 'src/routes/paths';
+// import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { fDateTime } from 'src/utils/format-time';
+import { fDateTime, formatStr } from 'src/utils/format-time';
+
 import { EventOrderService } from 'src/services/event-order.service';
-import { toast } from 'src/components/snackbar';
 
 import { Label } from 'src/components/label';
-import { ConfirmDialog } from 'src/components/custom-dialog';
-import { CustomPopover, usePopover } from 'src/components/custom-popover';
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { ConfirmDialog } from 'src/components/custom-dialog';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
@@ -45,7 +46,7 @@ export default function EventOrderDetailsToolbar({
       // Créer un lien temporaire pour télécharger le PDF
       const link = document.createElement('a');
       link.href = response.invoice_url;
-      link.download = `facture-${orderId}.pdf`;
+      link.download = `facture-${orderNumber.padStart(6, '0')}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -89,7 +90,7 @@ export default function EventOrderDetailsToolbar({
             </Stack>
 
             <Box sx={{ typography: 'body2', color: 'text.disabled' }}>
-              {fDateTime(createdAt)}
+              {fDateTime(createdAt, formatStr.european.dateTime)}
             </Box>
           </Stack>
         </Stack>
@@ -167,6 +168,11 @@ EventOrderDetailsToolbar.propTypes = {
   onChangeStatus: PropTypes.func,
   orderNumber: PropTypes.string,
   status: PropTypes.string,
-  statusOptions: PropTypes.array,
+  statusOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    })
+  ),
   orderId: PropTypes.string,
 };

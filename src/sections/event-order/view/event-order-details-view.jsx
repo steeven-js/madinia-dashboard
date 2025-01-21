@@ -84,7 +84,7 @@ export function EventOrderDetailsView() {
     return (
       <DashboardContent>
         <Stack alignItems="center" justifyContent="center" sx={{ height: '100vh' }}>
-          La commande n'existe pas ou a été supprimée
+          La commande n&apos;existe pas ou a été supprimée
         </Stack>
       </DashboardContent>
     );

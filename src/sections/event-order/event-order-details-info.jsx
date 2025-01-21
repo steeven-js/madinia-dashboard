@@ -1,99 +1,73 @@
-import Box from '@mui/material/Box';
+import PropTypes from 'prop-types';
+
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
 import CardHeader from '@mui/material/CardHeader';
-
-import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
 
 export function EventOrderDetailsInfo({ customerName, customerEmail, sessionId, qrCode }) {
-  const renderCustomer = (
-    <>
-      <CardHeader
-        title="Informations client"
-        action={
-          <IconButton>
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-        }
-      />
-      <Stack spacing={1.5} sx={{ p: 3, typography: 'body2' }}>
-        <Stack direction="row">
-          <Box component="span" sx={{ color: 'text.secondary', width: 120, flexShrink: 0 }}>
-            Nom
-          </Box>
-          {customerName || 'N/A'}
-        </Stack>
-
-        <Stack direction="row">
-          <Box component="span" sx={{ color: 'text.secondary', width: 120, flexShrink: 0 }}>
-            Email
-          </Box>
-          {customerEmail || 'N/A'}
-        </Stack>
-      </Stack>
-    </>
-  );
-
-  const renderPayment = (
-    <>
-      <CardHeader
-        title="Informations de paiement"
-        action={
-          <IconButton>
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-        }
-      />
-      <Stack spacing={1.5} sx={{ p: 3, typography: 'body2' }}>
-        <Stack direction="row">
-          <Box component="span" sx={{ color: 'text.secondary', width: 120, flexShrink: 0 }}>
-            Session ID
-          </Box>
-          {sessionId || 'N/A'}
-        </Stack>
-      </Stack>
-    </>
-  );
-
-  const renderQRCode = qrCode && (
-    <>
-      <CardHeader
-        title="QR Code"
-        action={
-          <IconButton>
-            <Iconify icon="solar:pen-bold" />
-          </IconButton>
-        }
-      />
-      <Stack alignItems="center" sx={{ p: 3 }}>
-        <Box
-          component="img"
-          src={qrCode}
-          alt="QR Code"
-          sx={{ width: 200, height: 200, borderRadius: 1.5 }}
-        />
-      </Stack>
-    </>
-  );
-
   return (
-    <Card>
-      {renderCustomer}
+    <Stack spacing={3}>
+      <Card>
+        <CardHeader title="Informations client" />
 
-      <Divider sx={{ borderStyle: 'dashed' }} />
+        <Stack spacing={2} sx={{ p: 3 }}>
+          <Stack spacing={1}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+              Nom
+            </Typography>
+            <Typography variant="body2">{customerName || 'N/A'}</Typography>
+          </Stack>
 
-      {renderPayment}
+          <Stack spacing={1}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+              Email
+            </Typography>
+            <Typography variant="body2">{customerEmail || 'N/A'}</Typography>
+          </Stack>
+        </Stack>
+      </Card>
 
       {qrCode && (
-        <>
-          <Divider sx={{ borderStyle: 'dashed' }} />
-          {renderQRCode}
-        </>
+        <Card>
+          <CardHeader title="QR Code" />
+          <Stack spacing={2} sx={{ p: 3 }}>
+            <img src={qrCode} alt="QR Code" style={{ maxWidth: '100%', height: 'auto' }} />
+          </Stack>
+        </Card>
       )}
-    </Card>
+
+      {sessionId && (
+        <Card>
+          <CardHeader title="Informations de paiement" />
+          <Stack spacing={2} sx={{ p: 3 }}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                Session ID
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  wordBreak: 'break-all',
+                  maxWidth: '100%',
+                  overflowWrap: 'break-word'
+                }}
+              >
+                {sessionId}
+              </Typography>
+            </Stack>
+          </Stack>
+        </Card>
+      )}
+    </Stack>
   );
 }
+
+EventOrderDetailsInfo.propTypes = {
+  customerName: PropTypes.string,
+  customerEmail: PropTypes.string,
+  sessionId: PropTypes.string,
+  qrCode: PropTypes.string,
+};
