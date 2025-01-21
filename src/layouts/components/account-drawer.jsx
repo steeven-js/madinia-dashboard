@@ -11,6 +11,8 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { useRouter, usePathname } from 'src/routes/hooks';
 
+import { useAuth } from 'src/hooks/use-auth';
+
 import { varAlpha } from 'src/theme/styles';
 
 import { Label } from 'src/components/label';
@@ -31,7 +33,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
 
   const pathname = usePathname();
 
-  // const { user } = useMockedUser();
+  const { user: userAuth } = useAuth();
 
   const [open, setOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
     <>
       <AccountButton
         onClick={handleOpenDrawer}
-        photoURL={user?.avatarUrl}
+        photoURL={userAuth?.photoURL}
         displayName={user?.displayName}
         sx={sx}
         {...other}

@@ -14,10 +14,10 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
-import { auth } from 'src/utils/firebase';
 
 import { updateOrCreateUserData } from 'src/hooks/use-users';
 
+import { auth } from 'src/utils/firebase';
 import { fData } from 'src/utils/format-number';
 
 import { toast } from 'src/components/snackbar';
@@ -57,7 +57,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
     ...currentUser
   };
 
-  console.log('currentUser avec ID:', currentUserWithId);
+  // console.log('currentUser avec ID:', currentUserWithId);
 
   const defaultValues = {
     displayName: currentUser?.displayName || '',
@@ -73,7 +73,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
     isPublic: currentUser?.isPublic || false,
   };
 
-  console.log('defaultValues:', defaultValues);
+  // console.log('defaultValues:', defaultValues);
 
   const methods = useForm({
     mode: 'all',

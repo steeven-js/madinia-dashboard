@@ -1,7 +1,7 @@
 import { updateProfile } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { doc, addDoc, updateDoc, onSnapshot, collection, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
 
@@ -180,7 +180,8 @@ export async function updateOrCreateUserData({ currentUser, data }) {
       });
     } else if (typeof data.avatarUrl === 'string' && data.avatarUrl.startsWith('http')) {
       // Conserver l'URL existante
-      avatarUrl = data.avatarUrl;
+      const { avatarUrl: existingAvatarUrl } = data;
+      avatarUrl = existingAvatarUrl;
     }
 
     // Préparation des données à mettre à jour
