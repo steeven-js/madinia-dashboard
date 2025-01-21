@@ -110,15 +110,15 @@ export const navDataAdmin = [
   {
     subheader: 'Management',
     items: [
-      // {
-      //   title: 'User',
-      //   path: paths.dashboard.user.root,
-      //   icon: ICONS.user,
-      //   children: [
-      //     { title: 'Cards', path: paths.dashboard.user.cards },
-      //     { title: 'List', path: paths.dashboard.user.list },
-      //   ],
-      // },
+      {
+        title: 'User',
+        path: paths.dashboard.user.root,
+        icon: ICONS.user,
+        children: [
+          { title: 'Cards', path: paths.dashboard.user.cards },
+          { title: 'List', path: paths.dashboard.user.list },
+        ],
+      },
       {
         title: 'AutoEcole',
         path: paths.dashboard.autoEcole.root,

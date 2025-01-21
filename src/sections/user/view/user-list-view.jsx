@@ -67,7 +67,7 @@ export function UserListView({ users, currentAuthUser }) {
 
   const confirm = useBoolean();
 
-  const [acceptedRoles, setAcceptedRoles] = useState(['dev']);
+  const [acceptedRoles, setAcceptedRoles] = useState(['dev', 'admin']);
 
   const [tableData, setTableData] = useState(users);
 
