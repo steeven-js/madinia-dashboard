@@ -1,33 +1,69 @@
+import PropTypes from 'prop-types';
+import { useState, useCallback } from 'react';
+
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
+import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
+import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useBoolean } from 'src/hooks/use-boolean';
+
 import { fDateTime } from 'src/utils/format-time';
+import { EventOrderService } from 'src/services/event-order.service';
+import { toast } from 'src/components/snackbar';
 
 import { Label } from 'src/components/label';
+import { ConfirmDialog } from 'src/components/custom-dialog';
+import { CustomPopover, usePopover } from 'src/components/custom-popover';
 import { Iconify } from 'src/components/iconify';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export function EventOrderDetailsToolbar({
-  status,
+export default function EventOrderDetailsToolbar({
   backLink,
-  createdAt,
   orderNumber,
-  statusOptions,
+  createdAt,
+  status,
   onChangeStatus,
+  statusOptions,
+  orderId,
 }) {
+  const confirm = useBoolean();
   const popover = usePopover();
 
+  const handlePrintInvoice = async () => {
+    try {
+      const response = await EventOrderService.generateInvoice(orderId);
+
+      // Créer un lien temporaire pour télécharger le PDF
+      const link = document.createElement('a');
+      link.href = response.invoice_url;
+      link.download = `facture-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast.error('Erreur lors de la génération de la facture');
+    }
+  };
+
   return (
-    <>
-      <Stack spacing={3} direction={{ xs: 'column', md: 'row' }} sx={{ mb: { xs: 3, md: 5 } }}>
+    <Container>
+      <Stack
+        spacing={3}
+        direction={{ xs: 'column', md: 'row' }}
+        sx={{
+          mb: { xs: 3, md: 5 },
+        }}
+      >
         <Stack spacing={1} direction="row" alignItems="flex-start">
           <IconButton component={RouterLink} href={backLink}>
             <Iconify icon="eva:arrow-ios-back-fill" />
@@ -35,7 +71,8 @@ export function EventOrderDetailsToolbar({
 
           <Stack spacing={0.5}>
             <Stack spacing={1} direction="row" alignItems="center">
-              <Typography variant="h4"> Commande {orderNumber} </Typography>
+              <Typography variant="h4">Commande {orderNumber}</Typography>
+
               <Label
                 variant="soft"
                 color={
@@ -45,13 +82,15 @@ export function EventOrderDetailsToolbar({
                   'default'
                 }
               >
-                {status}
+                {status === 'paid' && 'Payé'}
+                {status === 'unpaid' && 'Non payé'}
+                {status === 'refunded' && 'Remboursé'}
               </Label>
             </Stack>
 
-            <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+            <Box sx={{ typography: 'body2', color: 'text.disabled' }}>
               {fDateTime(createdAt)}
-            </Typography>
+            </Box>
           </Stack>
         </Stack>
 
@@ -69,19 +108,18 @@ export function EventOrderDetailsToolbar({
             onClick={popover.onOpen}
             sx={{ textTransform: 'capitalize' }}
           >
-            {status}
+            {status === 'paid' && 'Payé'}
+            {status === 'unpaid' && 'Non payé'}
+            {status === 'refunded' && 'Remboursé'}
           </Button>
 
           <Button
             color="inherit"
             variant="outlined"
             startIcon={<Iconify icon="solar:printer-minimalistic-bold" />}
+            onClick={handlePrintInvoice}
           >
-            Imprimer
-          </Button>
-
-          <Button color="inherit" variant="contained" startIcon={<Iconify icon="solar:pen-bold" />}>
-            Modifier
+            Imprimer la facture
           </Button>
         </Stack>
       </Stack>
@@ -107,6 +145,28 @@ export function EventOrderDetailsToolbar({
           ))}
         </MenuList>
       </CustomPopover>
-    </>
+
+      <ConfirmDialog
+        open={confirm.value}
+        onClose={confirm.onFalse}
+        title="Delete"
+        content="Are you sure want to delete?"
+        action={
+          <Button variant="contained" color="error" onClick={confirm.onFalse}>
+            Delete
+          </Button>
+        }
+      />
+    </Container>
   );
 }
+
+EventOrderDetailsToolbar.propTypes = {
+  backLink: PropTypes.string,
+  createdAt: PropTypes.instanceOf(Date),
+  onChangeStatus: PropTypes.func,
+  orderNumber: PropTypes.string,
+  status: PropTypes.string,
+  statusOptions: PropTypes.array,
+  orderId: PropTypes.string,
+};

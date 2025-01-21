@@ -14,7 +14,7 @@ import { toast } from 'src/components/snackbar';
 
 import { EventOrderDetailsInfo } from '../event-order-details-info';
 import { EventOrderDetailsItems } from '../event-order-details-items';
-import { EventOrderDetailsToolbar } from '../event-order-details-toolbar';
+import EventOrderDetailsToolbar from '../event-order-details-toolbar';
 import { EventOrderDetailsHistory } from '../event-order-details-history';
 
 // ----------------------------------------------------------------------
@@ -35,11 +35,19 @@ export function EventOrderDetailsView() {
   const loadOrder = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await EventOrderService.getEventOrder(id);
-      setOrder(response.data);
+      const data = await EventOrderService.getEventOrder(id);
+
+      if (!data || data.id === null) {
+        throw new Error('Commande non trouvée');
+      }
+      setOrder(data);
     } catch (error) {
-      console.error('Error loading order:', error);
-      toast.error('Erreur lors du chargement de la commande');
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        'Erreur lors du chargement de la commande'
+      );
+      setOrder(null);
     } finally {
       setLoading(false);
     }
@@ -49,16 +57,18 @@ export function EventOrderDetailsView() {
     loadOrder();
   }, [loadOrder]);
 
-  const handleChangeStatus = useCallback(async (newValue) => {
-    try {
-      await EventOrderService.updateEventOrder(id, { status: newValue });
-      loadOrder(); // Recharger la commande pour avoir les données à jour
-      toast.success('Statut mis à jour avec succès');
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Erreur lors de la mise à jour du statut');
-    }
-  }, [id, loadOrder]);
+  const handleChangeStatus = useCallback(
+    async (newValue) => {
+      try {
+        await EventOrderService.updateEventOrder(id, { status: newValue });
+        await loadOrder(); // Recharger la commande pour avoir les données à jour
+        toast.success('Statut mis à jour avec succès');
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du statut');
+      }
+    },
+    [id, loadOrder]
+  );
 
   if (loading) {
     return (
@@ -70,8 +80,14 @@ export function EventOrderDetailsView() {
     );
   }
 
-  if (!order) {
-    return null;
+  if (!order || order.id === null) {
+    return (
+      <DashboardContent>
+        <Stack alignItems="center" justifyContent="center" sx={{ height: '100vh' }}>
+          La commande n'existe pas ou a été supprimée
+        </Stack>
+      </DashboardContent>
+    );
   }
 
   return (
@@ -79,10 +95,11 @@ export function EventOrderDetailsView() {
       <EventOrderDetailsToolbar
         backLink={paths.dashboard.eventOrder.root}
         orderNumber={order.order_number}
-        createdAt={order.created_at}
+        createdAt={new Date(order.created_at)}
         status={order.status}
         onChangeStatus={handleChangeStatus}
         statusOptions={ORDER_STATUS_OPTIONS}
+        orderId={order.id}
       />
 
       <Grid container spacing={3}>
@@ -91,6 +108,7 @@ export function EventOrderDetailsView() {
             <EventOrderDetailsItems
               event={order.event}
               totalAmount={order.total_price}
+              orderId={order.id}
             />
 
             <EventOrderDetailsHistory

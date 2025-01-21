@@ -8,7 +8,10 @@ export const EventOrderService = {
       const response = await axios.get(ENDPOINTS.API_EVENT_ORDER_URL, {
         headers: CONFIG.headers,
       });
-      return response.data;
+      if (!response.data || !response.data.data) {
+        throw new Error('Données de commandes invalides');
+      }
+      return response.data.data;
     } catch (error) {
       console.error('Error fetching event orders:', error);
       throw error;
@@ -20,7 +23,12 @@ export const EventOrderService = {
       const response = await axios.get(`${ENDPOINTS.API_EVENT_ORDER_URL}/${id}`, {
         headers: CONFIG.headers,
       });
-      return response.data;
+
+      if (!response.data || !response.data.data) {
+        throw new Error('Données de commande invalides');
+      }
+
+      return response.data.data;
     } catch (error) {
       console.error('Error fetching event order:', error);
       throw error;
@@ -74,5 +82,17 @@ export const EventOrderService = {
       console.error('Error regenerating QR code:', error);
       throw error;
     }
-  }
+  },
+
+  async generateInvoice(id) {
+    try {
+      const response = await axios.get(`${ENDPOINTS.API_EVENT_ORDER_URL}/${id}/invoice`, {
+        headers: CONFIG.headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      throw error;
+    }
+  },
 };

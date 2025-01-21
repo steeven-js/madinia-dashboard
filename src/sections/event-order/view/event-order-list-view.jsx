@@ -105,8 +105,7 @@ export function EventOrderListView() {
     const fetchEventOrders = async () => {
       try {
         setLoading(true);
-        const response = await EventOrderService.getEventOrders();
-        const orders = response.data || [];
+        const orders = await EventOrderService.getEventOrders();
 
         const formattedOrders = orders.map((order) => ({
           id: order.id,
@@ -125,7 +124,7 @@ export function EventOrderListView() {
         setTableData(formattedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
-        toast.error('Failed to fetch orders');
+        toast.error('Erreur lors du chargement des commandes');
       } finally {
         setLoading(false);
       }

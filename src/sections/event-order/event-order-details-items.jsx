@@ -7,12 +7,31 @@ import Typography from '@mui/material/Typography';
 
 import { fDateTime } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
+import { EventOrderService } from 'src/services/event-order.service';
+import { toast } from 'src/components/snackbar';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function EventOrderDetailsItems({ event, totalAmount }) {
+export function EventOrderDetailsItems({ event, totalAmount, orderId }) {
+  const handlePrintInvoice = async () => {
+    try {
+      const response = await EventOrderService.generateInvoice(orderId);
+
+      // Créer un lien temporaire pour télécharger le PDF
+      const link = document.createElement('a');
+      link.href = response.invoice_url;
+      link.download = `facture-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast.error('Erreur lors de la génération de la facture');
+    }
+  };
+
   return (
     <Card>
       <CardHeader
