@@ -66,7 +66,7 @@ export function SignOutButton({ onClose, ...other }) {
       onClick={CONFIG.auth.method === 'auth0' ? handleLogoutAuth0 : handleLogout}
       {...other}
     >
-      Logout
+      Déconnexion
     </Button>
   );
 }
