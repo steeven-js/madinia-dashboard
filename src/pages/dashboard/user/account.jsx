@@ -4,13 +4,14 @@ import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { useUserById } from 'src/hooks/use-users';
 import { useAuth } from 'src/hooks/use-auth';
+import { useUserById } from 'src/hooks/use-users';
 
 import { CONFIG } from 'src/config-global';
 
-import { AccountView } from 'src/sections/account/view';
 import { EmptyContent } from 'src/components/empty-content';
+
+import { AccountView } from 'src/sections/account/view';
 
 // ----------------------------------------------------------------------
 
