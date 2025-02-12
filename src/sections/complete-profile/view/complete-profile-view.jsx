@@ -1,5 +1,6 @@
+import { toast } from 'sonner';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -15,8 +16,6 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import { paths } from 'src/routes/paths';
 
-import { useUserById } from 'src/hooks/use-users';
-
 import { db } from 'src/utils/firebase';
 
 import { Iconify } from 'src/components/iconify';
@@ -24,31 +23,7 @@ import { Iconify } from 'src/components/iconify';
 export default function CompleteProfileView() {
   const navigate = useNavigate();
   const authUser = useSelector((state) => state.auth.user);
-  const { user, loading: userLoading } = useUserById(authUser?.uid);
   const [loading, setLoading] = useState(false);
-
-  const isProfileComplete = (userData) => {
-    if (!userData) return false;
-
-    const requiredFields = [
-      'address',
-      'city',
-      'company',
-      'country',
-      'phoneNumber',
-      'state',
-      'zipCode',
-    ];
-
-    return requiredFields.every((field) => !!userData[field]);
-  };
-
-  useEffect(() => {
-    if (user && isProfileComplete(user)) {
-      navigate(paths.dashboard.root);
-    }
-  }, [user, navigate]);
-
   const [formData, setFormData] = useState({
     about: '',
     address: '',
@@ -60,22 +35,6 @@ export default function CompleteProfileView() {
     zipCode: '',
   });
 
-  // Initialiser le formulaire avec les données existantes
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        about: user.about || '',
-        address: user.address || '',
-        city: user.city || '',
-        company: user.company || '',
-        country: user.country || '',
-        phoneNumber: user.phoneNumber || '',
-        state: user.state || '',
-        zipCode: user.zipCode || '',
-      });
-    }
-  }, [user]);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -85,33 +44,31 @@ export default function CompleteProfileView() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!authUser?.uid) {
-      console.error('Aucun utilisateur connecté');
+    if (!authUser?.id) {
+      toast.error('Vous devez être connecté pour compléter votre profil');
       return;
     }
 
     setLoading(true);
     try {
-      const userRef = doc(db, 'users', authUser.uid);
+      const userRef = doc(db, 'users', authUser.id);
       await updateDoc(userRef, {
         ...formData,
         isPublic: true,
         updatedAt: new Date(),
       });
-      navigate(paths.dashboard.user.account(authUser.uid));
+
+      toast.success('Votre profil a été complété avec succès !');
+
+      setTimeout(() => {
+        navigate(paths.dashboard.root);
+      }, 1500);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour du profil');
     }
     setLoading(false);
   };
-
-  if (userLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <LoadingButton loading />
-      </Box>
-    );
-  }
 
   return (
     <Container maxWidth="lg">
