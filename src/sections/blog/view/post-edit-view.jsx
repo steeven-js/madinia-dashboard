@@ -8,7 +8,7 @@ import { PostNewEditForm } from '../post-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function PostEditView({ post }) {
+export function PostEditView({ post, categories }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
@@ -21,7 +21,7 @@ export function PostEditView({ post }) {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <PostNewEditForm currentPost={post} />
+      <PostNewEditForm currentPost={post} categories={categories} />
     </DashboardContent>
   );
 }

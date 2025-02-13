@@ -88,7 +88,7 @@ export function PostListView({ currentUser, posts }) {
           results={searchResults}
           onSearch={handleSearch}
           loading={searchLoading}
-          hrefItem={(id) => paths.dashboard.post.id}
+          hrefItem={(id) => paths.dashboard.post.details(id)}
         />
 
         <PostSort sort={sortBy} onSort={handleSortBy} sortOptions={POST_SORT_OPTIONS} />

@@ -41,9 +41,11 @@ export const paths = {
     demo: { details: `/product/${MOCK_ID}` },
   },
   post: {
-    root: `/post`,
-    details: (title) => `/post/${paramCase(title)}`,
-    demo: { details: `/post/${paramCase(MOCK_TITLE)}` },
+    root: `${ROOTS.DASHBOARD}/post`,
+    new: `${ROOTS.DASHBOARD}/post/new`,
+    details: (id) => `${ROOTS.DASHBOARD}/post/${id}`,
+    edit: (id) => `${ROOTS.DASHBOARD}/post/${id}/edit`,
+    categories: `${ROOTS.DASHBOARD}/post/categories`,
   },
   // AUTH
   auth: {
@@ -170,6 +172,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/post/new`,
       details: (id) => `${ROOTS.DASHBOARD}/post/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/post/${id}/edit`,
+      categories: `${ROOTS.DASHBOARD}/post/categories`,
     },
     order: {
       root: `${ROOTS.DASHBOARD}/order`,

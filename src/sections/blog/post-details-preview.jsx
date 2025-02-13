@@ -48,7 +48,7 @@ export function PostDetailsPreview({
         </Typography>
 
         <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
+          Fermer
         </Button>
 
         <LoadingButton

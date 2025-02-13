@@ -13,8 +13,6 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
-import { deletePostById } from 'src/hooks/use-posts';
-
 import { fDate } from 'src/utils/format-time';
 import { fShortenNumber } from 'src/utils/format-number';
 
@@ -33,10 +31,6 @@ export function PostItemHorizontal({ post, currentUser }) {
   const popover = usePopover();
 
   const router = useRouter();
-
-  const handleDeletePost = async (postId) => {
-    await deletePostById(postId);
-  };
 
   const {
     id,
@@ -159,7 +153,6 @@ export function PostItemHorizontal({ post, currentUser }) {
 
           <MenuItem
             onClick={() => {
-              handleDeletePost(id);
               popover.onClose();
             }}
             sx={{ color: 'error.main' }}

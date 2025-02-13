@@ -37,7 +37,7 @@ export const navData = [
           { title: 'Product', path: paths.product.demo.details },
           { title: 'Checkout', path: paths.product.checkout },
           { title: 'Posts', path: paths.post.root },
-          { title: 'Post', path: paths.post.demo.details },
+          // { title: 'Post', path: paths.post.demo.details },
         ],
       },
       {

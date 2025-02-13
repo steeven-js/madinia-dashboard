@@ -33,6 +33,7 @@ const BlogPostsPage = lazy(() => import('src/pages/dashboard/post/list'));
 const BlogPostPage = lazy(() => import('src/pages/dashboard/post/details'));
 const BlogNewPostPage = lazy(() => import('src/pages/dashboard/post/new'));
 const BlogEditPostPage = lazy(() => import('src/pages/dashboard/post/edit'));
+const PostCategoryPage = lazy(() => import('src/pages/dashboard/post/categories/list'));
 // Event
 const EventListPage = lazy(() => import('src/pages/dashboard/event/list'));
 const EventDetailsPage = lazy(() => import('src/pages/dashboard/event/details'));
@@ -118,6 +119,7 @@ export const dashboardRoutes = [
           { path: ':id', element: <BlogPostPage /> },
           { path: ':id/edit', element: <BlogEditPostPage /> },
           { path: 'new', element: <BlogNewPostPage /> },
+          { path: 'categories', element: <PostCategoryPage /> },
         ],
       },
       {

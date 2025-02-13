@@ -3,19 +3,22 @@ import { useState, useEffect, useCallback } from 'react';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
+// import Checkbox from '@mui/material/Checkbox';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import FormControlLabel from '@mui/material/FormControlLabel';
+// import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
-import { fShortenNumber } from 'src/utils/format-number';
+// import { fShortenNumber } from 'src/utils/format-number';
+
+import { useUpdatePostPublish } from 'src/hooks/use-posts';
 
 import { POST_PUBLISH_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Markdown } from 'src/components/markdown';
 import { EmptyContent } from 'src/components/empty-content';
@@ -29,9 +32,24 @@ import { PostDetailsToolbar } from '../post-details-toolbar';
 export function PostDetailsView({ post, loading, error, id }) {
   const [publish, setPublish] = useState('');
 
-  const handleChangePublish = useCallback((newValue) => {
-    setPublish(newValue);
-  }, []);
+  const { handleUpdatePublish } = useUpdatePostPublish();
+
+  const handleChangePublish = useCallback(async (newValue) => {
+    try {
+      const result = await handleUpdatePublish(id, newValue);
+      if (result.success) {
+        setPublish(newValue);
+        toast.success('Publish status updated');
+      } else {
+        // Optionally handle error, maybe show a notification
+        console.error('Failed to update publish status');
+        toast.error('Failed to update publish status');
+      }
+    } catch (err) {
+      console.error('Error in handleChangePublish:', err);
+      toast.error('Error in handleChangePublish');
+    }
+  }, [id, handleUpdatePublish]);
 
   useEffect(() => {
     if (post) {
@@ -111,7 +129,7 @@ export function PostDetailsView({ post, loading, error, id }) {
             ))}
           </Stack>
 
-          <Stack direction="row" alignItems="center">
+          {/* <Stack direction="row" alignItems="center">
             <FormControlLabel
               control={
                 <Checkbox
@@ -126,7 +144,7 @@ export function PostDetailsView({ post, loading, error, id }) {
               label={fShortenNumber(post?.totalFavorites)}
               sx={{ mr: 1 }}
             />
-          </Stack>
+          </Stack> */}
         </Stack>
       </Stack>
     </DashboardContent>

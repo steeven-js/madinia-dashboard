@@ -8,8 +8,6 @@ import { usePosts } from 'src/hooks/use-posts';
 
 import { CONFIG } from 'src/config-global';
 
-import { EmptyContent } from 'src/components/empty-content';
-
 import { PostListView } from 'src/sections/blog/view';
 
 // ----------------------------------------------------------------------
@@ -17,23 +15,20 @@ import { PostListView } from 'src/sections/blog/view';
 const metadata = { title: `Post list | Dashboard - ${CONFIG.name}` };
 
 export default function Page() {
-  const { user, loading: authLoading } = useAuth();
-  const { posts, loading: postsLoading } = usePosts();
+  const { user, loading } = useAuth();
 
-  const isLoading = authLoading || postsLoading;
+  const { posts } = usePosts();
 
   return (
     <>
       <Helmet>
-        <title>{metadata.title}</title>
+        <title> {metadata.title}</title>
       </Helmet>
 
-      {isLoading ? (
+      {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
           <CircularProgress />
         </Box>
-      ) : posts.length === 0 ? (
-        <EmptyContent title="Aucun post" />
       ) : (
         <PostListView currentUser={user} posts={posts} />
       )}

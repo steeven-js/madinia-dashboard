@@ -86,7 +86,7 @@ export function PostSearch({ query, results, onSearch, hrefItem, loading }) {
               }}
             />
 
-            <Link key={inputValue} underline="none" onClick={() => handleClick(post.title)}>
+            <Link key={inputValue} underline="none" onClick={() => handleClick(post.id)}>
               {parts.map((part, index) => (
                 <Typography
                   key={index}
