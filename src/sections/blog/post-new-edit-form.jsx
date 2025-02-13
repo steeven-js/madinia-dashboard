@@ -145,7 +145,7 @@ export function PostNewEditForm({ currentPost }) {
         totalShares: currentPost?.totalShares || 0,
         totalComments: currentPost?.totalComments || 0,
         isCommentsEnabled,
-        publish : isPublish ? 'published' : 'draft',
+        publish: isPublish ? 'published' : 'draft',
       };
 
       // Si c'est un nouveau post, ajoutez createdAt
@@ -167,7 +167,7 @@ export function PostNewEditForm({ currentPost }) {
       reset();
       toast.success(currentPost ? 'Update success!' : 'Create success!');
       router.push(paths.dashboard.post.list);
-      console.info('DATA', userData);
+      // console.info('DATA', userData);
     } catch (error) {
       console.error(error);
       toast.error('An error occurred');
