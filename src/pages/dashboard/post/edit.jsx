@@ -12,7 +12,7 @@ import { PostEditView } from 'src/sections/blog/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Post edit | Dashboard - ${CONFIG.site.name}` };
+const metadata = { title: `Post edit | Dashboard - ${CONFIG.name}` };
 
 export default function Page() {
   const { id = '' } = useParams();

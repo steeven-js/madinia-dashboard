@@ -16,6 +16,8 @@ import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
@@ -40,6 +42,7 @@ export const NewPostSchema = zod.object({
   coverUrl: schemaHelper.file({ message: { required_error: 'Cover is required!' } }),
   tags: zod.string().array().min(2, { message: 'Must have at least 2 items!' }),
   metaKeywords: zod.string().array().nonempty({ message: 'Meta keywords are required!' }),
+  readingTime: zod.number().min(1, { message: 'Reading time is required!' }),
   // Not required
   metaTitle: zod.string(),
   metaDescription: zod.string(),
@@ -75,6 +78,7 @@ export function PostNewEditForm({ currentPost }) {
       metaKeywords: currentPost?.metaKeywords || [],
       metaTitle: currentPost?.metaTitle || '',
       metaDescription: currentPost?.metaDescription || '',
+      readingTime: currentPost?.readingTime || 1,
       createdAt: currentPost?.createdAt || Date.now(),
       isCommentsEnabled: currentPost?.isCommentsEnabled || true,
       publish: currentPost?.publish || 'draft',
@@ -213,6 +217,14 @@ export function PostNewEditForm({ currentPost }) {
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
+        <Field.Select name="readingTime" label="Temps de lecture (en minutes)" required>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30].map((time) => (
+            <MenuItem key={time} value={time}>
+              {time} {time === 1 ? 'minute' : 'minutes'}
+            </MenuItem>
+          ))}
+        </Field.Select>
+
         <Field.Autocomplete
           name="tags"
           label="Tags"
