@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -10,56 +10,35 @@ import { paths } from 'src/routes/paths';
 import { useTabs } from 'src/hooks/use-tabs';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _userAbout, _userFeeds, _userFriends, _userGallery, _userFollowers } from 'src/_mock';
 
 import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useMockedUser } from 'src/auth/hooks';
-
 import { ProfileHome } from '../profile-home';
 import { ProfileCover } from '../profile-cover';
-import { ProfileFriends } from '../profile-friends';
-import { ProfileGallery } from '../profile-gallery';
-import { ProfileFollowers } from '../profile-followers';
 
 // ----------------------------------------------------------------------
 
 const TABS = [
-  { value: 'profile', label: 'Profile', icon: <Iconify icon="solar:user-id-bold" width={24} /> },
-  { value: 'followers', label: 'Followers', icon: <Iconify icon="solar:heart-bold" width={24} /> },
-  {
-    value: 'friends',
-    label: 'Friends',
-    icon: <Iconify icon="solar:users-group-rounded-bold" width={24} />,
-  },
-  {
-    value: 'gallery',
-    label: 'Gallery',
-    icon: <Iconify icon="solar:gallery-wide-bold" width={24} />,
-  },
+  { value: 'profile', label: 'Profil', icon: <Iconify icon="solar:user-id-bold" width={24} /> },
 ];
 
 // ----------------------------------------------------------------------
 
-export function UserProfileView() {
-  const { user } = useMockedUser();
-
-  const [searchFriends, setSearchFriends] = useState('');
-
+export function UserProfileView({ user }) {
   const tabs = useTabs('profile');
 
-  const handleSearchFriends = useCallback((event) => {
-    setSearchFriends(event.target.value);
-  }, []);
+  // const handleSearchFriends = useCallback((event) => {
+  //   setSearchFriends(event.target.value);
+  // }, []);
 
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Profile"
+        heading="Profil"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Utilisateur', href: paths.dashboard.user.root },
           { name: user?.displayName },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -67,10 +46,10 @@ export function UserProfileView() {
 
       <Card sx={{ mb: 3, height: 290 }}>
         <ProfileCover
-          role={_userAbout.role}
+          role={user?.role}
           name={user?.displayName}
-          avatarUrl={user?.photoURL}
-          coverUrl={_userAbout.coverUrl}
+          avatarUrl={user?.avatarUrl}
+          coverUrl="/assets/background/cover_1.jpg"
         />
 
         <Box
@@ -93,19 +72,7 @@ export function UserProfileView() {
         </Box>
       </Card>
 
-      {tabs.value === 'profile' && <ProfileHome info={_userAbout} posts={_userFeeds} />}
-
-      {tabs.value === 'followers' && <ProfileFollowers followers={_userFollowers} />}
-
-      {tabs.value === 'friends' && (
-        <ProfileFriends
-          friends={_userFriends}
-          searchFriends={searchFriends}
-          onSearchFriends={handleSearchFriends}
-        />
-      )}
-
-      {tabs.value === 'gallery' && <ProfileGallery gallery={_userGallery} />}
+      {tabs.value === 'profile' && <ProfileHome info={user} />}
     </DashboardContent>
   );
 }
