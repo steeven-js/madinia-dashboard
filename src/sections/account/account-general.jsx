@@ -26,24 +26,23 @@ import { Form, Field, schemaHelper } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const UpdateUserSchema = zod.object({
-  displayName: zod.string().min(1, { message: 'Name is required!' }),
+  displayName: zod.string().min(1, { message: 'Le nom est requis !' }),
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: "L'email est requis !" })
+    .email({ message: "L'email doit être une adresse valide !" }),
   avatarUrl: schemaHelper.file({
-    message: { required_error: 'Avatar is required!' },
+    message: { required_error: "L'avatar est requis !" },
   }),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   country: schemaHelper.objectOrNull({
-    message: { required_error: 'Country is required!' },
+    message: { required_error: 'Le pays est requis !' },
   }),
-  address: zod.string().min(1, { message: 'Address is required!' }),
-  state: zod.string().min(1, { message: 'State is required!' }),
-  city: zod.string().min(1, { message: 'City is required!' }),
-  zipCode: zod.string().min(1, { message: 'Zip code is required!' }),
-  about: zod.string().min(1, { message: 'About is required!' }),
-  // Not required
+  address: zod.string().min(1, { message: "L'adresse est requise !" }),
+  state: zod.string().min(1, { message: 'La région est requise !' }),
+  city: zod.string().min(1, { message: 'La ville est requise !' }),
+  zipCode: zod.string().min(1, { message: 'Le code postal est requis !' }),
+  about: zod.string().min(1, { message: 'La description est requise !' }),
   isPublic: zod.boolean(),
 });
 
@@ -54,7 +53,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
   // S'assurer que currentUser a toujours un ID
   const currentUserWithId = {
     id: auth.currentUser?.uid,
-    ...currentUser
+    ...currentUser,
   };
 
   // console.log('currentUser avec ID:', currentUserWithId);
@@ -91,7 +90,7 @@ export function AccountGeneral({ currentUser, userProfile }) {
     try {
       await updateOrCreateUserData({
         currentUser: currentUserWithId,
-        data
+        data,
       });
 
       router.push(paths.dashboard.root);
@@ -129,8 +128,8 @@ export function AccountGeneral({ currentUser, userProfile }) {
                     color: 'text.disabled',
                   }}
                 >
-                  Allowed *.jpeg, *.jpg, *.png, *.gif
-                  <br /> max size of {fData(3145728)}
+                  Formats autorisés *.jpeg, *.jpg, *.png, *.gif
+                  <br /> taille maximum de {fData(3145728)}
                 </Typography>
               }
             />
@@ -138,13 +137,13 @@ export function AccountGeneral({ currentUser, userProfile }) {
             <Field.Switch
               name="isPublic"
               labelPlacement="start"
-              label="Public profile"
+              label="Profil public"
               value={userProfile?.isPublic ? 'true' : 'false'}
               sx={{ mt: 5 }}
             />
 
             <Button variant="soft" color="error" sx={{ mt: 3 }}>
-              Delete user
+              Supprimer l'utilisateur
             </Button>
           </Card>
         </Grid>
@@ -160,23 +159,23 @@ export function AccountGeneral({ currentUser, userProfile }) {
                 sm: 'repeat(2, 1fr)',
               }}
             >
-              <Field.Text name="displayName" label="displayName" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone name="phoneNumber" label="Phone number" />
-              <Field.Text name="address" label="Address" />
+              <Field.Text name="displayName" label="Nom complet" />
+              <Field.Text name="email" label="Adresse email" />
+              <Field.Phone name="phoneNumber" label="Numéro de téléphone" />
+              <Field.Text name="address" label="Adresse" />
 
-              <Field.CountrySelect name="country" label="Country" placeholder="Choose a country" />
+              <Field.CountrySelect name="country" label="Pays" placeholder="Choisir un pays" />
 
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="zipCode" label="Zip/code" />
+              <Field.Text name="state" label="Région" />
+              <Field.Text name="city" label="Ville" />
+              <Field.Text name="zipCode" label="Code postal" />
             </Box>
 
             <Stack spacing={3} alignItems="flex-end" sx={{ mt: 3 }}>
-              <Field.Text name="about" multiline rows={4} label="About" />
+              <Field.Text name="about" multiline rows={4} label="À propos" />
 
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                Save changes
+                Enregistrer les modifications
               </LoadingButton>
             </Stack>
           </Card>

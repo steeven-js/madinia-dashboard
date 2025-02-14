@@ -17,8 +17,12 @@ import { AccountSocialLinks } from '../account-social-links';
 // ----------------------------------------------------------------------
 
 const TABS = [
-  { value: 'general', label: 'General', icon: <Iconify icon="solar:user-id-bold" width={24} /> },
-  { value: 'social', label: 'Social links', icon: <Iconify icon="solar:share-bold" width={24} /> },
+  { value: 'general', label: 'Général', icon: <Iconify icon="solar:user-id-bold" width={24} /> },
+  {
+    value: 'social',
+    label: 'Réseaux sociaux',
+    icon: <Iconify icon="solar:share-bold" width={24} />,
+  },
   // { value: 'security', label: 'Security', icon: <Iconify icon="ic:round-vpn-key" width={24} /> },
 ];
 
@@ -30,11 +34,11 @@ export function AccountView({ user, userProfile }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Account"
+        heading="Mon compte"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.root },
-          { name: 'Account' },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Utilisateur', href: paths.dashboard.user.root },
+          { name: 'Mon compte' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
