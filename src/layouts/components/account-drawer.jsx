@@ -122,10 +122,10 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
                 rootLabel = pathname.includes('/dashboard') ? 'Accueil' : 'Dashboard';
                 rootHref = pathname.includes('/dashboard') ? '/' : paths.dashboard.root;
               } else if (option.label === 'Profile') {
-                rootHref = paths.dashboard.user.profile(user?.uid);
+                rootHref = paths.dashboard.user.profile(userAuth?.id);
               } else if (option.label === 'Account settings') {
                 rootLabel = 'Paramètres du compte';
-                rootHref = paths.dashboard.user.account(user?.uid);
+                rootHref = paths.dashboard.user.account;
               }
 
               return (

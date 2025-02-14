@@ -1,4 +1,3 @@
-
 import { _id, _postTitles } from 'src/_mock/assets';
 
 // ----------------------------------------------------------------------
@@ -118,7 +117,7 @@ export const paths = {
       list: `${ROOTS.DASHBOARD}/user/list`,
       cards: `${ROOTS.DASHBOARD}/user/cards`,
       profile: (id) => `${ROOTS.DASHBOARD}/user/profile/${id}`,
-      account: (id) => `${ROOTS.DASHBOARD}/user/account/${id}`,
+      account: `${ROOTS.DASHBOARD}/user/account`,
       edit: (id) => `${ROOTS.DASHBOARD}/user/${id}/edit`,
       demo: {
         edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,

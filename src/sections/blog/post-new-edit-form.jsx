@@ -35,13 +35,17 @@ import { PostDetailsPreview } from './post-details-preview';
 // ----------------------------------------------------------------------
 
 export const NewPostSchema = zod.object({
-  title: zod.string().min(1, { message: 'Title is required!' }),
-  description: zod.string().min(1, { message: 'Description is required!' }),
-  content: schemaHelper.editor().min(100, { message: 'Content must be at least 100 characters' }),
-  coverUrl: schemaHelper.file({ message: { required_error: 'Cover is required!' } }),
-  tags: zod.string().array().min(2, { message: 'Must have at least 2 items!' }),
-  metaKeywords: zod.string().array().nonempty({ message: 'Meta keywords are required!' }),
-  readingTime: zod.number().min(1, { message: 'Reading time is required!' }),
+  title: zod.string().min(1, { message: 'Le titre est requis !' }),
+  description: zod.string().min(1, { message: 'La description est requise !' }),
+  content: schemaHelper
+    .editor()
+    .min(100, { message: 'Le contenu doit faire au moins 100 caractères' }),
+  coverUrl: schemaHelper.file({
+    message: { required_error: "L'image de couverture est requise !" },
+  }),
+  tags: zod.string().array().min(2, { message: 'Il faut au moins 2 tags !' }),
+  metaKeywords: zod.string().array().nonempty({ message: 'Les mots-clés meta sont requis !' }),
+  readingTime: zod.number().min(1, { message: 'Le temps de lecture est requis !' }),
   // Not required
   metaTitle: zod.string(),
   metaDescription: zod.string(),
@@ -183,22 +187,22 @@ export function PostNewEditForm({ currentPost }) {
 
   const renderDetails = (
     <Card>
-      <CardHeader title="Details" subheader="Title, short description, image..." sx={{ mb: 3 }} />
+      <CardHeader title="Détails" subheader="Titre, description courte, image..." sx={{ mb: 3 }} />
 
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
-        <Field.Text name="title" label="Post title" />
+        <Field.Text name="title" label="Titre de l'article" />
 
         <Field.Text name="description" label="Description" multiline rows={3} />
 
         <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Content</Typography>
+          <Typography variant="subtitle2">Contenu</Typography>
           <Field.Editor name="content" sx={{ maxHeight: 480 }} />
         </Stack>
 
         <Stack spacing={1.5}>
-          <Typography variant="subtitle2">Cover</Typography>
+          <Typography variant="subtitle2">Image de couverture</Typography>
           <Field.Upload name="coverUrl" maxSize={3145728} onDelete={handleRemoveFile} />
         </Stack>
       </Stack>
@@ -208,8 +212,8 @@ export function PostNewEditForm({ currentPost }) {
   const renderProperties = (
     <Card>
       <CardHeader
-        title="Properties"
-        subheader="Additional functions and attributes..."
+        title="Propriétés"
+        subheader="Fonctions et attributs additionnels..."
         sx={{ mb: 3 }}
       />
 
@@ -292,7 +296,7 @@ export function PostNewEditForm({ currentPost }) {
               inputProps={{ id: 'comments-switch' }}
             />
           }
-          label="Enable comments"
+          label="Activer les commentaires"
         />
       </Stack>
     </Card>
@@ -308,13 +312,13 @@ export function PostNewEditForm({ currentPost }) {
             inputProps={{ id: 'publish-switch' }}
           />
         }
-        label="Publish"
+        label="Publier"
         sx={{ pl: 3, flexGrow: 1 }}
       />
 
       <div>
         <Button color="inherit" variant="outlined" size="large" onClick={preview.onTrue}>
-          Preview
+          Aperçu
         </Button>
 
         <LoadingButton
@@ -324,7 +328,7 @@ export function PostNewEditForm({ currentPost }) {
           loading={isSubmitting}
           sx={{ ml: 2 }}
         >
-          {!currentPost ? 'Create post' : 'Save changes'}
+          {!currentPost ? "Créer l'article" : 'Enregistrer les modifications'}
         </LoadingButton>
       </div>
     </Box>

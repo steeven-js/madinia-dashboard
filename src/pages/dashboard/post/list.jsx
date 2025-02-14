@@ -12,7 +12,7 @@ import { PostListView } from 'src/sections/blog/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Post list | Dashboard - ${CONFIG.name}` };
+const metadata = { title: `Liste des articles | Tableau de bord - ${CONFIG.name}` };
 
 export default function Page() {
   const { user, loading } = useAuth();

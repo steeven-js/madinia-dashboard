@@ -1,4 +1,3 @@
-import { useParams } from 'react-router';
 import { Helmet } from 'react-helmet-async';
 
 import Box from '@mui/material/Box';
@@ -18,9 +17,33 @@ import { AccountView } from 'src/sections/account/view';
 const metadata = { title: `Paramètres du compte | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
-  const { id = '' } = useParams();
-  const { user, loading } = useUserById(id);
-  const { user: userAuth } = useAuth();
+  const { user: userAuth, loading: authLoading } = useAuth();
+  const { user, loading: userLoading } = useUserById(userAuth?.uid);
+
+  // console.log('Auth Debug:', {
+  //   authLoading,
+  //   userAuth,
+  //   userAuthId: userAuth?.uid,
+  //   userLoading,
+  //   user,
+  // });
+
+  if (authLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!userAuth) {
+    return (
+      <EmptyContent
+        title="Accès non autorisé"
+        description="Vous devez être connecté pour accéder à cette page"
+      />
+    );
+  }
 
   return (
     <>
@@ -28,7 +51,7 @@ export default function Page() {
         <title>{metadata.title}</title>
       </Helmet>
 
-      {loading ? (
+      {userLoading ? (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
           <CircularProgress />
         </Box>

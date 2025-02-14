@@ -57,11 +57,11 @@ export function PostListView({ currentUser, posts }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="List"
+        heading="Liste"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Blog', href: paths.dashboard.post.root },
-          { name: 'List' },
+          { name: 'Liste' },
         ]}
         action={
           <Button
@@ -70,7 +70,7 @@ export function PostListView({ currentUser, posts }) {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            New post
+            Nouvel article
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -99,22 +99,30 @@ export function PostListView({ currentUser, posts }) {
         onChange={handleFilterPublish}
         sx={{ mb: { xs: 3, md: 5 } }}
       >
-        {['all', 'published', 'draft'].map((tab) => (
+        {[
+          { value: 'all', label: 'Tous' },
+          { value: 'published', label: 'Publiés' },
+          { value: 'draft', label: 'Brouillons' },
+        ].map((tab) => (
           <Tab
-            key={tab}
+            key={tab.value}
             iconPosition="end"
-            value={tab}
-            label={tab}
+            value={tab.value}
+            label={tab.label}
             icon={
               <Label
-                variant={((tab === 'all' || tab === filters.state.publish) && 'filled') || 'soft'}
-                color={(tab === 'published' && 'info') || 'default'}
+                variant={
+                  ((tab.value === 'all' || tab.value === filters.state.publish) && 'filled') ||
+                  'soft'
+                }
+                color={(tab.value === 'published' && 'info') || 'default'}
               >
-                {tab === 'all' && posts.length}
+                {tab.value === 'all' && posts.length}
 
-                {tab === 'published' && posts.filter((post) => post.publish === 'published').length}
+                {tab.value === 'published' &&
+                  posts.filter((post) => post.publish === 'published').length}
 
-                {tab === 'draft' && posts.filter((post) => post.publish === 'draft').length}
+                {tab.value === 'draft' && posts.filter((post) => post.publish === 'draft').length}
               </Label>
             }
             sx={{ textTransform: 'capitalize' }}

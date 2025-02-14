@@ -50,7 +50,7 @@ export function PostItemHorizontal({ post, currentUser }) {
         <Stack spacing={1} sx={{ p: theme.spacing(3, 3, 2, 3), width: '100%' }}>
           <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
             <Label variant="soft" color={(publish === 'published' && 'info') || 'default'}>
-              {publish}
+              {publish === 'published' ? 'Publié' : 'Brouillon'}
             </Label>
 
             <Box component="span" sx={{ typography: 'caption', color: 'text.disabled' }}>
@@ -138,7 +138,7 @@ export function PostItemHorizontal({ post, currentUser }) {
             }}
           >
             <Iconify icon="solar:eye-bold" />
-            View
+            Voir
           </MenuItem>
 
           <MenuItem
@@ -148,7 +148,7 @@ export function PostItemHorizontal({ post, currentUser }) {
             }}
           >
             <Iconify icon="solar:pen-bold" />
-            Edit
+            Modifier
           </MenuItem>
 
           <MenuItem
@@ -158,7 +158,7 @@ export function PostItemHorizontal({ post, currentUser }) {
             sx={{ color: 'error.main' }}
           >
             <Iconify icon="solar:trash-bin-trash-bold" />
-            Delete
+            Supprimer
           </MenuItem>
         </MenuList>
       </CustomPopover>

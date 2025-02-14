@@ -8,15 +8,15 @@ import { PostNewEditForm } from '../post-new-edit-form';
 
 // ----------------------------------------------------------------------
 
-export function PostCreateView({categories}) {
+export function PostCreateView({ categories }) {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Create a new post"
+        heading="Créer un nouvel article"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Blog', href: paths.dashboard.post.root },
-          { name: 'Create' },
+          { name: 'Créer' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
