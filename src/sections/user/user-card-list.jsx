@@ -25,8 +25,8 @@ export function UserCardList({ users }) {
       >
         {users
           .slice((page - 1) * rowsPerPage, (page - 1) * rowsPerPage + rowsPerPage)
-          .map((user) => (
-            <UserCard key={user.id} user={user} />
+          .map((user, index) => (
+            <UserCard key={user.id} user={user} index={index} />
           ))}
       </Box>
 

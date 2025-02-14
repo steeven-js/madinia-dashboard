@@ -13,7 +13,7 @@ import { UserListView } from 'src/sections/user/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `User list | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Liste des utilisateurs | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   const { users, loading } = useUsers();
@@ -31,7 +31,7 @@ export default function Page() {
           <CircularProgress />
         </Box>
       ) : users.length === 0 ? (
-        <EmptyContent title="Aucun post" />
+        <EmptyContent title="Aucun utilisateur" />
       ) : (
         <UserListView users={users} currentAuthUser={currentAuthUser} />
       )}

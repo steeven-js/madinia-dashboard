@@ -9,7 +9,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import { fShortenNumber } from 'src/utils/format-number';
 
-import { _socials } from 'src/_mock';
+import { _socials, _mock } from 'src/_mock';
 import { varAlpha } from 'src/theme/styles';
 import { AvatarShape } from 'src/assets/illustrations';
 import { TwitterIcon, FacebookIcon, LinkedinIcon, InstagramIcon } from 'src/assets/icons';
@@ -18,7 +18,7 @@ import { Image } from 'src/components/image';
 
 // ----------------------------------------------------------------------
 
-export function UserCard({ user, sx, ...other }) {
+export function UserCard({ user, index, sx, ...other }) {
   return (
     <Card sx={{ textAlign: 'center', ...sx }} {...other}>
       <Box sx={{ position: 'relative' }}>
@@ -34,7 +34,7 @@ export function UserCard({ user, sx, ...other }) {
         />
 
         <Avatar
-          alt={user.name}
+          alt={user.displayName}
           src={user.avatarUrl}
           sx={{
             width: 64,
@@ -49,8 +49,8 @@ export function UserCard({ user, sx, ...other }) {
         />
 
         <Image
-          src={user.coverUrl}
-          alt={user.coverUrl}
+          src={user.coverUrl || _mock.image.cover(index)}
+          alt={user.displayName}
           ratio="16/9"
           slotProps={{
             overlay: {
@@ -62,50 +62,53 @@ export function UserCard({ user, sx, ...other }) {
 
       <ListItemText
         sx={{ mt: 7, mb: 1 }}
-        primary={user.name}
-        secondary={user.role}
+        primary={user.displayName}
+        secondary={user.about || user.role}
         primaryTypographyProps={{ typography: 'subtitle1' }}
         secondaryTypographyProps={{ component: 'span', mt: 0.5 }}
       />
 
       <Stack direction="row" alignItems="center" justifyContent="center" sx={{ mb: 2.5 }}>
-        {_socials.map((social) => (
-          <IconButton key={social.label} color="inherit">
-            {social.value === 'twitter' && <TwitterIcon />}
-            {social.value === 'facebook' && <FacebookIcon />}
-            {social.value === 'instagram' && <InstagramIcon />}
-            {social.value === 'linkedin' && <LinkedinIcon />}
-          </IconButton>
-        ))}
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {user.email}
+        </Typography>
       </Stack>
 
       <Divider sx={{ borderStyle: 'dashed' }} />
 
       <Box
         display="grid"
-        gridTemplateColumns="repeat(3, 1fr)"
+        gridTemplateColumns="repeat(2, 1fr)"
         sx={{ py: 3, typography: 'subtitle1' }}
       >
         <div>
           <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
-            Follower
+            Ville
           </Typography>
-          {fShortenNumber(user.totalFollowers)}
+          <Typography
+            variant="body2"
+            sx={{
+              textTransform: 'lowercase',
+              fontSize: '0.875rem',
+            }}
+          >
+            {user.city || 'Non renseigné'}
+          </Typography>
         </div>
 
         <div>
           <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
-            Following
+            Entreprise
           </Typography>
-
-          {fShortenNumber(user.totalFollowing)}
-        </div>
-
-        <div>
-          <Typography variant="caption" component="div" sx={{ mb: 0.5, color: 'text.secondary' }}>
-            Total post
+          <Typography
+            variant="body2"
+            sx={{
+              textTransform: 'lowercase',
+              fontSize: '0.875rem',
+            }}
+          >
+            {user.company || 'Non renseigné'}
           </Typography>
-          {fShortenNumber(user.totalPosts)}
         </div>
       </Box>
     </Card>
