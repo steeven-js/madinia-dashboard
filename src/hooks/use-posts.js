@@ -38,30 +38,30 @@ export function usePosts(sortBy = 'latest', searchQuery = '', publish = 'all') {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
 
     // Construction de la requête Firebase en fonction des paramètres
     const q = searchQuery
       ? query(  // Requête de recherche par titre
-          collection(db, 'posts'),
-          orderBy('title'),
-          startAt(searchQuery),
-          endAt(`${searchQuery}\uf8ff`), // Utilise le caractère high surrogate pour la recherche partielle
-          limit(10)
-        )
+        collection(db, 'posts'),
+        orderBy('title'),
+        startAt(searchQuery),
+        endAt(`${searchQuery}\uf8ff`), // Utilise le caractère high surrogate pour la recherche partielle
+        limit(10)
+      )
       : query(  // Requête standard avec tri et filtres
-          collection(db, 'posts'),
-          ...[
-            // Applique le tri selon le paramètre sortBy
-            orderBy(
-              sortBy === 'popular' ? 'totalViews' : 'createdAt',
-              sortBy === 'oldest' ? 'asc' : 'desc'
-            ),
-            limit(20),
-            // Ajoute un filtre sur le statut de publication si nécessaire
-            ...(publish !== 'all' ? [where('publish', '==', publish)] : []),
-          ]
-        );
+        collection(db, 'posts'),
+        ...[
+          // Applique le tri selon le paramètre sortBy
+          orderBy(
+            sortBy === 'popular' ? 'totalViews' : 'createdAt',
+            sortBy === 'oldest' ? 'asc' : 'desc'
+          ),
+          limit(20),
+          // Ajoute un filtre sur le statut de publication si nécessaire
+          ...(publish !== 'all' ? [where('publish', '==', publish)] : []),
+        ]
+      );
 
     // Abonnement aux changements en temps réel
     unsubscribe = onSnapshot(
@@ -99,7 +99,7 @@ export function useSubmitPost() {
     isCommentsEnabled
   }) => {
     try {
-      const { coverUrl: initialCoverUrl, ...otherData } = data;
+      const { coverUrl: initialCoverUrl, categoryId, ...otherData } = data;
       let coverUrl = initialCoverUrl;
 
       // Gestion de l'upload de l'image de couverture
@@ -118,6 +118,7 @@ export function useSubmitPost() {
       // Construction des données du post
       const userData = {
         ...otherData,
+        categoryId,
         coverUrl,
         postImages: images.map((img) => ({
           url: img.url,
@@ -242,7 +243,7 @@ export function useFetchPostById(id) {
   const [postError, setPostError] = useState(null);
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
 
     if (id) {
       const docRef = doc(db, 'posts', id);

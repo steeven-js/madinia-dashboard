@@ -46,6 +46,7 @@ export const NewPostSchema = zod.object({
   tags: zod.string().array().min(2, { message: 'Il faut au moins 2 tags !' }),
   metaKeywords: zod.string().array().nonempty({ message: 'Les mots-clés meta sont requis !' }),
   readingTime: zod.number().min(1, { message: 'Le temps de lecture est requis !' }),
+  categoryId: zod.string().min(1, { message: 'La catégorie est requise !' }),
   // Not required
   metaTitle: zod.string(),
   metaDescription: zod.string(),
@@ -53,7 +54,7 @@ export const NewPostSchema = zod.object({
 
 // ----------------------------------------------------------------------
 
-export function PostNewEditForm({ currentPost }) {
+export function PostNewEditForm({ currentPost, categories }) {
   const router = useRouter();
   const [isCommentsEnabled, setIsCommentsEnabled] = useState(true);
   const [isPublish, setIsPublish] = useState(true);
@@ -77,6 +78,7 @@ export function PostNewEditForm({ currentPost }) {
       description: currentPost?.description || '',
       content: currentPost?.content || '',
       coverUrl: currentPost?.coverUrl || null,
+      categoryId: currentPost?.categoryId || '',
       tags: currentPost?.tags || [],
       metaKeywords: currentPost?.metaKeywords || [],
       metaTitle: currentPost?.metaTitle || '',
@@ -153,6 +155,7 @@ export function PostNewEditForm({ currentPost }) {
         totalComments: currentPost?.totalComments || 0,
         isCommentsEnabled,
         publish: isPublish ? 'published' : 'draft',
+        categoryId: data.categoryId,
       };
 
       // Si c'est un nouveau post, ajoutez createdAt
@@ -220,6 +223,14 @@ export function PostNewEditForm({ currentPost }) {
       <Divider />
 
       <Stack spacing={3} sx={{ p: 3 }}>
+        <Field.Select name="categoryId" label="Catégorie" required>
+          {categories.map((category) => (
+            <MenuItem key={category.id} value={category.id}>
+              {category.name}
+            </MenuItem>
+          ))}
+        </Field.Select>
+
         <Field.Select name="readingTime" label="Temps de lecture (en minutes)" required>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30].map((time) => (
             <MenuItem key={time} value={time}>
