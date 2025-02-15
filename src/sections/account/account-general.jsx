@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useState, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
@@ -34,6 +34,11 @@ export const UpdateUserSchema = zod.object({
   avatarUrl: schemaHelper.file({
     message: { required_error: "L'avatar est requis !" },
   }),
+  coverUrl: schemaHelper
+    .file({
+      message: { required_error: "L'image de couverture est requise !" },
+    })
+    .nullable(),
   phoneNumber: schemaHelper.phoneNumber({ isValidPhoneNumber }),
   country: schemaHelper.objectOrNull({
     message: { required_error: 'Le pays est requis !' },
@@ -56,12 +61,11 @@ export function AccountGeneral({ currentUser, userProfile }) {
     ...currentUser,
   };
 
-  // console.log('currentUser avec ID:', currentUserWithId);
-
   const defaultValues = {
     displayName: userProfile?.displayName || '',
     email: userProfile?.email || '',
     avatarUrl: userProfile?.avatarUrl || null,
+    coverUrl: userProfile?.coverUrl || null,
     phoneNumber: userProfile?.phoneNumber || '',
     country: userProfile?.country || '',
     address: userProfile?.address || '',
@@ -72,8 +76,6 @@ export function AccountGeneral({ currentUser, userProfile }) {
     isPublic: userProfile?.isPublic || false,
   };
 
-  // console.log('defaultValues:', defaultValues);
-
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(UpdateUserSchema),
@@ -81,9 +83,14 @@ export function AccountGeneral({ currentUser, userProfile }) {
   });
 
   const {
+    setValue,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
+
+  const handleRemoveFile = useCallback(() => {
+    setValue('coverUrl', null);
+  }, [setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
     setIsSubmitting(true);
@@ -143,42 +150,63 @@ export function AccountGeneral({ currentUser, userProfile }) {
             />
 
             <Button variant="soft" color="error" sx={{ mt: 3 }}>
-              Supprimer l'utilisateur
+              Supprimer l&apos;utilisateur
             </Button>
           </Card>
         </Grid>
 
         <Grid xs={12} md={8}>
-          <Card sx={{ p: 3 }}>
-            <Box
-              rowGap={3}
-              columnGap={2}
-              display="grid"
-              gridTemplateColumns={{
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-              }}
-            >
-              <Field.Text name="displayName" label="Nom complet" />
-              <Field.Text name="email" label="Adresse email" />
-              <Field.Phone name="phoneNumber" label="Numéro de téléphone" />
-              <Field.Text name="address" label="Adresse" />
+          <Stack spacing={3}>
+            {/* Zone 1: Informations personnelles */}
+            <Card sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3 }}>
+                Informations personnelles
+              </Typography>
 
-              <Field.CountrySelect name="country" label="Pays" placeholder="Choisir un pays" />
+              <Box
+                rowGap={3}
+                columnGap={2}
+                display="grid"
+                gridTemplateColumns={{
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                }}
+              >
+                <Field.Text name="displayName" label="Nom complet" />
+                <Field.Text name="email" label="Adresse e-mail" />
+                <Field.Phone name="phoneNumber" label="Numéro de téléphone" />
+                <Field.Text name="address" label="Adresse" />
+                <Field.CountrySelect name="country" label="Pays" placeholder="Choisir un pays" />
+                <Field.Text name="state" label="Région" />
+                <Field.Text name="city" label="Ville" />
+                <Field.Text name="zipCode" label="Code postal" />
+              </Box>
 
-              <Field.Text name="state" label="Région" />
-              <Field.Text name="city" label="Ville" />
-              <Field.Text name="zipCode" label="Code postal" />
-            </Box>
+              <Stack spacing={3} alignItems="flex-end" sx={{ mt: 3 }}>
+                <Field.Text name="about" multiline rows={4} label="À propos" />
+              </Stack>
+            </Card>
 
-            <Stack spacing={3} alignItems="flex-end" sx={{ mt: 3 }}>
-              <Field.Text name="about" multiline rows={4} label="À propos" />
+            {/* Zone 2: Images */}
+            <Card sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3 }}>
+                Images du profil
+              </Typography>
 
+              <Stack spacing={3}>
+                {/* Cover */}
+                <Stack spacing={1.5}>
+                  <Field.Upload name="coverUrl" maxSize={3145728} onDelete={handleRemoveFile} />
+                </Stack>
+              </Stack>
+            </Card>
+
+            <Stack alignItems="flex-end">
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
                 Enregistrer les modifications
               </LoadingButton>
             </Stack>
-          </Card>
+          </Stack>
         </Grid>
       </Grid>
     </Form>

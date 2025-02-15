@@ -8,6 +8,7 @@ import { useAuth } from 'src/hooks/use-auth';
 import { CONFIG } from 'src/config-global';
 
 import { EmptyContent } from 'src/components/empty-content';
+
 import { UserProfileView } from 'src/sections/user/view';
 
 // ----------------------------------------------------------------------

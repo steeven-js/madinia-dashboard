@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { updateProfile } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
 import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
@@ -118,7 +119,8 @@ export const useUserById = (id) => {
       userDocRef,
       (docSnapshot) => {
         if (docSnapshot.exists()) {
-          setUser({ id: docSnapshot.id, ...docSnapshot.data() });
+          const { id: docId, ...docData } = docSnapshot.data();
+          setUser({ id: docSnapshot.id, ...docData });
         } else {
           console.error('No such document!');
           setUser(null);
@@ -153,22 +155,23 @@ export async function updateOrCreateUserData({ currentUser, data }) {
     console.log('Début de la mise à jour:', { currentUser, data });
 
     let avatarUrl = null;
+    let coverUrl = null;
 
     // Gestion de l'avatar
     if (data.avatarUrl instanceof File) {
       // Supprimer l'ancienne image si elle existe
       if (currentUser.avatarUrl) {
         try {
-          const oldAvatarRef = ref(storage, currentUser.avatarUrl);
+          const { avatarUrl: oldAvatarUrl } = currentUser;
+          const oldAvatarRef = ref(storage, oldAvatarUrl);
           await deleteObject(oldAvatarRef);
           console.log('Ancienne image supprimée avec succès');
         } catch (error) {
           console.warn('Erreur lors de la suppression de l\'ancienne image:', error);
-          // On continue même si la suppression échoue
         }
       }
 
-      // Upload du nouveau fichier avec un nom standardisé
+      // eslint-disable-next-line prefer-destructuring
       const fileExtension = data.avatarUrl.name.split('.').pop();
       const storageRef = ref(storage, `avatars/${currentUser.id}/avatar.${fileExtension}`);
       await uploadBytes(storageRef, data.avatarUrl);
@@ -179,28 +182,66 @@ export async function updateOrCreateUserData({ currentUser, data }) {
         photoURL: avatarUrl
       });
     } else if (typeof data.avatarUrl === 'string' && data.avatarUrl.startsWith('http')) {
-      // Conserver l'URL existante
-      const { avatarUrl: existingAvatarUrl } = data;
-      avatarUrl = existingAvatarUrl;
+      avatarUrl = data.avatarUrl;
+    }
+
+    // Gestion de la couverture
+    if (data.coverUrl instanceof File) {
+      // Supprimer l'ancienne image si elle existe
+      if (currentUser.coverUrl) {
+        try {
+          const { coverUrl: oldCoverUrl } = currentUser;
+          const oldCoverRef = ref(storage, oldCoverUrl);
+          await deleteObject(oldCoverRef);
+          console.log('Ancienne image de couverture supprimée avec succès');
+        } catch (error) {
+          console.warn('Erreur lors de la suppression de l\'ancienne image de couverture:', error);
+        }
+      }
+
+      // eslint-disable-next-line prefer-destructuring
+      const fileExtension = data.coverUrl.name.split('.').pop();
+      const storageRef = ref(storage, `covers/${currentUser.id}/cover.${fileExtension}`);
+      await uploadBytes(storageRef, data.coverUrl);
+      coverUrl = await getDownloadURL(storageRef);
+    } else if (typeof data.coverUrl === 'string' && data.coverUrl.startsWith('http')) {
+      coverUrl = data.coverUrl;
     }
 
     // Préparation des données à mettre à jour
     const userData = {
-      ...data,
+      displayName: data.displayName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      country: data.country,
+      address: data.address,
+      state: data.state,
+      city: data.city,
+      zipCode: data.zipCode,
+      about: data.about,
+      isPublic: data.isPublic,
       updatedAt: serverTimestamp(),
     };
 
+    // Ajouter les URLs seulement si elles existent
     if (avatarUrl) {
       userData.avatarUrl = avatarUrl;
     }
+
+    if (coverUrl) {
+      userData.coverUrl = coverUrl;
+    }
+
+    console.log('Données à sauvegarder:', userData);
 
     // Mise à jour du document dans Firestore
     const userRef = doc(db, 'users', currentUser.id);
     await setDoc(userRef, userData, { merge: true });
 
-    // Mise à jour du profil Auth avec le nouveau displayName
+    // Mise à jour du profil Auth
     await updateProfile(auth.currentUser, {
-      displayName: data.displayName
+      displayName: data.displayName,
+      photoURL: avatarUrl
     });
 
     toast.success('Profil mis à jour avec succès');

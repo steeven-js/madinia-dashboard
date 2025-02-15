@@ -1,4 +1,3 @@
-import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -6,6 +5,7 @@ import Card from '@mui/material/Card';
 import Tabs from '@mui/material/Tabs';
 
 import { paths } from 'src/routes/paths';
+import { useRouter } from 'src/routes/hooks';
 
 import { useTabs } from 'src/hooks/use-tabs';
 
@@ -20,17 +20,31 @@ import { ProfileCover } from '../profile-cover';
 // ----------------------------------------------------------------------
 
 const TABS = [
-  { value: 'profile', label: 'Profil', icon: <Iconify icon="solar:user-id-bold" width={24} /> },
+  {
+    value: 'profile',
+    label: 'Profil',
+    icon: <Iconify icon="solar:user-id-bold" width={24} />,
+  },
+  {
+    value: 'edit',
+    label: 'Modifier',
+    icon: <Iconify icon="solar:pen-bold" width={24} />,
+  },
 ];
 
 // ----------------------------------------------------------------------
 
 export function UserProfileView({ user }) {
   const tabs = useTabs('profile');
+  const router = useRouter();
 
-  // const handleSearchFriends = useCallback((event) => {
-  //   setSearchFriends(event.target.value);
-  // }, []);
+  const handleChangeTab = (event, newValue) => {
+    if (newValue === 'edit') {
+      router.push(paths.dashboard.user.account);
+      return;
+    }
+    tabs.onChange(event, newValue);
+  };
 
   return (
     <DashboardContent>
@@ -49,7 +63,7 @@ export function UserProfileView({ user }) {
           role={user?.role}
           name={user?.displayName}
           avatarUrl={user?.avatarUrl}
-          coverUrl="/assets/background/cover_1.jpg"
+          coverUrl={user?.coverUrl}
         />
 
         <Box
@@ -64,7 +78,7 @@ export function UserProfileView({ user }) {
             bgcolor: 'background.paper',
           }}
         >
-          <Tabs value={tabs.value} onChange={tabs.onChange}>
+          <Tabs value={tabs.value} onChange={handleChangeTab}>
             {TABS.map((tab) => (
               <Tab key={tab.value} value={tab.value} icon={tab.icon} label={tab.label} />
             ))}

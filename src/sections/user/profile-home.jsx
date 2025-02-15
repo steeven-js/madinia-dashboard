@@ -13,14 +13,13 @@ import CardHeader from '@mui/material/CardHeader';
 
 // import { fNumber } from 'src/utils/format-number';
 
-import { _socials } from 'src/_mock';
+// import { ProfilePostItem } from './profile-post-item';
+import { Typography } from '@mui/material';
+
 // import { varAlpha } from 'src/theme/styles';
 import { TwitterIcon, FacebookIcon, LinkedinIcon, InstagramIcon } from 'src/assets/icons';
 
 import { Iconify } from 'src/components/iconify';
-
-// import { ProfilePostItem } from './profile-post-item';
-import { Typography } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
