@@ -125,15 +125,6 @@ export function useSubmitPost() {
           path: img.path,
           name: img.name,
         })),
-        authorId: auth.currentUser.uid,
-        authorName: auth.currentUser.displayName || 'Author',
-        slug,
-        author: [
-          {
-            avatarUrl: auth.currentUser.photoURL || 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp',
-            name: auth.currentUser.displayName || 'Author',
-          },
-        ],
         updatedAt: now,
         totalViews: currentPost?.totalViews || 0,
         totalShares: currentPost?.totalShares || 0,
@@ -142,8 +133,14 @@ export function useSubmitPost() {
         publish: isPublish ? 'published' : 'draft',
       };
 
-      // Ajout de la date de création pour les nouveaux posts
+      // Ajout des informations de l'auteur uniquement pour les nouveaux posts
       if (!currentPost) {
+        userData.authorId = auth.currentUser.uid;
+        userData.authorName = auth.currentUser.displayName || 'Author';
+        userData.author = [{
+          avatarUrl: auth.currentUser.photoURL || 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp',
+          name: auth.currentUser.displayName || 'Author',
+        }];
         userData.createdAt = now;
       }
 
