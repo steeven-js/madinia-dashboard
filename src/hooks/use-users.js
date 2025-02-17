@@ -232,7 +232,7 @@ export async function updateOrCreateUserData({ currentUser, data }) {
       userData.coverUrl = coverUrl;
     }
 
-    console.log('Données à sauvegarder:', userData);
+    // console.log('Données à sauvegarder:', userData);
 
     // Mise à jour du document dans Firestore
     const userRef = doc(db, 'users', currentUser.id);
@@ -246,13 +246,13 @@ export async function updateOrCreateUserData({ currentUser, data }) {
 
     toast.success('Profil mis à jour avec succès');
 
-    console.log('Mise à jour réussie:', {
-      firestoreData: userData,
-      authProfile: {
-        displayName: data.displayName,
-        photoURL: avatarUrl
-      }
-    });
+    // console.log('Mise à jour réussie:', {
+    //   firestoreData: userData,
+    //   authProfile: {
+    //     displayName: data.displayName,
+    //     photoURL: avatarUrl
+    //   }
+    // });
 
   } catch (error) {
     console.error('Erreur lors de la mise à jour:', error);
