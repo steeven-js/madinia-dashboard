@@ -252,29 +252,33 @@ export function EventNewEditForm({ event: currentEvent }) {
   );
 
   const renderSocialLink = (
-    <Card sx={{ p: 3, gap: 3, display: 'flex', flexDirection: 'column' }}>
+    <Card>
       <CardHeader
         title="Liens Sociaux"
         subheader="Liens vers les réseaux sociaux de l'événement"
         sx={{ mb: 3 }}
       />
       <Divider />
-      {['facebook', 'instagram', 'linkedin', 'twitter'].map((social) => (
-        <Field.Text
-          key={social}
-          name={social}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                {social === 'facebook' && <FacebookIcon width={24} />}
-                {social === 'instagram' && <InstagramIcon width={24} />}
-                {social === 'linkedin' && <LinkedinIcon width={24} />}
-                {social === 'twitter' && <TwitterIcon width={24} sx={{ color: 'text.primary' }} />}
-              </InputAdornment>
-            ),
-          }}
-        />
-      ))}
+      <Stack spacing={3} sx={{ p: 3 }}>
+        {['facebook', 'instagram', 'linkedin', 'twitter'].map((social) => (
+          <Field.Text
+            key={social}
+            name={social}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  {social === 'facebook' && <FacebookIcon width={24} />}
+                  {social === 'instagram' && <InstagramIcon width={24} />}
+                  {social === 'linkedin' && <LinkedinIcon width={24} />}
+                  {social === 'twitter' && (
+                    <TwitterIcon width={24} sx={{ color: 'text.primary' }} />
+                  )}
+                </InputAdornment>
+              ),
+            }}
+          />
+        ))}
+      </Stack>
     </Card>
   );
 
