@@ -48,6 +48,15 @@ export const NewEventSchema = zod.object({
   instagram: zod.string().optional().nullable(),
   linkedin: zod.string().optional().nullable(),
   twitter: zod.string().optional().nullable(),
+  externalLinks: zod
+    .array(
+      zod.object({
+        label: zod.string(),
+        url: zod.string().url("L'URL doit être valide"),
+      })
+    )
+    .optional()
+    .default([]),
   participants: zod
     .object({
       max: zod.number().optional(),
@@ -76,6 +85,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       instagram: currentEvent?.instagram || '',
       linkedin: currentEvent?.linkedin || '',
       twitter: currentEvent?.twitter || '',
+      externalLinks: currentEvent?.externalLinks || [],
       participants: {
         max: currentEvent?.participants?.max || 10,
         current: currentEvent?.participants?.current || 0,
@@ -268,6 +278,53 @@ export function EventNewEditForm({ event: currentEvent }) {
     </Card>
   );
 
+  const renderExternalLinks = (
+    <Card>
+      <CardHeader
+        title="Liens Externes"
+        subheader="Ajoutez des liens vers des ressources externes"
+        sx={{ mb: 3 }}
+      />
+      <Divider />
+      <Stack spacing={3} sx={{ p: 3 }}>
+        {values.externalLinks.map((_, index) => (
+          <Stack key={index} direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <Field.Text
+              name={`externalLinks.${index}.label`}
+              label="Libellé"
+              placeholder="Ex: Site web, Billetterie..."
+            />
+            <Field.Text
+              name={`externalLinks.${index}.url`}
+              label="URL"
+              placeholder="https://"
+              fullWidth
+            />
+            <LoadingButton
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                const newLinks = [...values.externalLinks];
+                newLinks.splice(index, 1);
+                setValue('externalLinks', newLinks);
+              }}
+            >
+              Supprimer
+            </LoadingButton>
+          </Stack>
+        ))}
+        <LoadingButton
+          variant="contained"
+          onClick={() => {
+            setValue('externalLinks', [...values.externalLinks, { label: '', url: '' }]);
+          }}
+        >
+          Ajouter un lien
+        </LoadingButton>
+      </Stack>
+    </Card>
+  );
+
   const renderPricing = (
     <Card>
       <CardHeader title="Tarification" subheader="Informations sur les prix" sx={{ mb: 3 }} />
@@ -317,6 +374,7 @@ export function EventNewEditForm({ event: currentEvent }) {
       <Stack spacing={{ xs: 3, md: 5 }} sx={{ mx: 'auto', maxWidth: { xs: 720, xl: 880 } }}>
         {renderDetails}
         {renderSocialLink}
+        {renderExternalLinks}
         {renderPricing}
         {renderActions}
       </Stack>

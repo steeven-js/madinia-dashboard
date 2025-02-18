@@ -21,6 +21,15 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
+export const sortEventsByDate = (events) => [...events].sort((a, b) => {
+    // Convertir les dates en objets Date pour une comparaison correcte
+    const dateA = new Date(a.scheduledDate || a.date).getTime();
+    const dateB = new Date(b.scheduledDate || b.date).getTime();
+
+    // Tri décroissant (du plus récent au plus ancien)
+    return dateB - dateA;
+  });
+
 export function EventTableRow({ row, selected, onEditRow, onSelectRow, onDeleteRow }) {
   const confirm = useBoolean();
   const popover = usePopover();

@@ -37,8 +37,8 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { EventTableRow } from '../event-table-row';
 import { EventTableToolbar } from '../event-table-toolbar';
+import { EventTableRow, sortEventsByDate } from '../event-table-row';
 import { EventTableFiltersResult } from '../event-table-filters-result';
 
 // ----------------------------------------------------------------------
@@ -68,12 +68,18 @@ export function EventListView({ events }) {
   const table = useTable();
   const router = useRouter();
   const confirm = useBoolean();
-  const [tableData, setTableData] = useState(events);
+  const [tableData, setTableData] = useState(sortEventsByDate(events));
   const filters = useSetState({ title: '', status: 'all' });
 
   const dataFiltered = applyFilter({
     inputData: tableData,
     comparator: (a, b) => {
+      if (!table.orderBy || table.orderBy === 'date') {
+        const dateA = new Date(a.scheduledDate || a.date).getTime();
+        const dateB = new Date(b.scheduledDate || b.date).getTime();
+        return table.order === 'desc' ? dateB - dateA : dateA - dateB;
+      }
+
       const order = table.order === 'desc' ? 1 : -1;
       return order * extendedDescendingComparator(a, b, table.orderBy);
     },
