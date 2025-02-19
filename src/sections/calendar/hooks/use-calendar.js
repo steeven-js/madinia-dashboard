@@ -104,26 +104,54 @@ export function useCalendar() {
     [onOpenForm]
   );
 
-  const onResizeEvent = useCallback((arg, updateEvent) => {
-    const { event } = arg;
-
-    updateEvent({
-      id: event.id,
-      allDay: event.allDay,
-      start: event.startStr,
-      end: event.endStr,
-    });
-  }, []);
-
   const onDropEvent = useCallback((arg, updateEvent) => {
     const { event } = arg;
 
-    updateEvent({
+    const eventData = {
       id: event.id,
       allDay: event.allDay,
       start: event.startStr,
       end: event.endStr,
-    });
+      userId: event.extendedProps.userId || '',
+      userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
+      photoURL: event.extendedProps.photoURL || '',
+      userEmail: event.extendedProps.userEmail || '',
+      createdAt: event.extendedProps.createdAt || Date.now(),
+      title: event.title,
+      description: event.extendedProps.description || '',
+      color: event.backgroundColor || event.extendedProps.color || '#00AB55',
+    };
+
+    const cleanedData = Object.fromEntries(
+      Object.entries(eventData).filter(([_, value]) => value !== undefined)
+    );
+
+    updateEvent(cleanedData);
+  }, []);
+
+  const onResizeEvent = useCallback((arg, updateEvent) => {
+    const { event } = arg;
+
+    const eventData = {
+      id: event.id,
+      allDay: event.allDay,
+      start: event.startStr,
+      end: event.endStr,
+      userId: event.extendedProps.userId || '',
+      userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
+      photoURL: event.extendedProps.photoURL || '',
+      userEmail: event.extendedProps.userEmail || '',
+      createdAt: event.extendedProps.createdAt || Date.now(),
+      title: event.title,
+      description: event.extendedProps.description || '',
+      color: event.backgroundColor || event.extendedProps.color || '#00AB55',
+    };
+
+    const cleanedData = Object.fromEntries(
+      Object.entries(eventData).filter(([_, value]) => value !== undefined)
+    );
+
+    updateEvent(cleanedData);
   }, []);
 
   const onClickEventInFilters = useCallback(

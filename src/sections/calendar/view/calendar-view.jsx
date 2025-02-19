@@ -1,6 +1,6 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import listPlugin from '@fullcalendar/list';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -14,6 +14,7 @@ import Dialog from '@mui/material/Dialog';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
+import Avatar from '@mui/material/Avatar';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
@@ -175,6 +176,28 @@ export function CalendarView() {
                 day: 'Jour',
                 list: 'Liste',
               }}
+              eventContent={(eventInfo) => ({
+                html: `
+                  <div style="display: flex; align-items: center; gap: 8px; max-width: 100%; overflow: hidden;">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+                      <img
+                        src="${eventInfo.event.extendedProps.photoURL || ''}"
+                        alt="${eventInfo.event.extendedProps.userDisplayName}"
+                        style="width: 100%; height: 100%; object-fit: cover;"
+                        onerror="this.style.display='none'"
+                      />
+                    </div>
+                    <div style="min-width: 0; flex: 1;">
+                      <div style="font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                        ${eventInfo.event.title}
+                      </div>
+                      <div style="font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${eventInfo.event.extendedProps.userDisplayName}
+                      </div>
+                    </div>
+                  </div>
+                `,
+              })}
             />
           </StyledCalendar>
         </Card>

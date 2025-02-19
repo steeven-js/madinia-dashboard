@@ -130,6 +130,7 @@ export const navDataAdmin = [
           { title: 'New', path: paths.dashboard.autoEcole.new },
         ],
       },
+      { title: 'Calendier', path: paths.dashboard.calendar, icon: ICONS.calendar },
     ],
   },
 ];

@@ -1,7 +1,9 @@
 import { z as zod } from 'zod';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import { useSelector } from 'react-redux';
+import { useAuth } from 'src/hooks/use-auth';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,6 +12,8 @@ import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogActions from '@mui/material/DialogActions';
+import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
 
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter } from 'src/utils/format-time';
@@ -43,6 +47,19 @@ export const EventSchema = zod.object({
 // ----------------------------------------------------------------------
 
 export function CalendarForm({ currentEvent, colorOptions, onClose }) {
+  const { user } = useAuth();
+  const userRole = useSelector((state) => state.auth.role);
+
+  // Vérifier si l'utilisateur a le droit de modifier/supprimer
+  const canModify = useMemo(() => {
+    // Si c'est un nouvel événement (pas de currentEvent.id), autoriser la création
+    if (!currentEvent?.id) {
+      return true;
+    }
+    // Sinon vérifier les permissions de modification
+    return userRole === 'dev' || currentEvent?.userId === user?.uid;
+  }, [userRole, currentEvent?.id, currentEvent?.userId, user?.uid]);
+
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
@@ -75,12 +92,26 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     try {
       if (!dateError) {
         if (currentEvent?.id) {
-          await updateEvent(eventData);
+          // S'assurer que toutes les propriétés ont des valeurs par défaut
+          const updateData = {
+            ...eventData,
+            userId: currentEvent.userId || '',
+            userDisplayName: currentEvent.userDisplayName || 'Anonymous',
+            photoURL: currentEvent.photoURL || '',
+            userEmail: currentEvent.userEmail || '',
+            createdAt: currentEvent.createdAt || Date.now(),
+          };
+
+          // Filtrer les propriétés undefined
+          const cleanedData = Object.fromEntries(
+            Object.entries(updateData).filter(([_, value]) => value !== undefined)
+          );
+
+          await updateEvent(cleanedData);
           toast.success('Update success!');
         } else {
           await createEvent(eventData);
           toast.success('Create success!');
-          // You might want to do something with createdEvent here
         }
         onClose();
         reset();
@@ -93,21 +124,39 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
   const onDelete = useCallback(async () => {
     try {
-      if (!currentEvent?.firestoreId) {
-        throw new Error('Firestore ID is missing');
+      // Vérifier les permissions
+      if (!canModify) {
+        toast.error("Vous n'avez pas les permissions nécessaires");
+        return;
       }
-      await deleteEvent(currentEvent.id, currentEvent.firestoreId);
+
+      // Utiliser directement l'ID de l'événement
+      if (!currentEvent?.id) {
+        throw new Error('Event ID is missing');
+      }
+
+      await deleteEvent(currentEvent.id);
       toast.success('Delete success!');
       onClose();
     } catch (error) {
       console.error(error);
       toast.error('Delete failed');
     }
-  }, [currentEvent?.id, currentEvent?.firestoreId, onClose]);
+  }, [currentEvent?.id, canModify, onClose]);
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
+        {/* Afficher l'avatar et le nom du créateur */}
+        {currentEvent?.id && (
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+            <Avatar src={currentEvent.photoURL} alt={currentEvent.userDisplayName}>
+              {currentEvent.userDisplayName?.charAt(0)}
+            </Avatar>
+            <Typography variant="subtitle2">Créé par {currentEvent.userDisplayName}</Typography>
+          </Stack>
+        )}
+
         <Stack spacing={3}>
           <Field.Text name="title" label="Title" />
 
@@ -143,7 +192,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       </Scrollbar>
 
       <DialogActions sx={{ flexShrink: 0 }}>
-        {!!currentEvent?.id && (
+        {!!currentEvent?.id && canModify && (
           <Tooltip title="Delete event">
             <IconButton onClick={onDelete}>
               <Iconify icon="solar:trash-bin-trash-bold" />
@@ -157,14 +206,20 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           Cancel
         </Button>
 
-        <LoadingButton
-          type="submit"
-          variant="contained"
-          loading={isSubmitting}
-          disabled={dateError}
-        >
-          Save changes
-        </LoadingButton>
+        {canModify ? (
+          <LoadingButton
+            type="submit"
+            variant="contained"
+            loading={isSubmitting}
+            disabled={dateError}
+          >
+            Save changes
+          </LoadingButton>
+        ) : (
+          <Button variant="contained" disabled>
+            Lecture seule
+          </Button>
+        )}
       </DialogActions>
     </Form>
   );
