@@ -189,7 +189,7 @@ export function fDateRangeShortLabel(startDate, endDate, initial) {
     return 'Invalid time value';
   }
 
-  let label = `${fDate(startDate)} - ${fDate(endDate)}`;
+  let label = `${fEuroDate(startDate)} - ${fEuroDate(endDate)}`;
 
   if (initial) {
     return label;
@@ -200,11 +200,11 @@ export function fDateRangeShortLabel(startDate, endDate, initial) {
   const isSameDay = fIsSame(startDate, endDate, 'day');
 
   if (isSameYear && !isSameMonth) {
-    label = `${fDate(startDate, 'DD MMM')} - ${fDate(endDate)}`;
+    label = `${fEuroDate(startDate)} - ${fEuroDate(endDate)}`;
   } else if (isSameYear && isSameMonth && !isSameDay) {
-    label = `${fDate(startDate, 'DD')} - ${fDate(endDate)}`;
+    label = `${fEuroDate(startDate)} - ${fEuroDate(endDate)}`;
   } else if (isSameYear && isSameMonth && isSameDay) {
-    label = `${fDate(endDate)}`;
+    label = `${fEuroDate(endDate)}`;
   }
 
   return label;

@@ -27,7 +27,7 @@ export function CalendarFiltersResult({ filters, totalResults, sx }) {
 
   return (
     <FiltersResult totalResults={totalResults} onReset={filters.onResetState} sx={sx}>
-      <FiltersBlock label="Colors:" isShow={!!filters.state.colors.length}>
+      <FiltersBlock label="Couleurs:" isShow={!!filters.state.colors.length}>
         {filters.state.colors.map((item) => (
           <Chip
             {...chipProps}

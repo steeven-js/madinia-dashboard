@@ -12,7 +12,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { orderBy } from 'src/utils/helper';
-import { fDate, fDateTime } from 'src/utils/format-time';
+import { fDate, fDateTime, fEuroDate, fEuroDateTime } from 'src/utils/format-time';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -55,10 +55,10 @@ export function CalendarFilters({
     <>
       <Box display="flex" alignItems="center" sx={{ py: 2, pr: 1, pl: 2.5 }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Filters
+          Filtres
         </Typography>
 
-        <Tooltip title="Reset">
+        <Tooltip title="Réinitialiser">
           <IconButton onClick={filters.onResetState}>
             <Badge color="error" variant="dot" invisible={!canReset}>
               <Iconify icon="solar:restart-bold" />
@@ -78,7 +78,7 @@ export function CalendarFilters({
   const renderColors = (
     <Box display="flex" flexDirection="column" sx={{ my: 3, px: 2.5 }}>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Colors
+        Couleurs
       </Typography>
       <ColorPicker
         colors={colorOptions}
@@ -91,24 +91,26 @@ export function CalendarFilters({
   const renderDateRange = (
     <Box display="flex" flexDirection="column" sx={{ mb: 3, px: 2.5 }}>
       <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-        Range
+        Période
       </Typography>
 
       <DatePicker
-        label="Start date"
+        label="Date de début"
         value={filters.state.startDate}
         onChange={handleFilterStartDate}
         sx={{ mb: 2.5 }}
       />
 
       <DatePicker
-        label="End date"
+        label="Date de fin"
         value={filters.state.endDate}
         onChange={handleFilterEndDate}
         slotProps={{
           textField: {
             error: dateError,
-            helperText: dateError ? 'End date must be later than start date' : null,
+            helperText: dateError
+              ? 'La date de fin doit être postérieure à la date de début'
+              : null,
           },
         }}
       />
@@ -118,7 +120,7 @@ export function CalendarFilters({
   const renderEvents = (
     <>
       <Typography variant="subtitle2" sx={{ px: 2.5, mb: 1 }}>
-        Events ({events.length})
+        Événements ({events.length})
       </Typography>
 
       <Box component="ul">
@@ -157,8 +159,8 @@ export function CalendarFilters({
                     sx={{ fontSize: 11, color: 'text.disabled' }}
                   >
                     {event.allDay
-                      ? fDate(event.start)
-                      : `${fDateTime(event.start)} - ${fDateTime(event.end)}`}
+                      ? fEuroDate(event.start)
+                      : `${fEuroDateTime(event.start)} - ${fEuroDateTime(event.end)}`}
                   </Typography>
                 }
                 sx={{ display: 'flex', flexDirection: 'column-reverse' }}

@@ -178,21 +178,23 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           )}
 
           <Stack spacing={3}>
-            <Field.Text name="title" label="Title" />
+            <Field.Text name="title" label="Titre" />
 
             <Field.Text name="description" label="Description" multiline rows={3} />
 
-            <Field.Switch name="allDay" label="All day" />
+            <Field.Switch name="allDay" label="Toute la journée" />
 
-            <Field.MobileDateTimePicker name="start" label="Start date" />
+            <Field.MobileDateTimePicker name="start" label="Date de début" />
 
             <Field.MobileDateTimePicker
               name="end"
-              label="End date"
+              label="Date de fin"
               slotProps={{
                 textField: {
                   error: dateError,
-                  helperText: dateError ? 'End date must be later than start date' : null,
+                  helperText: dateError
+                    ? 'La date de fin doit être postérieure à la date de début'
+                    : null,
                 },
               }}
             />
@@ -223,7 +225,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
           <Box sx={{ flexGrow: 1 }} />
 
           <Button variant="outlined" color="inherit" onClick={onClose}>
-            Cancel
+            Annuler
           </Button>
 
           {canModify ? (
@@ -233,7 +235,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               loading={isSubmitting}
               disabled={dateError}
             >
-              Save changes
+              Enregistrer
             </LoadingButton>
           ) : (
             <Button variant="contained" disabled>
