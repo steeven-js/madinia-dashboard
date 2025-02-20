@@ -184,11 +184,18 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
             <Field.Switch name="allDay" label="Toute la journée" />
 
-            <Field.MobileDateTimePicker name="start" label="Date de début" />
+            <Field.MobileDateTimePicker
+              name="start"
+              label="Date de début"
+              ampm={false}
+              format="DD/MM/YYYY HH:mm"
+            />
 
             <Field.MobileDateTimePicker
               name="end"
               label="Date de fin"
+              ampm={false}
+              format="DD/MM/YYYY HH:mm"
               slotProps={{
                 textField: {
                   error: dateError,
