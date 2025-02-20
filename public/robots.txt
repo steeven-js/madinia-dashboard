@@ -7,4 +7,4 @@ Allow: /
 # Disallow: /admin/
 
 # Sitemap (si vous en avez un)
-# Sitemap: https://madinia.fr/sitemap.xml
+Sitemap: https://madinia.fr/sitemap.xml
