@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import {
   query,
   addDoc,
+  getDoc,
   orderBy,
   updateDoc,
   deleteDoc,
@@ -9,7 +10,6 @@ import {
   onSnapshot,
   getFirestore,
   doc as firestoreDoc,
-  getDoc,
 } from 'firebase/firestore';
 
 import { auth } from 'src/utils/firebase';

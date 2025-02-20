@@ -1,19 +1,24 @@
 import { z as zod } from 'zod';
-import { useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { useSelector } from 'react-redux';
-import { useAuth } from 'src/hooks/use-auth';
+import { useMemo, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Avatar from '@mui/material/Avatar';
+import Dialog from '@mui/material/Dialog';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
-import LoadingButton from '@mui/lab/LoadingButton';
-import DialogActions from '@mui/material/DialogActions';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
+import LoadingButton from '@mui/lab/LoadingButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+
+import { useAuth } from 'src/hooks/use-auth';
 
 import { uuidv4 } from 'src/utils/uuidv4';
 import { fIsAfter } from 'src/utils/format-time';
@@ -122,6 +127,19 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     }
   });
 
+  // État pour le modal de confirmation
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+  // Gestionnaires pour le modal de confirmation
+  const handleOpenConfirmDialog = () => {
+    setOpenConfirmDialog(true);
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+  };
+
+  // Modification de onDelete pour la confirmation
   const onDelete = useCallback(async () => {
     try {
       // Vérifier les permissions
@@ -137,6 +155,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
 
       await deleteEvent(currentEvent.id);
       toast.success('Delete success!');
+      handleCloseConfirmDialog();
       onClose();
     } catch (error) {
       console.error(error);
@@ -145,82 +164,107 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   }, [currentEvent?.id, canModify, onClose]);
 
   return (
-    <Form methods={methods} onSubmit={onSubmit}>
-      <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
-        {/* Afficher l'avatar et le nom du créateur */}
-        {currentEvent?.id && (
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Avatar src={currentEvent.photoURL} alt={currentEvent.userDisplayName}>
-              {currentEvent.userDisplayName?.charAt(0)}
-            </Avatar>
-            <Typography variant="subtitle2">Créé par {currentEvent.userDisplayName}</Typography>
+    <>
+      <Form methods={methods} onSubmit={onSubmit}>
+        <Scrollbar sx={{ p: 3, bgcolor: 'background.neutral' }}>
+          {/* Afficher l'avatar et le nom du créateur */}
+          {currentEvent?.id && (
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+              <Avatar src={currentEvent.photoURL} alt={currentEvent.userDisplayName}>
+                {currentEvent.userDisplayName?.charAt(0)}
+              </Avatar>
+              <Typography variant="subtitle2">Créé par {currentEvent.userDisplayName}</Typography>
+            </Stack>
+          )}
+
+          <Stack spacing={3}>
+            <Field.Text name="title" label="Title" />
+
+            <Field.Text name="description" label="Description" multiline rows={3} />
+
+            <Field.Switch name="allDay" label="All day" />
+
+            <Field.MobileDateTimePicker name="start" label="Start date" />
+
+            <Field.MobileDateTimePicker
+              name="end"
+              label="End date"
+              slotProps={{
+                textField: {
+                  error: dateError,
+                  helperText: dateError ? 'End date must be later than start date' : null,
+                },
+              }}
+            />
+
+            <Controller
+              name="color"
+              control={control}
+              render={({ field }) => (
+                <ColorPicker
+                  selected={field.value}
+                  onSelectColor={(color) => field.onChange(color)}
+                  colors={colorOptions}
+                />
+              )}
+            />
           </Stack>
-        )}
+        </Scrollbar>
 
-        <Stack spacing={3}>
-          <Field.Text name="title" label="Title" />
+        <DialogActions sx={{ flexShrink: 0 }}>
+          {!!currentEvent?.id && canModify && (
+            <Tooltip title="Delete event">
+              <IconButton onClick={handleOpenConfirmDialog}>
+                <Iconify icon="solar:trash-bin-trash-bold" />
+              </IconButton>
+            </Tooltip>
+          )}
 
-          <Field.Text name="description" label="Description" multiline rows={3} />
+          <Box sx={{ flexGrow: 1 }} />
 
-          <Field.Switch name="allDay" label="All day" />
-
-          <Field.MobileDateTimePicker name="start" label="Start date" />
-
-          <Field.MobileDateTimePicker
-            name="end"
-            label="End date"
-            slotProps={{
-              textField: {
-                error: dateError,
-                helperText: dateError ? 'End date must be later than start date' : null,
-              },
-            }}
-          />
-
-          <Controller
-            name="color"
-            control={control}
-            render={({ field }) => (
-              <ColorPicker
-                selected={field.value}
-                onSelectColor={(color) => field.onChange(color)}
-                colors={colorOptions}
-              />
-            )}
-          />
-        </Stack>
-      </Scrollbar>
-
-      <DialogActions sx={{ flexShrink: 0 }}>
-        {!!currentEvent?.id && canModify && (
-          <Tooltip title="Delete event">
-            <IconButton onClick={onDelete}>
-              <Iconify icon="solar:trash-bin-trash-bold" />
-            </IconButton>
-          </Tooltip>
-        )}
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
-        </Button>
-
-        {canModify ? (
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            loading={isSubmitting}
-            disabled={dateError}
-          >
-            Save changes
-          </LoadingButton>
-        ) : (
-          <Button variant="contained" disabled>
-            Lecture seule
+          <Button variant="outlined" color="inherit" onClick={onClose}>
+            Cancel
           </Button>
-        )}
-      </DialogActions>
-    </Form>
+
+          {canModify ? (
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              loading={isSubmitting}
+              disabled={dateError}
+            >
+              Save changes
+            </LoadingButton>
+          ) : (
+            <Button variant="contained" disabled>
+              Lecture seule
+            </Button>
+          )}
+        </DialogActions>
+      </Form>
+
+      {/* Modal de confirmation */}
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCloseConfirmDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDialog} color="inherit">
+            Annuler
+          </Button>
+          <Button onClick={onDelete} variant="contained" color="error" autoFocus>
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
