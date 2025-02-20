@@ -12,7 +12,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { orderBy } from 'src/utils/helper';
-import { fDate, fDateTime, fEuroDate, fEuroDateTime } from 'src/utils/format-time';
+import { fEuroDate, fEuroDateTime } from 'src/utils/format-time';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
