@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Interdire l'accès à certains dossiers si nécessaire
+# Disallow: /private/
+# Disallow: /admin/
+
+# Sitemap (si vous en avez un)
+# Sitemap: https://madinia.fr/sitemap.xml
