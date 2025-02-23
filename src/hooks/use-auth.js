@@ -7,6 +7,8 @@ import { db, auth } from 'src/utils/firebase';
 
 import { setUser, setRole, setError, clearAuth } from 'src/store/slices/authSlice';
 
+import { ROLES } from 'src/auth/roles-permissions';
+
 /**
  * Hook principal de gestion de l'authentification
  * Gère l'état de connexion de l'utilisateur et synchronise les données entre Firebase et Redux
@@ -81,18 +83,22 @@ export function useAuth() {
             const profileData = userProfileDoc.data();
             setUserProfile(profileData);
 
+            // Vérification et attribution du rôle
+            const userRole = profileData?.role || ROLES.USER;
+
             // Préparation des données pour Redux
             const serializedUserData = {
               id: _user.uid,
               email: _user.email,
               createdAt: serializeTimestamp(_user.metadata.creationTime),
               lastConnection: serializeTimestamp(_user.metadata.lastSignInTime),
-              ...serializeProfile(profileData)
+              ...serializeProfile(profileData),
+              role: userRole,
             };
 
             // Mise à jour du store Redux
             dispatch(setUser(serializedUserData));
-            dispatch(setRole(profileData?.role || 'user'));
+            dispatch(setRole(userRole));
           } else {
             console.log("Le profil utilisateur n'existe pas");
             dispatch(clearAuth());

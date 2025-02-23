@@ -8,6 +8,8 @@ import axios from 'src/utils/axios';
 
 import { AUTH, FIRESTORE } from 'src/lib/firebase';
 
+import { ROLES, ROLE_PERMISSIONS } from 'src/auth/roles-permissions';
+
 import { AuthContext } from '../auth-context';
 
 // ----------------------------------------------------------------------
@@ -22,19 +24,27 @@ export function AuthProvider({ children }) {
     try {
       onAuthStateChanged(AUTH, async (user) => {
         if (user && user.emailVerified) {
-          /*
-           * (1) If skip emailVerified
-           * Remove the condition (if/else) : user.emailVerified
-           */
           const userProfile = doc(FIRESTORE, 'users', user.uid);
-
           const docSnap = await getDoc(userProfile);
-
           const profileData = docSnap.data();
 
           const { accessToken } = user;
 
-          setState({ user: { ...user, ...profileData }, loading: false });
+          await user.getIdTokenResult(true).then(async (idTokenResult) => {
+            if (!idTokenResult.claims.role) {
+              await AUTH.currentUser.getIdToken(true);
+            }
+          });
+
+          setState({
+            user: {
+              ...user,
+              ...profileData,
+              role: profileData?.role || ROLES.USER,
+            },
+            loading: false,
+          });
+
           axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
         } else {
           setState({ user: null, loading: false });
@@ -67,7 +77,8 @@ export function AuthProvider({ children }) {
             accessToken: state.user?.accessToken,
             displayName: state.user?.displayName,
             photoURL: state.user?.photoURL,
-            role: state.user?.role ?? 'admin',
+            role: state.user?.role || ROLES.USER,
+            permissions: ROLE_PERMISSIONS[state.user?.role || ROLES.USER],
           }
         : null,
       checkUserSession,

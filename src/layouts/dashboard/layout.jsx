@@ -23,13 +23,11 @@ import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
 import { LayoutSection } from '../core/layout-section';
 import { HeaderSection } from '../core/header-section';
+import { getNavDataByRole } from '../config-navigation';
 import { StyledDivider, useNavColorVars } from './styles';
-import { navDataUser } from '../config-nav-dashboard-user';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
-import { navDataAdmin } from '../config-nav-dashboard-administrator';
-import { navData as dashboardNavData } from '../config-nav-dashboard';
 
 // ----------------------------------------------------------------------
 
@@ -45,26 +43,11 @@ export function DashboardLayout({ sx, children, header, data }) {
 
   const useAuthRole = useSelector((state) => state.auth.role);
 
-  const getUserAuthRole = () => {
-    if (useAuthRole === 'dev') {
-      return dashboardNavData;
-    }
-
-    if (useAuthRole === 'admin') {
-      return navDataAdmin;
-    }
-
-    if (useAuthRole === 'user') {
-      return navDataUser;
-    }
-
-    // Default return value if none of the conditions are met
-    return navDataUser; // or [] or null, depending on your needs
-  };
-
-  const layoutQuery = 'lg';
+  const getUserAuthRole = () => getNavDataByRole(useAuthRole);
 
   const navData = getUserAuthRole();
+
+  const layoutQuery = 'lg';
 
   const isNavMini = settings.navLayout === 'mini';
   const isNavHorizontal = settings.navLayout === 'horizontal';

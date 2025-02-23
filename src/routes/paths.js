@@ -138,12 +138,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/autoEcole/new`,
       list: `${ROOTS.DASHBOARD}/autoEcole/list`,
       cards: `${ROOTS.DASHBOARD}/autoEcole/cards`,
-      // profile: (id) => `${ROOTS.DASHBOARD}/user/profile/${id}`,
-      // account: (id) => `${ROOTS.DASHBOARD}/user/account/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/autoEcole/${id}/edit`,
-      // demo: {
-      //   edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
-      // },
     },
     product: {
       root: `${ROOTS.DASHBOARD}/product`,
@@ -205,6 +200,12 @@ export const paths = {
     },
     qrScanner: {
       root: `${ROOTS.DASHBOARD}/qr-scanner`,
+    },
+    roles: {
+      root: '/dashboard/roles',
+      list: '/dashboard/roles/list',
+      new: '/dashboard/roles/new',
+      edit: (id) => `/dashboard/roles/${id}/edit`,
     },
   },
 };
