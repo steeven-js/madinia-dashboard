@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth';
 
 import { db, auth } from 'src/utils/firebase';
+import { CONFIG } from 'src/config-global';
 
 import { setUser, setRole, setError, clearAuth } from 'src/store/slices/authSlice';
 
@@ -84,25 +85,32 @@ export function useAuth() {
             const profileData = userProfileDoc.data();
             setUserProfile(profileData);
 
-            // Préparation des données pour Redux
+            // Determine role with proper fallback
+            const userRole = idTokenResult.claims.role || profileData?.role || 'user';
+
+            // Validate role exists in CONFIG
+            const validRole = CONFIG.roles[userRole] ? userRole : 'user';
+
             const serializedUserData = {
               id: _user.uid,
               email: _user.email,
               createdAt: serializeTimestamp(_user.metadata.creationTime),
               lastConnection: serializeTimestamp(_user.metadata.lastSignInTime),
-              role: idTokenResult.claims.role || profileData?.role || 'user',
+              role: validRole,
+              roleLevel: CONFIG.roles[validRole].level,
+              permissions: CONFIG.roles[validRole].permissions,
               ...serializeProfile(profileData)
             };
 
             // Mise à jour du store Redux
             dispatch(setUser(serializedUserData));
-            dispatch(setRole(idTokenResult.claims.role || profileData?.role || 'user'));
+            dispatch(setRole(validRole));
           } else {
-            console.log("Le profil utilisateur n'existe pas");
+            console.log("User profile doesn't exist");
             dispatch(clearAuth());
           }
         } catch (error) {
-          console.error('Erreur lors de la récupération du profil utilisateur:', error);
+          console.error('Error fetching user profile:', error);
           dispatch(setError(error.message));
         }
       } else {
@@ -119,7 +127,14 @@ export function useAuth() {
     return unsubscribe;
   }, [dispatch]);
 
-  return { user, userId, userProfile, loading };
+  return {
+    user,
+    userId,
+    userProfile,
+    loading,
+    hasPermission: (permission) => hasRolePermission(userProfile?.role, permission),
+    hasMinimumLevel: (level) => hasRoleLevel(userProfile?.role, level)
+  };
 }
 
 /**
@@ -203,3 +218,27 @@ export function useUpdateFirebasePassword() {
 
   return { updateFirebasePassword, isUpdating, error };
 }
+
+/**
+ * Vérifie si un rôle a accès à une permission
+ * @param {string} role - Le rôle à vérifier
+ * @param {string} permission - La permission requise
+ * @returns {boolean}
+ */
+const hasRolePermission = (role, permission) => {
+  const roleConfig = CONFIG.roles[role];
+  if (!roleConfig) return false;
+  return roleConfig.permissions.includes('all') || roleConfig.permissions.includes(permission);
+};
+
+/**
+ * Vérifie si un rôle a un niveau suffisant
+ * @param {string} role - Le rôle à vérifier
+ * @param {number} requiredLevel - Le niveau minimum requis
+ * @returns {boolean}
+ */
+const hasRoleLevel = (role, requiredLevel) => {
+  const roleConfig = CONFIG.roles[role];
+  if (!roleConfig) return false;
+  return roleConfig.level >= requiredLevel;
+};

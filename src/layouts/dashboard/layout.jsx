@@ -54,6 +54,10 @@ export function DashboardLayout({ sx, children, header, data }) {
       return navDataAdmin;
     }
 
+    if (useAuthRole === 'super_admin') {
+      return navDataAdmin;
+    }
+
     if (useAuthRole === 'user') {
       return navDataUser;
     }

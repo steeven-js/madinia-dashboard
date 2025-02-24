@@ -7,6 +7,7 @@ import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp } from 
 import { db, auth, storage } from 'src/utils/firebase';
 
 import { toast } from 'src/components/snackbar';
+import { CONFIG } from 'src/config-global';
 
 /**
  * Récupère l'ID de l'utilisateur actuellement connecté
@@ -297,13 +298,24 @@ export const updateUserRole = async (userId, newRole) => {
     throw new Error("L'ID de l'utilisateur est requis");
   }
 
+  // Validate role exists in CONFIG
+  if (!CONFIG.roles[newRole]) {
+    throw new Error(`Le rôle ${newRole} n'existe pas`);
+  }
+
   const userRef = doc(db, 'users', userId);
 
   try {
     await updateDoc(userRef, {
       role: newRole,
-      updatedAt: Date.now()
+      roleLevel: CONFIG.roles[newRole].level,
+      permissions: CONFIG.roles[newRole].permissions,
+      updatedAt: serverTimestamp()
     });
+
+    // Optionally update custom claims through a Cloud Function
+    // This would require setting up a Cloud Function to update Firebase Auth custom claims
+
     toast.success('Rôle mis à jour avec succès !');
   } catch (error) {
     console.error('Erreur lors de la mise à jour du rôle:', error);

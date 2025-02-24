@@ -1,18 +1,32 @@
 // userSlice.js
 import { doc, getDoc } from 'firebase/firestore';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
 import { db } from 'src/utils/firebase';
+import { setRole } from './authSlice';
 
 export const fetchUserData = createAsyncThunk(
   'user/fetchUserData',
-  async (userId) => {
-    const docRef = doc(db, 'users', userId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data();
+  async (userId, { dispatch }) => {
+    try {
+      // Get user data from Firestore
+      const docRef = doc(db, 'users', userId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+
+        // Set role in auth slice
+        if (userData.role) {
+          dispatch(setRole(userData.role));
+        }
+
+        return userData;
+      }
+      throw new Error('No user document found!');
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
     }
-    throw new Error('Aucun document trouvé !');
   }
 );
 
@@ -20,10 +34,19 @@ const userSlice = createSlice({
   name: 'user',
   initialState: {
     data: null,
-    status: 'idle',
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
   },
-  reducers: {},
+  reducers: {
+    updateUserData: (state, action) => {
+      state.data = { ...state.data, ...action.payload };
+    },
+    clearUserData: (state) => {
+      state.data = null;
+      state.status = 'idle';
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserData.pending, (state) => {
@@ -32,6 +55,7 @@ const userSlice = createSlice({
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.data = action.payload;
+        state.error = null;
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.status = 'failed';
@@ -40,4 +64,5 @@ const userSlice = createSlice({
   },
 });
 
+export const { updateUserData, clearUserData } = userSlice.actions;
 export default userSlice.reducer;

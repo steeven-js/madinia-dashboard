@@ -37,6 +37,9 @@ export default function OverviewAppPage() {
       case CONFIG.roles.dev:
         return <OverviewAppView />;
 
+      case CONFIG.roles.super_admin:
+        return <AdminOverviewAppPage />;
+
       case CONFIG.roles.admin:
       case CONFIG.roles.user:
         return <AdminOverviewAppPage />;
