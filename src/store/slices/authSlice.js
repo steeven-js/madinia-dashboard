@@ -1,5 +1,6 @@
 // src/store/slices/authSlice.js
 import { createSlice } from '@reduxjs/toolkit';
+
 import { CONFIG } from 'src/config-global';
 
 const initialState = {
@@ -58,7 +59,7 @@ export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 
 // Helper function to check permissions
 export const hasPermission = (state, permission) => {
-  const permissions = state.auth.permissions;
+  const { permissions } = state.auth;
   return permissions.includes('all') || permissions.includes(permission);
 };
 

@@ -13,13 +13,29 @@ import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 
-import { USER_ROLES_OPTIONS } from 'src/_mock';
 import { CONFIG } from 'src/config-global';
+import { USER_ROLES_OPTIONS } from 'src/_mock';
 
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
+
+// Ajouter la fonction helper pour les labels de rôle
+const getRoleLabel = (roleName) => {
+  switch (roleName) {
+    case 'super_admin':
+      return 'Super Admin';
+    case 'dev':
+      return 'Développeur';
+    case 'admin':
+      return 'Administrateur';
+    case 'user':
+      return 'Utilisateur';
+    default:
+      return roleName;
+  }
+};
 
 export default function UserTableToolbar({
   filters = { name: '', role: [] },
@@ -91,7 +107,7 @@ export default function UserTableToolbar({
                 .map((value) => {
                   const role = availableRoles.find((option) => option.value === value);
                   console.log('Found role for value:', value, role);
-                  return role ? role.label : value;
+                  return role ? getRoleLabel(role.value) : value;
                 })
                 .join(', ');
             }}
@@ -105,7 +121,7 @@ export default function UserTableToolbar({
                     size="small"
                     checked={(filters.role || []).includes(option.value)}
                   />
-                  {option.label}
+                  {getRoleLabel(option.value)}
                 </MenuItem>
               );
             })}

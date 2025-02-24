@@ -6,8 +6,9 @@ import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp } from 
 
 import { db, auth, storage } from 'src/utils/firebase';
 
-import { toast } from 'src/components/snackbar';
 import { CONFIG } from 'src/config-global';
+
+import { toast } from 'src/components/snackbar';
 
 /**
  * Récupère l'ID de l'utilisateur actuellement connecté

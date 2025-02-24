@@ -19,6 +19,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSetState } from 'src/hooks/use-set-state';
 import { updateUserRole, updateUserStatus } from 'src/hooks/use-users';
 
+import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/theme/styles';
 import { USER_STATUS_OPTIONS } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -46,20 +47,32 @@ import { RoleBasedGuard } from 'src/auth/guard';
 import UserTableRow from '../user-table-row';
 import UserTableToolbar from '../user-table-toolbar';
 import { UserTableFiltersResult } from '../user-table-filters-result';
-import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
+// Fonction helper pour obtenir le label du rôle
+const getRoleLabel = (roleName) => {
+  switch (roleName) {
+    case 'super_admin':
+      return 'Super Admin';
+    case 'dev':
+      return 'Développeur';
+    case 'admin':
+      return 'Administrateur';
+    case 'user':
+      return 'Utilisateur';
+    default:
+      return roleName;
+  }
+};
+
 const ROLE_OPTIONS = Object.entries(CONFIG.roles)
   .sort((a, b) => b[1].level - a[1].level)
   .map(([value, role]) => ({
     value,
-    label: role.name
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' '),
+    label: getRoleLabel(value), // Utiliser la fonction helper ici
     level: role.level,
   }));
 

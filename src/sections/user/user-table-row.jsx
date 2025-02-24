@@ -15,6 +15,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { CONFIG } from 'src/config-global';
 import { USER_STATUS_OPTIONS } from 'src/_mock';
 
 import { Label } from 'src/components/label';
@@ -23,9 +24,23 @@ import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
-import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
+
+const getRoleLabel = (roleName) => {
+  switch (roleName) {
+    case 'super_admin':
+      return 'Super Admin';
+    case 'dev':
+      return 'Développeur';
+    case 'admin':
+      return 'Administrateur';
+    case 'user':
+      return 'Utilisateur';
+    default:
+      return roleName;
+  }
+};
 
 export default function UserTableRow({
   row,
@@ -115,6 +130,7 @@ export default function UserTableRow({
             disabled={isCurrentUser}
             size="small"
             sx={{ minWidth: 120 }}
+            renderValue={(value) => getRoleLabel(value)}
           >
             {roleOptions.map((option) => (
               <MenuItem

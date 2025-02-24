@@ -1,7 +1,9 @@
 // userSlice.js
 import { doc, getDoc } from 'firebase/firestore';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
 import { db } from 'src/utils/firebase';
+
 import { setRole } from './authSlice';
 
 export const fetchUserData = createAsyncThunk(
