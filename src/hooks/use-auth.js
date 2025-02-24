@@ -75,6 +75,9 @@ export function useAuth() {
         setUserId(_user.uid);
 
         try {
+          // Récupération des custom claims
+          const idTokenResult = await _user.getIdTokenResult();
+
           // Récupération du profil Firestore
           const userProfileDoc = await getDoc(doc(db, 'users', _user.uid));
           if (userProfileDoc.exists()) {
@@ -87,12 +90,13 @@ export function useAuth() {
               email: _user.email,
               createdAt: serializeTimestamp(_user.metadata.creationTime),
               lastConnection: serializeTimestamp(_user.metadata.lastSignInTime),
+              role: idTokenResult.claims.role || profileData?.role || 'user',
               ...serializeProfile(profileData)
             };
 
             // Mise à jour du store Redux
             dispatch(setUser(serializedUserData));
-            dispatch(setRole(profileData?.role || 'user'));
+            dispatch(setRole(idTokenResult.claims.role || profileData?.role || 'user'));
           } else {
             console.log("Le profil utilisateur n'existe pas");
             dispatch(clearAuth());
