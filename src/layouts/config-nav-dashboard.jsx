@@ -2,8 +2,6 @@ import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/config-global';
 
-// import { Label } from 'src/components/label';
-// import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -41,22 +39,12 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
-export const navData = [
-  /**
-   * Overview
-   */
-  {
+const baseNavItems = {
+  overview: {
     subheader: 'Overview',
-    items: [
-      { title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard },
-      // { title: 'plantmed', path: paths.dashboard.general.plantmed, icon: ICONS.dashboard },
-      { title: 'Qr Scanner', path: paths.dashboard.qrScanner.root, icon: ICONS.dashboard },
-    ],
+    items: [{ title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard }],
   },
-  /**
-   * Blog
-   */
-  {
+  blog: {
     subheader: 'Blog',
     items: [
       {
@@ -71,10 +59,7 @@ export const navData = [
       },
     ],
   },
-  /**
-   * Event
-   */
-  {
+  event: {
     subheader: 'Event',
     items: [
       {
@@ -88,27 +73,18 @@ export const navData = [
       },
     ],
   },
-  /**
-   * Event Orders
-   */
-  {
+  eventOrders: {
     subheader: 'Event Orders',
     items: [
       {
         title: 'Event Orders',
         path: paths.dashboard.eventOrder.root,
         icon: ICONS.order,
-        children: [
-          { title: 'List', path: paths.dashboard.eventOrder.root },
-          // Ajoutez d'autres sous-éléments si nécessaire
-        ],
+        children: [{ title: 'List', path: paths.dashboard.eventOrder.root }],
       },
     ],
   },
-  /**
-   * Management
-   */
-  {
+  management: {
     subheader: 'Management',
     items: [
       {
@@ -134,4 +110,37 @@ export const navData = [
       { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
     ],
   },
-];
+};
+
+// Role-based navigation configurations
+const roleNavConfig = {
+  super_admin: [
+    baseNavItems.overview,
+    baseNavItems.blog,
+    baseNavItems.event,
+    baseNavItems.eventOrders,
+    baseNavItems.management,
+  ],
+  dev: [
+    baseNavItems.overview,
+    baseNavItems.blog,
+    baseNavItems.event,
+    baseNavItems.eventOrders,
+    baseNavItems.management,
+  ],
+  admin: [
+    baseNavItems.overview,
+    baseNavItems.blog,
+    baseNavItems.event,
+    baseNavItems.eventOrders,
+    baseNavItems.management,
+  ],
+  user: [baseNavItems.overview],
+};
+
+export const getNavDataByRole = (role) => roleNavConfig[role] || roleNavConfig.user;
+
+// Pour la compatibilité avec le code existant
+export const navData = roleNavConfig.dev;
+export const navDataAdmin = roleNavConfig.admin;
+export const navDataUser = roleNavConfig.user;
