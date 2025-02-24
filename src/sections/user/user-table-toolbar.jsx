@@ -21,21 +21,16 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-// Ajouter la fonction helper pour les labels de rôle
-const getRoleLabel = (roleName) => {
-  switch (roleName) {
-    case 'super_admin':
-      return 'Super Admin';
-    case 'dev':
-      return 'Développeur';
-    case 'admin':
-      return 'Administrateur';
-    case 'user':
-      return 'Utilisateur';
-    default:
-      return roleName;
-  }
+// Remplacer le switch case par un objet de mapping
+const ROLE_LABELS = {
+  super_admin: 'Super Admin',
+  dev: 'Développeur',
+  admin: 'Administrateur',
+  user: 'Utilisateur',
 };
+
+// Simplifier la fonction getRoleLabel
+const getRoleLabel = (roleName) => ROLE_LABELS[roleName] || roleName;
 
 export default function UserTableToolbar({
   filters = { name: '', role: [] },
@@ -47,18 +42,17 @@ export default function UserTableToolbar({
   const popover = usePopover();
   const currentUserLevel = CONFIG.roles[currentUserRole]?.level || 0;
 
-  console.log('UserTableToolbar - roleOptions:', roleOptions);
-  console.log('UserTableToolbar - currentUserRole:', currentUserRole);
-  console.log('UserTableToolbar - currentUserLevel:', currentUserLevel);
+  // Ajouter des logs pour déboguer
+  console.log('Current filters:', filters);
+  console.log('Role options:', roleOptions);
 
-  // Afficher tous les rôles pour le filtre, mais désactiver ceux qui ne sont pas accessibles
   const availableRoles = roleOptions.map((role) => ({
     ...role,
     disabled:
       currentUserRole !== 'super_admin' && CONFIG.roles[role.value]?.level > currentUserLevel,
   }));
 
-  console.log('UserTableToolbar - availableRoles:', availableRoles);
+  console.log('Available roles:', availableRoles);
 
   const handleFilterName = useCallback(
     (event) => {
@@ -102,18 +96,17 @@ export default function UserTableToolbar({
             onChange={handleFilterRole}
             input={<OutlinedInput label="Rôle" />}
             renderValue={(selected) => {
-              console.log('Selected roles:', selected);
+              console.log('Rendering selected roles:', selected);
               return selected
                 .map((value) => {
-                  const role = availableRoles.find((option) => option.value === value);
-                  console.log('Found role for value:', value, role);
-                  return role ? getRoleLabel(role.value) : value;
+                  console.log('Processing role value:', value);
+                  return getRoleLabel(value);
                 })
                 .join(', ');
             }}
           >
             {availableRoles.map((option) => {
-              console.log('Rendering role option:', option);
+              console.log('Rendering option:', option);
               return (
                 <MenuItem key={option.value} value={option.value} disabled={option.disabled}>
                   <Checkbox

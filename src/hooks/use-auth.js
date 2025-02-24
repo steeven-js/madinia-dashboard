@@ -1,5 +1,5 @@
-import { useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile, updatePassword, onAuthStateChanged } from 'firebase/auth';
 
@@ -24,6 +24,10 @@ export function useAuth() {
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Récupérer le rôle depuis le store Redux
+  const currentAuthRole = useSelector((state) => state.auth.role);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   useEffect(() => {
     /**
@@ -132,6 +136,8 @@ export function useAuth() {
     userId,
     userProfile,
     loading,
+    currentAuthRole,
+    isAuthenticated,
     hasPermission: (permission) => hasRolePermission(userProfile?.role, permission),
     hasMinimumLevel: (level) => hasRoleLevel(userProfile?.role, level)
   };

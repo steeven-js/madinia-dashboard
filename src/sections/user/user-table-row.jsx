@@ -27,20 +27,14 @@ import { UserQuickEditForm } from './user-quick-edit-form';
 
 // ----------------------------------------------------------------------
 
-const getRoleLabel = (roleName) => {
-  switch (roleName) {
-    case 'super_admin':
-      return 'Super Admin';
-    case 'dev':
-      return 'Développeur';
-    case 'admin':
-      return 'Administrateur';
-    case 'user':
-      return 'Utilisateur';
-    default:
-      return roleName;
-  }
+const ROLE_LABELS = {
+  super_admin: 'Super Admin',
+  dev: 'Développeur',
+  admin: 'Administrateur',
+  user: 'Utilisateur',
 };
+
+const getRoleLabel = (roleName) => ROLE_LABELS[roleName] || roleName;
 
 export default function UserTableRow({
   row,
@@ -140,7 +134,7 @@ export default function UserTableRow({
                   currentUserRole !== 'super_admin' && option.level >= CONFIG.roles[role]?.level
                 }
               >
-                {option.label}
+                {getRoleLabel(option.value)}
               </MenuItem>
             ))}
           </Select>

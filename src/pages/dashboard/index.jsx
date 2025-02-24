@@ -1,7 +1,8 @@
-import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 
 import { Box, CircularProgress } from '@mui/material';
+
+import { useAuth } from 'src/hooks/use-auth';
 
 import { CONFIG } from 'src/config-global';
 
@@ -16,11 +17,20 @@ import AdminOverviewAppPage from './admin';
 const metadata = { title: `Dashboard - ${CONFIG.name}` };
 
 export default function OverviewAppPage() {
-  const currentAuthRole = useSelector((state) => state.auth.role);
-  const currentAuthLoading = useSelector((state) => state.auth.isLoading);
+  const { currentAuthRole, loading } = useAuth();
+
+  // const { currentAuthRole, isAuthenticated, loading } = useAuth();
+
+  // console.log('currentAuthRole:', currentAuthRole);
+
+  // console.log('Auth State:', {
+  //   currentAuthRole,
+  //   isAuthenticated,
+  //   loading,
+  // });
 
   const renderContent = () => {
-    if (currentAuthLoading) {
+    if (loading) {
       return (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
           <CircularProgress />
@@ -34,14 +44,14 @@ export default function OverviewAppPage() {
 
     // Logique pour déterminer quelle vue afficher selon le rôle
     switch (currentAuthRole) {
-      case CONFIG.roles.dev:
+      case 'super_admin':
         return <OverviewAppView />;
 
-      case CONFIG.roles.super_admin:
+      case 'admin':
+      case 'dev':
         return <AdminOverviewAppPage />;
 
-      case CONFIG.roles.admin:
-      case CONFIG.roles.user:
+      case 'user':
         return <AdminOverviewAppPage />;
 
       default:
