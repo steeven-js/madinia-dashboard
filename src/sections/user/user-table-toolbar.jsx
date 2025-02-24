@@ -14,6 +14,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { USER_ROLES_OPTIONS } from 'src/_mock';
+import { CONFIG } from 'src/config-global';
 
 import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -25,8 +26,23 @@ export default function UserTableToolbar({
   onFilterName,
   onFilterRole,
   roleOptions = USER_ROLES_OPTIONS,
+  currentUserRole,
 }) {
   const popover = usePopover();
+  const currentUserLevel = CONFIG.roles[currentUserRole]?.level || 0;
+
+  console.log('UserTableToolbar - roleOptions:', roleOptions);
+  console.log('UserTableToolbar - currentUserRole:', currentUserRole);
+  console.log('UserTableToolbar - currentUserLevel:', currentUserLevel);
+
+  // Afficher tous les rôles pour le filtre, mais désactiver ceux qui ne sont pas accessibles
+  const availableRoles = roleOptions.map((role) => ({
+    ...role,
+    disabled:
+      currentUserRole !== 'super_admin' && CONFIG.roles[role.value]?.level > currentUserLevel,
+  }));
+
+  console.log('UserTableToolbar - availableRoles:', availableRoles);
 
   const handleFilterName = useCallback(
     (event) => {
@@ -69,21 +85,30 @@ export default function UserTableToolbar({
             value={filters.role || []}
             onChange={handleFilterRole}
             input={<OutlinedInput label="Rôle" />}
-            renderValue={(selected) => selected.map((value) => {
-              const role = roleOptions.find((option) => option.value === value);
-              return role ? role.label : value;
-            }).join(', ')}
+            renderValue={(selected) => {
+              console.log('Selected roles:', selected);
+              return selected
+                .map((value) => {
+                  const role = availableRoles.find((option) => option.value === value);
+                  console.log('Found role for value:', value, role);
+                  return role ? role.label : value;
+                })
+                .join(', ');
+            }}
           >
-            {roleOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                <Checkbox
-                  disableRipple
-                  size="small"
-                  checked={(filters.role || []).includes(option.value)}
-                />
-                {option.label}
-              </MenuItem>
-            ))}
+            {availableRoles.map((option) => {
+              console.log('Rendering role option:', option);
+              return (
+                <MenuItem key={option.value} value={option.value} disabled={option.disabled}>
+                  <Checkbox
+                    disableRipple
+                    size="small"
+                    checked={(filters.role || []).includes(option.value)}
+                  />
+                  {option.label}
+                </MenuItem>
+              );
+            })}
           </Select>
         </FormControl>
 
@@ -156,6 +181,8 @@ UserTableToolbar.propTypes = {
     PropTypes.shape({
       value: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
+      level: PropTypes.number,
     })
   ),
+  currentUserRole: PropTypes.string,
 };

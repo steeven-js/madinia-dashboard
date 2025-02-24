@@ -46,16 +46,25 @@ import { RoleBasedGuard } from 'src/auth/guard';
 import UserTableRow from '../user-table-row';
 import UserTableToolbar from '../user-table-toolbar';
 import { UserTableFiltersResult } from '../user-table-filters-result';
+import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
-const ROLE_OPTIONS = [
-  { value: 'dev', label: 'Développeur' },
-  { value: 'admin', label: 'Administrateur' },
-  { value: 'user', label: 'Utilisateur' },
-];
+const ROLE_OPTIONS = Object.entries(CONFIG.roles)
+  .sort((a, b) => b[1].level - a[1].level)
+  .map(([value, role]) => ({
+    value,
+    label: role.name
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' '),
+    level: role.level,
+  }));
+
+console.log('CONFIG.roles:', CONFIG.roles);
+console.log('ROLE_OPTIONS:', ROLE_OPTIONS);
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Utilisateur', align: 'left', width: 280 },
@@ -74,7 +83,19 @@ export function UserListView({ users, currentAuthUser }) {
 
   const confirm = useBoolean();
 
-  const [acceptedRoles, setAcceptedRoles] = useState(['dev', 'admin']);
+  console.log('currentAuthUser:', currentAuthUser);
+
+  const currentUserLevel = CONFIG.roles[currentAuthUser?.role]?.level || 0;
+  console.log('currentUserLevel:', currentUserLevel);
+
+  const manageableRoles = ROLE_OPTIONS.filter((role) => {
+    if (currentAuthUser?.role === 'super_admin') return true;
+    return role.level < currentUserLevel;
+  });
+
+  console.log('manageableRoles:', manageableRoles);
+
+  const canManageUsers = currentUserLevel >= CONFIG.roles.admin.level;
 
   const [tableData, setTableData] = useState(users);
 
@@ -134,29 +155,49 @@ export function UserListView({ users, currentAuthUser }) {
     [filters, table]
   );
 
-  const handleChangeRole = useCallback(async (userId, newRole) => {
-    try {
-      await updateUserRole(userId, newRole);
-      // Mettre à jour les données locales
-      setTableData((prevData) =>
-        prevData.map((user) =>
-          user.id === userId ? { ...user, role: newRole } : user
-        )
-      );
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du rôle:', error);
-      toast.error('Une erreur est survenue lors de la mise à jour du rôle');
-    }
-  }, []);
+  const handleChangeRole = useCallback(
+    async (userId, newRole) => {
+      const targetUser = tableData.find((user) => user.id === userId);
+      const targetRoleLevel = CONFIG.roles[newRole]?.level || 0;
+
+      // Super admin peut attribuer n'importe quel rôle
+      if (currentAuthUser?.role !== 'super_admin') {
+        // Pour les autres, vérifier le niveau
+        if (targetRoleLevel >= currentUserLevel) {
+          toast.error("Vous n'avez pas les permissions nécessaires pour attribuer ce rôle");
+          return;
+        }
+      }
+
+      try {
+        await updateUserRole(userId, newRole);
+        setTableData((prevData) =>
+          prevData.map((user) =>
+            user.id === userId
+              ? {
+                  ...user,
+                  role: newRole,
+                  roleLevel: CONFIG.roles[newRole].level,
+                  permissions: CONFIG.roles[newRole].permissions,
+                }
+              : user
+          )
+        );
+        toast.success('Rôle mis à jour avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour du rôle:', error);
+        toast.error('Une erreur est survenue lors de la mise à jour du rôle');
+      }
+    },
+    [tableData, currentUserLevel, currentAuthUser?.role]
+  );
 
   const handleChangeStatus = useCallback(async (userId, newStatus) => {
     try {
       await updateUserStatus(userId, newStatus);
       // Mettre à jour les données locales
       setTableData((prevData) =>
-        prevData.map((user) =>
-          user.id === userId ? { ...user, status: newStatus } : user
-        )
+        prevData.map((user) => (user.id === userId ? { ...user, status: newStatus } : user))
       );
       toast.success('Statut mis à jour avec succès');
     } catch (error) {
@@ -165,25 +206,48 @@ export function UserListView({ users, currentAuthUser }) {
     }
   }, []);
 
-  const handleFilterName = useCallback((value) => {
-    filters.setState({ name: value });
-  }, [filters]);
+  const handleFilterName = useCallback(
+    (value) => {
+      filters.setState({ name: value });
+    },
+    [filters]
+  );
 
-  const handleFilterRole = useCallback((value) => {
-    filters.setState({ role: value });
-  }, [filters]);
+  const handleFilterRole = useCallback(
+    (value) => {
+      filters.setState({ role: value });
+    },
+    [filters]
+  );
 
   const handleResetFilters = useCallback(() => {
     filters.setState({ name: '', role: [], status: 'all' });
   }, [filters]);
 
-  const handleSelectRow = useCallback((id) => {
-    table.onSelectRow(id);
-  }, [table]);
+  const handleSelectRow = useCallback(
+    (id) => {
+      table.onSelectRow(id);
+    },
+    [table]
+  );
 
   const handleSelectAllRows = useCallback(() => {
-    table.onSelectAllRows(true, dataFiltered.map((row) => row.id));
+    table.onSelectAllRows(
+      true,
+      dataFiltered.map((row) => row.id)
+    );
   }, [table, dataFiltered]);
+
+  const canManageUser = useCallback(
+    (user) => {
+      // Super admin peut tout gérer
+      if (currentAuthUser?.role === 'super_admin') return true;
+
+      const userRoleLevel = CONFIG.roles[user.role]?.level || 0;
+      return userRoleLevel < currentUserLevel;
+    },
+    [currentUserLevel, currentAuthUser?.role]
+  );
 
   return (
     <>
@@ -191,7 +255,9 @@ export function UserListView({ users, currentAuthUser }) {
         <RoleBasedGuard
           hasContent
           currentRole={currentAuthUser?.role}
-          acceptRoles={acceptedRoles}
+          acceptRoles={Object.keys(CONFIG.roles).filter(
+            (role) => CONFIG.roles[role].level >= CONFIG.roles.admin.level
+          )}
           sx={{ py: 10 }}
         >
           <CustomBreadcrumbs
@@ -258,6 +324,7 @@ export function UserListView({ users, currentAuthUser }) {
               onFilterRole={handleFilterRole}
               onFilterStatus={handleFilterStatus}
               roleOptions={ROLE_OPTIONS}
+              currentUserRole={currentAuthUser?.role}
               onResetFilters={handleResetFilters}
             />
 
@@ -312,10 +379,12 @@ export function UserListView({ users, currentAuthUser }) {
                           onSelectRow={() => handleSelectRow(row.id)}
                           onDeleteRow={() => handleDeleteRow(row.id)}
                           onEditRow={() => handleEditRow(row.id)}
-                          roleOptions={ROLE_OPTIONS}
+                          roleOptions={manageableRoles}
                           onChangeRole={(newRole) => handleChangeRole(row.id, newRole)}
                           onChangeStatus={(newStatus) => handleChangeStatus(row.id, newStatus)}
                           isCurrentUser={currentAuthUser?.id === row.id}
+                          canManage={canManageUser(row)}
+                          currentUserRole={currentAuthUser?.role}
                         />
                       ))}
 

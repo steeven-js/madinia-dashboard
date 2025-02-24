@@ -23,6 +23,7 @@ import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
+import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
@@ -36,6 +37,8 @@ export default function UserTableRow({
   onChangeRole,
   onChangeStatus,
   isCurrentUser,
+  canManage,
+  currentUserRole,
 }) {
   const { firstName, lastName, role, status, email, phoneNumber, avatarUrl } = row;
   const fullName = `${firstName} ${lastName}`;
@@ -114,7 +117,13 @@ export default function UserTableRow({
             sx={{ minWidth: 120 }}
           >
             {roleOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
+              <MenuItem
+                key={option.value}
+                value={option.value}
+                disabled={
+                  currentUserRole !== 'super_admin' && option.level >= CONFIG.roles[role]?.level
+                }
+              >
                 {option.label}
               </MenuItem>
             ))}
@@ -125,6 +134,7 @@ export default function UserTableRow({
           <Select
             value={status}
             onChange={handleChangeStatus}
+            disabled={isCurrentUser}
             size="small"
             sx={{ minWidth: 120 }}
             renderValue={(value) => (
@@ -152,11 +162,19 @@ export default function UserTableRow({
         </TableCell>
 
         <TableCell align="right" sx={{ width: 100, px: 1 }}>
-          <IconButton color={quickEdit.value ? 'inherit' : 'default'} onClick={quickEdit.onTrue}>
+          <IconButton
+            color={quickEdit.value ? 'inherit' : 'default'}
+            onClick={quickEdit.onTrue}
+            disabled={isCurrentUser}
+          >
             <Iconify icon="solar:pen-bold" />
           </IconButton>
 
-          <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
+          <IconButton
+            color={popover.open ? 'inherit' : 'default'}
+            onClick={popover.onOpen}
+            disabled={isCurrentUser}
+          >
             <Iconify icon="eva:more-vertical-fill" />
           </IconButton>
         </TableCell>
@@ -233,4 +251,6 @@ UserTableRow.propTypes = {
   onChangeRole: PropTypes.func,
   onChangeStatus: PropTypes.func,
   isCurrentUser: PropTypes.bool,
+  canManage: PropTypes.bool,
+  currentUserRole: PropTypes.string,
 };
