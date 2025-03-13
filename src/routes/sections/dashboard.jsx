@@ -6,7 +6,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 
-import { AuthGuard } from 'src/auth/guard';
+import { AuthGuard, RoleGuard } from 'src/auth/guard';
 // import { ProfileGuard } from 'src/auth/guard/profile-guard';
 
 // ----------------------------------------------------------------------
@@ -70,62 +70,259 @@ export const dashboardRoutes = [
       {
         path: 'user',
         children: [
-          { element: <UserProfilePage />, index: true },
-          { path: 'profile/:id', element: <UserProfilePage /> },
-          { path: 'cards', element: <UserCardsPage /> },
-          { path: 'list', element: <UserListPage /> },
-          { path: 'new', element: <UserCreatePage /> },
-          { path: ':id/edit', element: <UserEditPage /> },
-          { path: 'account', element: <UserAccountPage /> },
+          {
+            element: (
+              <RoleGuard requiredLevel={0}>
+                <UserProfilePage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
+          {
+            path: 'profile/:id',
+            element: (
+              <RoleGuard requiredLevel={4}>
+                <UserCardsPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'list',
+            element: (
+              <RoleGuard requiredLevel={4}>
+                <UserListPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'new',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <UserCreatePage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id/edit',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <UserEditPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'account',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <UserAccountPage />
+              </RoleGuard>
+            ),
+          },
         ],
       },
       {
         path: 'event',
         children: [
-          { element: <EventListPage />, index: true },
-          { path: 'list', element: <EventListPage /> },
-          { path: ':id', element: <EventDetailsPage /> },
-          { path: ':id/edit', element: <EventEditPage /> },
-          { path: 'new', element: <EventCreatePage /> },
+          {
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventListPage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
+          {
+            path: 'list',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventListPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventDetailsPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id/edit',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventEditPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'new',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventCreatePage />
+              </RoleGuard>
+            ),
+          },
         ],
       },
       {
         path: 'ev_order',
         children: [
-          { element: <EventOrderPage />, index: true },
-          { path: 'list', element: <EventOrderPage /> },
-          { path: ':id', element: <EventOrderDetailsPage /> },
+          {
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventOrderPage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
+          {
+            path: 'list',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventOrderPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <EventOrderDetailsPage />
+              </RoleGuard>
+            ),
+          },
         ],
       },
       {
         path: 'autoEcole',
         children: [
-          { element: <AutoEcoleListPage />, index: true },
+          {
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <AutoEcoleListPage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
           // { path: 'profile/:id', element: <UserProfilePage /> },
-          { path: 'cards', element: <AutoEcoleCardsPage /> },
-          { path: 'list', element: <AutoEcoleListPage /> },
-          { path: 'new', element: <AutoEcoleCreatePage /> },
-          { path: ':id/edit', element: <AutoEcoleEditPage /> },
+          {
+            path: 'cards',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <AutoEcoleCardsPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'list',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <AutoEcoleListPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'new',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <AutoEcoleCreatePage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id/edit',
+            element: (
+              <RoleGuard requiredLevel={3}>
+                <AutoEcoleEditPage />
+              </RoleGuard>
+            ),
+          },
           // { path: 'account/:id', element: <UserAccountPage /> },
         ],
       },
       {
         path: 'post',
         children: [
-          { element: <BlogPostsPage />, index: true },
-          { path: 'posts', element: <BlogPostsPage /> },
-          { path: ':id', element: <BlogPostPage /> },
-          { path: ':id/edit', element: <BlogEditPostPage /> },
-          { path: 'new', element: <BlogNewPostPage /> },
-          { path: 'categories', element: <PostCategoryPage /> },
+          {
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <BlogPostsPage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
+          {
+            path: 'posts',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <BlogPostsPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <BlogPostPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: ':id/edit',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <BlogEditPostPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'new',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <BlogNewPostPage />
+              </RoleGuard>
+            ),
+          },
+          {
+            path: 'categories',
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <PostCategoryPage />
+              </RoleGuard>
+            ),
+          },
         ],
       },
       {
         path: 'qr-scanner',
-        children: [{ element: <QrScannerPage />, index: true }],
+        children: [
+          {
+            element: (
+              <RoleGuard requiredLevel={2}>
+                <QrScannerPage />
+              </RoleGuard>
+            ),
+            index: true,
+          },
+        ],
       },
-      { path: 'calendar', element: <CalendarPage /> },
-      { path: 'kanban', element: <KanbanPage /> },
+      {
+        path: 'calendar',
+        element: (
+          <RoleGuard requiredLevel={3}>
+            <CalendarPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'kanban',
+        element: (
+          <RoleGuard requiredLevel={3}>
+            <KanbanPage />
+          </RoleGuard>
+        ),
+      },
     ],
   },
 ];
