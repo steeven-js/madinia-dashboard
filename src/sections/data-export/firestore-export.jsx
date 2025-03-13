@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
-import { useState } from 'react';
-import { getDocs, collection } from 'firebase/firestore';
+import { useState, useRef } from 'react';
+import { getDocs, collection, doc, setDoc } from 'firebase/firestore';
 
 import {
   Box,
@@ -11,6 +11,8 @@ import {
   CardHeader,
   CardContent,
   CircularProgress,
+  Divider,
+  Typography,
 } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
@@ -31,6 +33,9 @@ export default function FirestoreExport({ db }) {
   const [selectedCollection, setSelectedCollection] = useState('');
   const [jsonData, setJsonData] = useState('');
   const [loading, setLoading] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const fileInputRef = useRef(null);
 
   const handleExport = async () => {
     if (!selectedCollection) {
@@ -87,9 +92,65 @@ export default function FirestoreExport({ db }) {
     URL.revokeObjectURL(url);
   };
 
+  const handleImportFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!selectedCollection) {
+      toast.error('Veuillez sélectionner une collection');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target.result;
+        const data = JSON.parse(content);
+        setImportLoading(true);
+        await importDataToFirestore(data);
+      } catch (error) {
+        console.error('Erreur lors de la lecture du fichier:', error);
+        toast.error(`Erreur: ${error.message}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const importDataToFirestore = async (data) => {
+    try {
+      const entries = Object.entries(data);
+      setImportProgress({ current: 0, total: entries.length });
+
+      for (const [docId, docData] of entries) {
+        await setDoc(doc(db, selectedCollection, docId), docData);
+        setImportProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+      }
+
+      toast.success(
+        `${entries.length} documents importés avec succès dans la collection "${selectedCollection}"`
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'importation des données:", error);
+      toast.error(`Erreur: ${error.message}`);
+    } finally {
+      setImportLoading(false);
+      setImportProgress({ current: 0, total: 0 });
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <Card>
-      <CardHeader title="Exporter une collection en JSON" />
+      <CardHeader title="Exporter/Importer une collection" />
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -116,6 +177,23 @@ export default function FirestoreExport({ db }) {
               {loading ? <CircularProgress size={24} /> : 'Exporter'}
             </Button>
 
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleImportFile}
+              disabled={!selectedCollection || importLoading}
+              startIcon={importLoading ? null : <Iconify icon="eva:upload-outline" />}
+            >
+              {importLoading ? <CircularProgress size={24} /> : 'Importer JSON'}
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".json"
+              onChange={handleFileChange}
+            />
+
             {jsonData && (
               <>
                 <Button
@@ -136,22 +214,34 @@ export default function FirestoreExport({ db }) {
             )}
           </Box>
 
+          {importLoading && (
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <CircularProgress size={30} />
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Importation en cours: {importProgress.current}/{importProgress.total} documents
+              </Typography>
+            </Box>
+          )}
+
           {jsonData && (
-            <TextField
-              multiline
-              fullWidth
-              rows={20}
-              value={jsonData}
-              InputProps={{
-                readOnly: true,
-              }}
-              sx={{
-                fontFamily: 'monospace',
-                '& .MuiInputBase-input': {
+            <>
+              <Divider sx={{ my: 2 }} />
+              <TextField
+                multiline
+                fullWidth
+                rows={20}
+                value={jsonData}
+                InputProps={{
+                  readOnly: true,
+                }}
+                sx={{
                   fontFamily: 'monospace',
-                },
-              }}
-            />
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'monospace',
+                  },
+                }}
+              />
+            </>
           )}
         </Box>
       </CardContent>
