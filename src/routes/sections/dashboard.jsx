@@ -49,6 +49,8 @@ const EventOrderDetailsPage = lazy(
 );
 // Qr Scanner
 const QrScannerPage = lazy(() => import('src/pages/dashboard/app/qr-coder-scanner'));
+// Data Export
+const DataExportPage = lazy(() => import('src/pages/dashboard/data-export'));
 
 // ----------------------------------------------------------------------
 
@@ -320,6 +322,14 @@ export const dashboardRoutes = [
         element: (
           <RoleGuard requiredLevel={3}>
             <KanbanPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'data-export',
+        element: (
+          <RoleGuard requiredLevel={3}>
+            <DataExportPage />
           </RoleGuard>
         ),
       },

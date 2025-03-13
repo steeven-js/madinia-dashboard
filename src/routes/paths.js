@@ -14,6 +14,15 @@ const ROOTS = {
 
 // ----------------------------------------------------------------------
 
+function path(root, sublink) {
+  return `${root}${sublink}`;
+}
+
+const ROOTS_AUTH = '/auth';
+const ROOTS_DASHBOARD = '/dashboard';
+
+// ----------------------------------------------------------------------
+
 export const paths = {
   comingSoon: '/coming-soon',
   maintenance: '/maintenance',
@@ -47,6 +56,12 @@ export const paths = {
   },
   // AUTH
   auth: {
+    root: ROOTS_AUTH,
+    login: path(ROOTS_AUTH, '/login'),
+    register: path(ROOTS_AUTH, '/register'),
+    verify: path(ROOTS_AUTH, '/verify'),
+    resetPassword: path(ROOTS_AUTH, '/reset-password'),
+    newPassword: path(ROOTS_AUTH, '/new-password'),
     amplify: {
       signIn: `${ROOTS.AUTH}/amplify/sign-in`,
       verify: `${ROOTS.AUTH}/amplify/verify`,
@@ -93,14 +108,15 @@ export const paths = {
   },
   // DASHBOARD
   dashboard: {
-    root: ROOTS.DASHBOARD,
-    mail: `${ROOTS.DASHBOARD}/mail`,
-    chat: `${ROOTS.DASHBOARD}/chat`,
-    blank: `${ROOTS.DASHBOARD}/blank`,
-    kanban: `${ROOTS.DASHBOARD}/kanban`,
-    calendar: `${ROOTS.DASHBOARD}/calendar`,
-    fileManager: `${ROOTS.DASHBOARD}/file-manager`,
-    permission: `${ROOTS.DASHBOARD}/permission`,
+    root: ROOTS_DASHBOARD,
+    mail: path(ROOTS_DASHBOARD, '/mail'),
+    chat: path(ROOTS_DASHBOARD, '/chat'),
+    blank: path(ROOTS_DASHBOARD, '/blank'),
+    kanban: path(ROOTS_DASHBOARD, '/kanban'),
+    calendar: path(ROOTS_DASHBOARD, '/calendar'),
+    fileManager: path(ROOTS_DASHBOARD, '/file-manager'),
+    permission: path(ROOTS_DASHBOARD, '/permission'),
+    dataExport: path(ROOTS_DASHBOARD, '/data-export'),
     completeProfile: `${ROOTS.DASHBOARD}/complete-profile`,
     general: {
       app: `${ROOTS.DASHBOARD}/app`,
@@ -138,12 +154,7 @@ export const paths = {
       new: `${ROOTS.DASHBOARD}/autoEcole/new`,
       list: `${ROOTS.DASHBOARD}/autoEcole/list`,
       cards: `${ROOTS.DASHBOARD}/autoEcole/cards`,
-      // profile: (id) => `${ROOTS.DASHBOARD}/user/profile/${id}`,
-      // account: (id) => `${ROOTS.DASHBOARD}/user/account/${id}`,
       edit: (id) => `${ROOTS.DASHBOARD}/autoEcole/${id}/edit`,
-      // demo: {
-      //   edit: `${ROOTS.DASHBOARD}/user/${MOCK_ID}/edit`,
-      // },
     },
     product: {
       root: `${ROOTS.DASHBOARD}/product`,

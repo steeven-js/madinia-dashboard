@@ -99,6 +99,14 @@ const navItems = {
     ],
   },
 
+  // Data Export - accessible uniquement aux développeurs et super admins
+  dataExport: {
+    subheader: 'Développement',
+    items: [
+      { title: 'Exportation de données', path: paths.dashboard.dataExport, icon: ICONS.file },
+    ],
+  },
+
   // Management - accessible uniquement aux développeurs et super admins
   management: {
     subheader: 'Gestion',
@@ -137,6 +145,7 @@ const navConfigByLevel = {
     navItems.blog,
     navItems.event,
     navItems.eventOrders,
+    navItems.dataExport,
     navItems.management,
   ],
 
@@ -147,6 +156,7 @@ const navConfigByLevel = {
     navItems.blog,
     navItems.event,
     navItems.eventOrders,
+    navItems.dataExport,
     navItems.management,
   ],
 
