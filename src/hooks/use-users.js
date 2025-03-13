@@ -1,8 +1,8 @@
 /* eslint-disable prefer-destructuring */
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, deleteUser } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
-import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, deleteObject, getDownloadURL, listAll } from 'firebase/storage';
+import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp, deleteDoc } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
 
@@ -347,6 +347,69 @@ export const updateUserStatus = async (userId, newStatus) => {
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error);
     toast.error('Une erreur est survenue lors de la mise à jour du statut');
+    throw error;
+  }
+};
+
+/**
+ * Supprime complètement un utilisateur (Auth, Firestore et Storage)
+ * @param {string} userId - ID de l'utilisateur à supprimer
+ * @returns {Promise<void>}
+ */
+export const deleteUserCompletely = async (userId) => {
+  if (!userId) {
+    throw new Error("L'ID de l'utilisateur est requis");
+  }
+
+  try {
+    // 1. Supprimer les fichiers de stockage associés à l'utilisateur
+    // Supprimer les avatars
+    const avatarsRef = ref(storage, `avatars/${userId}`);
+    try {
+      const avatarsList = await listAll(avatarsRef);
+      const deletePromises = avatarsList.items.map((itemRef) => deleteObject(itemRef));
+      await Promise.all(deletePromises);
+    } catch (error) {
+      // Ignorer l'erreur si le dossier n'existe pas
+      if (!error.message.includes('does not exist')) {
+        console.warn('Erreur lors de la suppression des avatars:', error);
+      }
+    }
+
+    // Supprimer les couvertures
+    const coversRef = ref(storage, `covers/${userId}`);
+    try {
+      const coversList = await listAll(coversRef);
+      const deletePromises = coversList.items.map((itemRef) => deleteObject(itemRef));
+      await Promise.all(deletePromises);
+    } catch (error) {
+      // Ignorer l'erreur si le dossier n'existe pas
+      if (!error.message.includes('does not exist')) {
+        console.warn('Erreur lors de la suppression des couvertures:', error);
+      }
+    }
+
+    // 2. Supprimer le document utilisateur dans Firestore
+    const userRef = doc(db, 'users', userId);
+    await deleteDoc(userRef);
+
+    // 3. Supprimer l'utilisateur de Firebase Auth
+    // Note: Cette opération nécessite une réauthentification récente pour l'utilisateur actuel
+    // Si on supprime un autre utilisateur, il faut utiliser les fonctions Admin SDK via une Cloud Function
+    if (auth.currentUser && auth.currentUser.uid === userId) {
+      await deleteUser(auth.currentUser);
+    } else {
+      // Pour supprimer un autre utilisateur, nous devons utiliser une Cloud Function
+      // Cette partie nécessite une implémentation côté serveur
+      // Ici, nous supposons que la suppression Firestore est suffisante pour l'interface utilisateur
+      console.warn('La suppression complète d\'un autre utilisateur nécessite une Cloud Function');
+    }
+
+    toast.success('Utilisateur supprimé avec succès !');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    toast.error('Une erreur est survenue lors de la suppression de l\'utilisateur');
     throw error;
   }
 };

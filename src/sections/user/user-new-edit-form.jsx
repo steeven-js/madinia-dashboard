@@ -1,5 +1,5 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { isValidPhoneNumber } from 'react-phone-number-input/input';
@@ -9,6 +9,11 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -17,7 +22,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { updateOrCreateUserData } from 'src/hooks/use-users';
+import { updateOrCreateUserData, deleteUserCompletely } from 'src/hooks/use-users';
 
 import { fData } from 'src/utils/format-number';
 
@@ -51,8 +56,10 @@ export const NewUserSchema = zod.object({
 
 export function UserNewEditForm({ currentUser }) {
   const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  console.log('currentUser', currentUser);
+  // console.log('currentUser', currentUser);
 
   const defaultValues = useMemo(
     () => ({
@@ -93,7 +100,7 @@ export function UserNewEditForm({ currentUser }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      await updateOrCreateUserData({ currentUser,data });
+      await updateOrCreateUserData({ currentUser, data });
       reset();
       toast.success(currentUser ? 'Mise à jour réussie !' : 'Création réussie !');
       router.push(paths.dashboard.user.list);
@@ -102,6 +109,23 @@ export function UserNewEditForm({ currentUser }) {
       console.error(error);
     }
   });
+
+  const handleDeleteUser = async () => {
+    if (!currentUser?.id) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteUserCompletely(currentUser.id);
+      toast.success('Utilisateur supprimé avec succès !');
+      router.push(paths.dashboard.user.list);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error("Erreur lors de la suppression de l'utilisateur");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
@@ -198,8 +222,8 @@ export function UserNewEditForm({ currentUser }) {
 
             {currentUser && (
               <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
-                <Button variant="soft" color="error">
-                  Delete user
+                <Button variant="soft" color="error" onClick={() => setDeleteDialogOpen(true)}>
+                  Supprimer l'utilisateur
                 </Button>
               </Stack>
             )}
@@ -244,6 +268,36 @@ export function UserNewEditForm({ currentUser }) {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Dialogue de confirmation de suppression */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action
+            supprimera l'utilisateur de Firebase Auth, de la base de données Firestore et tous les
+            fichiers associés dans Storage. Cette action est irréversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+            Annuler
+          </Button>
+          <LoadingButton
+            onClick={handleDeleteUser}
+            color="error"
+            variant="contained"
+            loading={isDeleting}
+          >
+            Supprimer
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
     </Form>
   );
 }

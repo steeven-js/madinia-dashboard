@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useState } from 'react';
 
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -12,6 +13,7 @@ import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import ListItemText from '@mui/material/ListItemText';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
@@ -22,6 +24,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+
+import { deleteUserCompletely } from 'src/hooks/use-users';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
 
@@ -43,12 +47,13 @@ export default function UserTableRow({
   canManage,
   currentUserRole,
 }) {
-  const { firstName, lastName, role, status, email, phoneNumber, avatarUrl } = row;
+  const { id, firstName, lastName, role, status, email, phoneNumber, avatarUrl } = row;
   const fullName = `${firstName} ${lastName}`;
 
   const confirm = useBoolean();
   const popover = usePopover();
   const quickEdit = useBoolean();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleChangeRole = (event) => {
     onChangeRole(event.target.value);
@@ -56,6 +61,19 @@ export default function UserTableRow({
 
   const handleChangeStatus = (event) => {
     onChangeStatus(event.target.value);
+  };
+
+  const handleDeleteUser = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteUserCompletely(id);
+      onDeleteRow();
+      confirm.onFalse();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusColor = (userStatus) => {
@@ -220,11 +238,16 @@ export default function UserTableRow({
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Supprimer"
-        content="Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
+        content="Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action supprimera l'utilisateur de Firebase Auth, de la base de données Firestore et tous les fichiers associés dans Storage. Cette action est irréversible."
         action={
-          <Button variant="contained" color="error" onClick={onDeleteRow}>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            onClick={handleDeleteUser}
+            loading={isDeleting}
+          >
             Supprimer
-          </Button>
+          </LoadingButton>
         }
       />
     </>

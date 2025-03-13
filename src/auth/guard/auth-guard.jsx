@@ -32,7 +32,7 @@ export function AuthGuard({ children }) {
     [searchParams]
   );
 
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     if (loading) {
       return;
     }
@@ -48,19 +48,23 @@ export function AuthGuard({ children }) {
         supabase: paths.auth.supabase.signIn,
       }[method];
 
-      const href = `${signInPath}?${createQueryString('returnTo', pathname)}`;
-
-      router.replace(href);
+      // Vérifier si le chemin existe
+      if (signInPath) {
+        const href = `${signInPath}?${createQueryString('returnTo', pathname)}`;
+        router.replace(href);
+      } else {
+        // Fallback au cas où le chemin n'est pas défini
+        router.replace('/auth/firebase/login');
+      }
       return;
     }
 
     setIsChecking(false);
-  };
+  }, [authenticated, loading, pathname, createQueryString, router]);
 
   useEffect(() => {
     checkPermissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authenticated, loading]);
+  }, [checkPermissions]);
 
   if (isChecking) {
     return <SplashScreen />;

@@ -27,7 +27,7 @@ export const signInWithPassword = async ({ email, password }) => {
     }
 
     // Récupérer l'uid de l'utilisateur créé
-    const {uid} = user;
+    const { uid } = user;
 
     // Créer un document utilisateur
     const userRef = doc(FIRESTORE, 'users', uid);
@@ -74,7 +74,7 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
     await _sendEmailVerification(newUser.user);
 
     // Récupérer l'uid de l'utilisateur créé
-    const {uid} = newUser.user;
+    const { uid } = newUser.user;
 
     // Créer un document utilisateur
     const userRef = doc(FIRESTORE, 'users', uid);
@@ -100,7 +100,14 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
  * Sign out
  *************************************** */
 export const signOut = async () => {
-  await _signOut(AUTH);
+  try {
+    await _signOut(AUTH);
+    // Redirection gérée par les guards après la mise à jour du state
+    window.location.href = '/auth/firebase/login';
+  } catch (error) {
+    console.error('Error during sign out:', error);
+    throw error;
+  }
 };
 
 /** **************************************
