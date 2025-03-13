@@ -454,9 +454,19 @@ function applyFilter({ inputData, comparator, filters }) {
   return stabilizedThis
     .map((el) => el[0])
     .filter((user) => {
-      // Name filter
-      if (name && !user.displayName.toLowerCase().includes(name.toLowerCase())) {
-        return false;
+      // Name filter - search in multiple fields
+      if (name) {
+        const searchTerm = name.toLowerCase();
+        const matchesSearch =
+          (user.displayName && user.displayName.toLowerCase().includes(searchTerm)) ||
+          (user.firstName && user.firstName.toLowerCase().includes(searchTerm)) ||
+          (user.lastName && user.lastName.toLowerCase().includes(searchTerm)) ||
+          (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+          (user.phoneNumber && user.phoneNumber.toLowerCase().includes(searchTerm));
+
+        if (!matchesSearch) {
+          return false;
+        }
       }
 
       // Status filter
