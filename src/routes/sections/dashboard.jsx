@@ -115,7 +115,7 @@ export const dashboardRoutes = [
           {
             path: 'account',
             element: (
-              <RoleGuard requiredLevel={3}>
+              <RoleGuard requiredLevel={1}>
                 <UserAccountPage />
               </RoleGuard>
             ),

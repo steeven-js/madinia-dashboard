@@ -47,6 +47,12 @@ const navItems = {
     items: [{ title: 'Application', path: paths.dashboard.root, icon: ICONS.dashboard }],
   },
 
+  // User Account - accessible à tous les niveaux
+  userAccount: {
+    subheader: 'Mon compte',
+    items: [{ title: 'Mon profil', path: paths.dashboard.user.account, icon: ICONS.user }],
+  },
+
   // QR Scanner - accessible aux administrateurs et supérieurs
   qrScanner: {
     subheader: 'Outils',
@@ -171,7 +177,7 @@ const navConfigByLevel = {
   ],
 
   // Niveau 1 (user) - Accès minimal
-  1: [navItems.overview],
+  1: [navItems.overview, navItems.userAccount],
 
   // Niveau 0 (par défaut) - Accès minimal
   0: [navItems.overview],
