@@ -27,14 +27,8 @@ import { UserQuickEditForm } from './user-quick-edit-form';
 
 // ----------------------------------------------------------------------
 
-const ROLE_LABELS = {
-  super_admin: 'Super Admin',
-  dev: 'Développeur',
-  admin: 'Administrateur',
-  user: 'Utilisateur',
-};
-
-const getRoleLabel = (roleName) => ROLE_LABELS[roleName] || roleName;
+// Utiliser les labels définis dans la configuration
+const getRoleLabel = (roleName) => CONFIG.roles[roleName]?.label || roleName;
 
 export default function UserTableRow({
   row,

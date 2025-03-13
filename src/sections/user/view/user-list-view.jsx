@@ -53,26 +53,13 @@ import { UserTableFiltersResult } from '../user-table-filters-result';
 const STATUS_OPTIONS = [{ value: 'all', label: 'All' }, ...USER_STATUS_OPTIONS];
 
 // Fonction helper pour obtenir le label du rôle
-const getRoleLabel = (roleName) => {
-  switch (roleName) {
-    case 'super_admin':
-      return 'Super Admin';
-    case 'dev':
-      return 'Développeur';
-    case 'admin':
-      return 'Administrateur';
-    case 'user':
-      return 'Utilisateur';
-    default:
-      return roleName;
-  }
-};
+const getRoleLabel = (roleName) => CONFIG.roles[roleName]?.label || roleName;
 
 const ROLE_OPTIONS = Object.entries(CONFIG.roles)
   .sort((a, b) => b[1].level - a[1].level)
   .map(([value, role]) => ({
     value,
-    label: getRoleLabel(value), // Utiliser la fonction helper ici
+    label: role.label, // Utiliser le label défini dans la configuration
     level: role.level,
   }));
 

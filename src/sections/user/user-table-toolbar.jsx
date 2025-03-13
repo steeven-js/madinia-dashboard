@@ -21,16 +21,8 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-// Remplacer le switch case par un objet de mapping
-const ROLE_LABELS = {
-  super_admin: 'Super Admin',
-  dev: 'Développeur',
-  admin: 'Administrateur',
-  user: 'Utilisateur',
-};
-
-// Simplifier la fonction getRoleLabel
-const getRoleLabel = (roleName) => ROLE_LABELS[roleName] || roleName;
+// Utiliser les labels définis dans la configuration
+const getRoleLabel = (roleName) => CONFIG.roles[roleName]?.label || roleName;
 
 export default function UserTableToolbar({
   filters = { name: '', role: [] },

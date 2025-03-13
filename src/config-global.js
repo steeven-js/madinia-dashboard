@@ -72,21 +72,25 @@ export const CONFIG = {
   roles: {
     super_admin: {
       name: 'super_admin',
+      label: 'Super Admin',
       level: 4,
       permissions: ['all']
     },
     dev: {
       name: 'dev',
+      label: 'Développeur',
       level: 3,
       permissions: ['all']
     },
     admin: {
       name: 'admin',
+      label: 'Administrateur',
       level: 2,
       permissions: ['manage_users', 'manage_content', 'view_analytics']
     },
     user: {
       name: 'user',
+      label: 'Utilisateur',
       level: 1,
       permissions: ['view_content']
     }

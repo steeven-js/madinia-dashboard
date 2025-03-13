@@ -39,11 +39,21 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
-const baseNavItems = {
+// Définition des éléments de navigation de base
+const navItems = {
+  // Overview - accessible à tous les niveaux
   overview: {
-    subheader: 'Overview',
+    subheader: 'Dashboard',
     items: [{ title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard }],
   },
+
+  // QR Scanner - accessible aux administrateurs et supérieurs
+  qrScanner: {
+    subheader: 'Outils',
+    items: [{ title: 'Qr Scanner', path: paths.dashboard.qrScanner.root, icon: ICONS.dashboard }],
+  },
+
+  // Blog - accessible aux administrateurs et supérieurs
   blog: {
     subheader: 'Blog',
     items: [
@@ -59,6 +69,8 @@ const baseNavItems = {
       },
     ],
   },
+
+  // Event - accessible aux administrateurs et supérieurs
   event: {
     subheader: 'Event',
     items: [
@@ -73,6 +85,8 @@ const baseNavItems = {
       },
     ],
   },
+
+  // Event Orders - accessible aux administrateurs et supérieurs
   eventOrders: {
     subheader: 'Event Orders',
     items: [
@@ -84,6 +98,8 @@ const baseNavItems = {
       },
     ],
   },
+
+  // Management - accessible uniquement aux développeurs et super admins
   management: {
     subheader: 'Management',
     items: [
@@ -106,41 +122,55 @@ const baseNavItems = {
           { title: 'New', path: paths.dashboard.autoEcole.new },
         ],
       },
-      { title: 'Calendar', path: paths.dashboard.calendar, icon: ICONS.calendar },
+      { title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar },
       { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
     ],
   },
 };
 
-// Role-based navigation configurations
-const roleNavConfig = {
-  super_admin: [
-    baseNavItems.overview,
-    baseNavItems.blog,
-    baseNavItems.event,
-    baseNavItems.eventOrders,
-    baseNavItems.management,
+// Configuration de navigation basée sur les niveaux de rôles
+const navConfigByLevel = {
+  // Niveau 4 (super_admin) - Accès complet
+  4: [
+    navItems.overview,
+    navItems.qrScanner,
+    navItems.blog,
+    navItems.event,
+    navItems.eventOrders,
+    navItems.management,
   ],
-  dev: [
-    baseNavItems.overview,
-    baseNavItems.blog,
-    baseNavItems.event,
-    baseNavItems.eventOrders,
-    baseNavItems.management,
+
+  // Niveau 3 (dev) - Accès complet
+  3: [
+    navItems.overview,
+    navItems.qrScanner,
+    navItems.blog,
+    navItems.event,
+    navItems.eventOrders,
+    navItems.management,
   ],
-  admin: [
-    baseNavItems.overview,
-    baseNavItems.blog,
-    baseNavItems.event,
-    baseNavItems.eventOrders,
-    baseNavItems.management,
-  ],
-  user: [baseNavItems.overview],
+
+  // Niveau 2 (admin) - Accès limité
+  2: [navItems.overview, navItems.qrScanner, navItems.blog, navItems.event, navItems.eventOrders],
+
+  // Niveau 1 (user) - Accès minimal
+  1: [navItems.overview],
+
+  // Niveau 0 (par défaut) - Accès minimal
+  0: [navItems.overview],
 };
 
-export const getNavDataByRole = (role) => roleNavConfig[role] || roleNavConfig.user;
+/**
+ * Obtient les données de navigation en fonction du rôle de l'utilisateur
+ * @param {string} role - Le rôle de l'utilisateur
+ * @returns {Array} - Les éléments de navigation correspondant au niveau du rôle
+ */
+export const getNavDataByRole = (role) => {
+  const roleLevel = CONFIG.roles[role]?.level || 0;
+  return navConfigByLevel[roleLevel] || navConfigByLevel[0];
+};
 
 // Pour la compatibilité avec le code existant
-export const navData = roleNavConfig.dev;
-export const navDataAdmin = roleNavConfig.admin;
-export const navDataUser = roleNavConfig.user;
+export const navData = navConfigByLevel[3]; // dev
+export const navDataAdmin = navConfigByLevel[2]; // admin
+export const navDataUser = navConfigByLevel[1]; // user

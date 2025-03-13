@@ -42,21 +42,23 @@ export default function OverviewAppPage() {
       return <EmptyContent title="Aucun Overview" />;
     }
 
-    // Logique pour déterminer quelle vue afficher selon le rôle
-    switch (currentAuthRole) {
-      case 'super_admin':
-        return <OverviewAppView />;
+    // Récupérer le niveau du rôle actuel
+    const roleLevel = CONFIG.roles[currentAuthRole]?.level || 0;
 
-      case 'admin':
-      case 'dev':
-        return <AdminOverviewAppPage />;
-
-      case 'user':
-        return <AdminOverviewAppPage />;
-
-      default:
-        return <EmptyContent title="Accès non autorisé" />;
+    // Logique pour déterminer quelle vue afficher selon le niveau du rôle
+    if (roleLevel >= CONFIG.roles.super_admin.level) {
+      return <OverviewAppView />;
     }
+
+    if (roleLevel >= CONFIG.roles.admin.level) {
+      return <AdminOverviewAppPage />;
+    }
+
+    if (roleLevel >= CONFIG.roles.user.level) {
+      return <AdminOverviewAppPage />;
+    }
+
+    return <EmptyContent title="Accès non autorisé" />;
   };
 
   return (
