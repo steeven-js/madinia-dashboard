@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+
 import { RoleGuard } from './role-guard';
 
 // ----------------------------------------------------------------------

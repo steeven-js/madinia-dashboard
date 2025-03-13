@@ -1,99 +1,29 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import {
-  Container,
-  Typography,
-  Card,
-  CardHeader,
-  CardContent,
-  Button,
-  Box,
-  TextField,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { toast } from 'sonner';
+import { getStorage } from 'firebase/storage';
+import { getFirestore } from 'firebase/firestore';
+
+import { Tab, Tabs, Container, Typography } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
+
+// Sections
+import FirestoreExport from 'src/sections/data-export/firestore-export';
+import StorageExplorer from 'src/sections/data-export/storage-explorer';
 
 // Initialize Firebase
 const app = initializeApp(CONFIG.firebase);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // ----------------------------------------------------------------------
 
 export default function DataExportPage() {
-  const [selectedCollection, setSelectedCollection] = useState('');
-  const [jsonData, setJsonData] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
 
-  const collections = [
-    'auto-ecole',
-    'calendar-events',
-    'contacts',
-    'events',
-    'messages',
-    'newsletters',
-    'postCategories',
-    'posts',
-    'users',
-  ];
-
-  const handleExport = async () => {
-    if (!selectedCollection) {
-      toast.error('Veuillez sélectionner une collection');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Référence à la collection
-      const collectionRef = collection(db, selectedCollection);
-
-      // Récupérer tous les documents de la collection
-      const querySnapshot = await getDocs(collectionRef);
-
-      // Convertir les documents en objets JavaScript
-      const data = {};
-      querySnapshot.forEach((doc) => {
-        data[doc.id] = doc.data();
-      });
-
-      // Convertir en JSON formaté
-      setJsonData(JSON.stringify(data, null, 2));
-      toast.success('Données exportées avec succès');
-    } catch (error) {
-      console.error("Erreur lors de l'exportation des données:", error);
-      toast.error(`Erreur: ${error.message}`);
-      setJsonData('');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopyToClipboard = () => {
-    navigator.clipboard
-      .writeText(jsonData)
-      .then(() => {
-        toast.success('Copié dans le presse-papiers');
-      })
-      .catch((err) => {
-        toast.error('Erreur lors de la copie');
-      });
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedCollection}-export.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
 
   return (
@@ -104,68 +34,15 @@ export default function DataExportPage() {
 
       <Container maxWidth="xl">
         <Typography variant="h4" sx={{ mb: 5 }}>
-          Exportation de données Firestore
+          Exportation de données
         </Typography>
 
-        <Card>
-          <CardHeader title="Exporter une collection en JSON" />
-          <CardContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                select
-                fullWidth
-                label="Sélectionner une collection"
-                value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
-              >
-                {collections.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
+        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
+          <Tab label="Firestore" />
+          <Tab label="Storage" />
+        </Tabs>
 
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button
-                  variant="contained"
-                  onClick={handleExport}
-                  disabled={!selectedCollection || loading}
-                >
-                  {loading ? <CircularProgress size={24} /> : 'Exporter'}
-                </Button>
-
-                {jsonData && (
-                  <>
-                    <Button variant="outlined" onClick={handleCopyToClipboard}>
-                      Copier
-                    </Button>
-                    <Button variant="outlined" onClick={handleDownload}>
-                      Télécharger
-                    </Button>
-                  </>
-                )}
-              </Box>
-
-              {jsonData && (
-                <TextField
-                  multiline
-                  fullWidth
-                  rows={20}
-                  value={jsonData}
-                  InputProps={{
-                    readOnly: true,
-                  }}
-                  sx={{
-                    fontFamily: 'monospace',
-                    '& .MuiInputBase-input': {
-                      fontFamily: 'monospace',
-                    },
-                  }}
-                />
-              )}
-            </Box>
-          </CardContent>
-        </Card>
+        {tabValue === 0 ? <FirestoreExport db={db} /> : <StorageExplorer storage={storage} />}
       </Container>
     </>
   );

@@ -161,7 +161,14 @@ const navConfigByLevel = {
   ],
 
   // Niveau 2 (admin) - Accès limité
-  2: [navItems.overview, navItems.qrScanner, navItems.blog, navItems.event, navItems.eventOrders],
+  2: [
+    navItems.overview,
+    navItems.qrScanner,
+    navItems.blog,
+    navItems.event,
+    navItems.eventOrders,
+    navItems.dataExport,
+  ],
 
   // Niveau 1 (user) - Accès minimal
   1: [navItems.overview],

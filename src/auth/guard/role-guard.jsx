@@ -1,21 +1,22 @@
-import PropTypes from 'prop-types';
 import { m } from 'framer-motion';
-import { Navigate, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
-import { ForbiddenIllustration } from 'src/assets/illustrations';
-import { varBounce, MotionContainer } from 'src/components/animate';
 
+import { ForbiddenIllustration } from 'src/assets/illustrations';
 import {
-  selectCurrentUser,
-  selectRoleLevel,
   selectUserRole,
+  selectRoleLevel,
+  selectCurrentUser,
   selectIsAuthenticated,
 } from 'src/store/slices/authSlice';
+
+import { varBounce, MotionContainer } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 

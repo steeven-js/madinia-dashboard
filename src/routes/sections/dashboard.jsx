@@ -328,7 +328,7 @@ export const dashboardRoutes = [
       {
         path: 'data-export',
         element: (
-          <RoleGuard requiredLevel={3}>
+          <RoleGuard requiredLevel={0}>
             <DataExportPage />
           </RoleGuard>
         ),
