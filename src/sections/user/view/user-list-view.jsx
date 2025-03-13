@@ -45,7 +45,7 @@ import {
 import { RoleBasedGuard } from 'src/auth/guard';
 
 import UserTableRow from '../user-table-row';
-import UserTableToolbar from '../user-table-toolbar';
+import { UserTableToolbar } from '../user-table-toolbar';
 import { UserTableFiltersResult } from '../user-table-filters-result';
 
 // ----------------------------------------------------------------------
