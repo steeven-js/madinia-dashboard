@@ -81,9 +81,9 @@ export const dashboardRoutes = [
             index: true,
           },
           {
-            path: 'profile/:id',
+            path: 'cards',
             element: (
-              <RoleGuard requiredLevel={4}>
+              <RoleGuard requiredLevel={0}>
                 <UserCardsPage />
               </RoleGuard>
             ),
