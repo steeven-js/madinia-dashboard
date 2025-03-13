@@ -43,14 +43,14 @@ const ICONS = {
 const navItems = {
   // Overview - accessible à tous les niveaux
   overview: {
-    subheader: 'Dashboard',
-    items: [{ title: 'App', path: paths.dashboard.root, icon: ICONS.dashboard }],
+    subheader: 'Tableau de bord',
+    items: [{ title: 'Application', path: paths.dashboard.root, icon: ICONS.dashboard }],
   },
 
   // QR Scanner - accessible aux administrateurs et supérieurs
   qrScanner: {
     subheader: 'Outils',
-    items: [{ title: 'Qr Scanner', path: paths.dashboard.qrScanner.root, icon: ICONS.dashboard }],
+    items: [{ title: 'Scanner QR', path: paths.dashboard.qrScanner.root, icon: ICONS.dashboard }],
   },
 
   // Blog - accessible aux administrateurs et supérieurs
@@ -62,9 +62,9 @@ const navItems = {
         path: paths.dashboard.post.root,
         icon: ICONS.blog,
         children: [
-          { title: 'Posts', path: paths.dashboard.post.root },
-          { title: 'Create', path: paths.dashboard.post.new },
-          { title: 'Categories', path: paths.dashboard.post.categories },
+          { title: 'Articles', path: paths.dashboard.post.root },
+          { title: 'Créer', path: paths.dashboard.post.new },
+          { title: 'Catégories', path: paths.dashboard.post.categories },
         ],
       },
     ],
@@ -72,15 +72,15 @@ const navItems = {
 
   // Event - accessible aux administrateurs et supérieurs
   event: {
-    subheader: 'Event',
+    subheader: 'Événement',
     items: [
       {
-        title: 'Event',
+        title: 'Événement',
         path: paths.dashboard.event.root,
         icon: ICONS.blog,
         children: [
-          { title: 'List', path: paths.dashboard.event.root },
-          { title: 'Create', path: paths.dashboard.event.new },
+          { title: 'Liste', path: paths.dashboard.event.root },
+          { title: 'Créer', path: paths.dashboard.event.new },
         ],
       },
     ],
@@ -88,38 +88,38 @@ const navItems = {
 
   // Event Orders - accessible aux administrateurs et supérieurs
   eventOrders: {
-    subheader: 'Event Orders',
+    subheader: "Commandes d'événements",
     items: [
       {
-        title: 'Event Orders',
+        title: "Commandes d'événements",
         path: paths.dashboard.eventOrder.root,
         icon: ICONS.order,
-        children: [{ title: 'List', path: paths.dashboard.eventOrder.root }],
+        children: [{ title: 'Liste', path: paths.dashboard.eventOrder.root }],
       },
     ],
   },
 
   // Management - accessible uniquement aux développeurs et super admins
   management: {
-    subheader: 'Management',
+    subheader: 'Gestion',
     items: [
       {
-        title: 'User',
+        title: 'Utilisateur',
         path: paths.dashboard.user.root,
         icon: ICONS.user,
         children: [
-          { title: 'Cards', path: paths.dashboard.user.cards },
-          { title: 'List', path: paths.dashboard.user.list },
+          { title: 'Cartes', path: paths.dashboard.user.cards },
+          { title: 'Liste', path: paths.dashboard.user.list },
         ],
       },
       {
-        title: 'AutoEcole',
+        title: 'Auto-école',
         path: paths.dashboard.autoEcole.root,
         icon: ICONS.user,
         children: [
-          { title: 'Cards', path: paths.dashboard.autoEcole.cards },
-          { title: 'List', path: paths.dashboard.autoEcole.list },
-          { title: 'New', path: paths.dashboard.autoEcole.new },
+          { title: 'Cartes', path: paths.dashboard.autoEcole.cards },
+          { title: 'Liste', path: paths.dashboard.autoEcole.list },
+          { title: 'Nouveau', path: paths.dashboard.autoEcole.new },
         ],
       },
       { title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar },
