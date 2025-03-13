@@ -18,7 +18,7 @@ export function AutoEcoleCardList({ autoEcoles, error }) {
     setPage(newPage);
   }, []);
 
-  console.log('autoEcoles', autoEcoles);
+  // console.log('autoEcoles', autoEcoles);
 
   // Si pas de données, ne rien afficher
   if (error) {

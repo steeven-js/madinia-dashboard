@@ -63,8 +63,8 @@ const ROLE_OPTIONS = Object.entries(CONFIG.roles)
     level: role.level,
   }));
 
-console.log('CONFIG.roles:', CONFIG.roles);
-console.log('ROLE_OPTIONS:', ROLE_OPTIONS);
+// console.log('CONFIG.roles:', CONFIG.roles);
+// console.log('ROLE_OPTIONS:', ROLE_OPTIONS);
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Utilisateur', align: 'left', width: 280 },
@@ -83,17 +83,17 @@ export function UserListView({ users, currentAuthUser }) {
 
   const confirm = useBoolean();
 
-  console.log('currentAuthUser:', currentAuthUser);
+  // console.log('currentAuthUser:', currentAuthUser);
 
   const currentUserLevel = CONFIG.roles[currentAuthUser?.role]?.level || 0;
-  console.log('currentUserLevel:', currentUserLevel);
+  // console.log('currentUserLevel:', currentUserLevel);
 
   const manageableRoles = ROLE_OPTIONS.filter((role) => {
     if (currentAuthUser?.role === 'super_admin') return true;
     return role.level < currentUserLevel;
   });
 
-  console.log('manageableRoles:', manageableRoles);
+  // console.log('manageableRoles:', manageableRoles);
 
   const canManageUsers = currentUserLevel >= CONFIG.roles.admin.level;
 

@@ -35,8 +35,8 @@ export default function UserTableToolbar({
   const currentUserLevel = CONFIG.roles[currentUserRole]?.level || 0;
 
   // Ajouter des logs pour déboguer
-  console.log('Current filters:', filters);
-  console.log('Role options:', roleOptions);
+  // console.log('Current filters:', filters);
+  // console.log('Role options:', roleOptions);
 
   const availableRoles = roleOptions.map((role) => ({
     ...role,
@@ -44,7 +44,7 @@ export default function UserTableToolbar({
       currentUserRole !== 'super_admin' && CONFIG.roles[role.value]?.level > currentUserLevel,
   }));
 
-  console.log('Available roles:', availableRoles);
+  // console.log('Available roles:', availableRoles);
 
   const handleFilterName = useCallback(
     (event) => {
@@ -98,7 +98,7 @@ export default function UserTableToolbar({
             }}
           >
             {availableRoles.map((option) => {
-              console.log('Rendering option:', option);
+              // console.log('Rendering option:', option);
               return (
                 <MenuItem key={option.value} value={option.value} disabled={option.disabled}>
                   <Checkbox

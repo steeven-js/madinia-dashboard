@@ -13,7 +13,7 @@ import { AutoEcoleCardList } from '../auto-ecole-card-list';
 // ----------------------------------------------------------------------
 
 export function AutolEcoleCardsView({ autoEcoles, error }) {
-  console.log('autoEcoles', autoEcoles);
+  // console.log('autoEcoles', autoEcoles);
 
   return (
     <DashboardContent>

@@ -19,7 +19,7 @@ export default function Page() {
 
   const { posts } = usePosts();
 
-  console.log('posts', posts);
+  // console.log('posts', posts);
 
   return (
     <>
