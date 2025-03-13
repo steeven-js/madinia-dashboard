@@ -1,18 +1,18 @@
 import { toast } from 'sonner';
-import { useState, useRef } from 'react';
-import { getDocs, collection, doc, setDoc } from 'firebase/firestore';
+import { useRef, useState } from 'react';
+import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
 
 import {
   Box,
   Card,
   Button,
+  Divider,
   MenuItem,
   TextField,
   CardHeader,
+  Typography,
   CardContent,
   CircularProgress,
-  Divider,
-  Typography,
 } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
@@ -53,8 +53,8 @@ export default function FirestoreExport({ db }) {
 
       // Convertir les documents en objets JavaScript
       const data = {};
-      querySnapshot.forEach((doc) => {
-        data[doc.id] = doc.data();
+      querySnapshot.forEach((docSnapshot) => {
+        data[docSnapshot.id] = docSnapshot.data();
       });
 
       // Convertir en JSON formaté
@@ -127,10 +127,12 @@ export default function FirestoreExport({ db }) {
       const entries = Object.entries(data);
       setImportProgress({ current: 0, total: entries.length });
 
-      for (const [docId, docData] of entries) {
-        await setDoc(doc(db, selectedCollection, docId), docData);
-        setImportProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-      }
+      await Promise.all(
+        entries.map(async ([docId, docData], index) => {
+          await setDoc(doc(db, selectedCollection, docId), docData);
+          setImportProgress((prev) => ({ ...prev, current: index + 1 }));
+        })
+      );
 
       toast.success(
         `${entries.length} documents importés avec succès dans la collection "${selectedCollection}"`
