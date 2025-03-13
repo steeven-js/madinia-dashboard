@@ -97,9 +97,9 @@ export default function UserTableToolbar({
                 .join(', ');
             }}
           >
-            {availableRoles.map((option) => {
+            {availableRoles.map((option) => 
               // console.log('Rendering option:', option);
-              return (
+               (
                 <MenuItem key={option.value} value={option.value} disabled={option.disabled}>
                   <Checkbox
                     disableRipple
@@ -108,8 +108,8 @@ export default function UserTableToolbar({
                   />
                   {getRoleLabel(option.value)}
                 </MenuItem>
-              );
-            })}
+              )
+            )}
           </Select>
         </FormControl>
 
