@@ -10,19 +10,19 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import DialogContentText from '@mui/material/DialogContentText';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { updateOrCreateUserData, deleteUserCompletely } from 'src/hooks/use-users';
+import { deleteUserCompletely, updateOrCreateUserData } from 'src/hooks/use-users';
 
 import { fData } from 'src/utils/format-number';
 
@@ -223,7 +223,7 @@ export function UserNewEditForm({ currentUser }) {
             {currentUser && (
               <Stack justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                 <Button variant="soft" color="error" onClick={() => setDeleteDialogOpen(true)}>
-                  Supprimer l'utilisateur
+                  Supprimer l&apos;utilisateur
                 </Button>
               </Stack>
             )}
@@ -280,8 +280,8 @@ export function UserNewEditForm({ currentUser }) {
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action
-            supprimera l'utilisateur de Firebase Auth, de la base de données Firestore et tous les
-            fichiers associés dans Storage. Cette action est irréversible.
+            supprimera l&apos;utilisateur de Firebase Auth, de la base de données Firestore et tous
+            les fichiers associés dans Storage. Cette action est irréversible.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

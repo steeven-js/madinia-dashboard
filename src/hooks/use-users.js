@@ -1,8 +1,8 @@
 /* eslint-disable prefer-destructuring */
-import { updateProfile, deleteUser } from 'firebase/auth';
 import { useState, useEffect, useCallback } from 'react';
-import { ref, uploadBytes, deleteObject, getDownloadURL, listAll } from 'firebase/storage';
-import { doc, setDoc, updateDoc, onSnapshot, collection, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { deleteUser, updateProfile } from 'firebase/auth';
+import { ref, listAll, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, serverTimestamp } from 'firebase/firestore';
 
 import { db, auth, storage } from 'src/utils/firebase';
 
@@ -352,7 +352,8 @@ export const updateUserStatus = async (userId, newStatus) => {
 };
 
 /**
- * Supprime complètement un utilisateur (Auth, Firestore et Storage)
+ * Supprime complètement un utilisateur (Firestore et Storage)
+ * Note: La suppression dans Firebase Auth nécessite une Cloud Function avec Admin SDK
  * @param {string} userId - ID de l'utilisateur à supprimer
  * @returns {Promise<void>}
  */
@@ -393,19 +394,29 @@ export const deleteUserCompletely = async (userId) => {
     const userRef = doc(db, 'users', userId);
     await deleteDoc(userRef);
 
-    // 3. Supprimer l'utilisateur de Firebase Auth
-    // Note: Cette opération nécessite une réauthentification récente pour l'utilisateur actuel
-    // Si on supprime un autre utilisateur, il faut utiliser les fonctions Admin SDK via une Cloud Function
+    // 3. IMPORTANT: La suppression dans Firebase Auth nécessite une Cloud Function
+    // La suppression d'un utilisateur dans Firebase Auth depuis le client a des limitations:
+    // - Un utilisateur ne peut supprimer que son propre compte après réauthentification récente
+    // - Pour supprimer d'autres utilisateurs, il faut utiliser Firebase Admin SDK via une Cloud Function
+
+    // Si l'utilisateur actuel essaie de se supprimer lui-même
     if (auth.currentUser && auth.currentUser.uid === userId) {
-      await deleteUser(auth.currentUser);
+      try {
+        // Cela ne fonctionnera que si l'utilisateur s'est connecté récemment
+        await deleteUser(auth.currentUser);
+      } catch (error) {
+        console.warn('Impossible de supprimer l\'utilisateur dans Firebase Auth:', error.message);
+        // Continuer malgré l'erreur car nous avons déjà supprimé les données Firestore et Storage
+      }
     } else {
-      // Pour supprimer un autre utilisateur, nous devons utiliser une Cloud Function
-      // Cette partie nécessite une implémentation côté serveur
-      // Ici, nous supposons que la suppression Firestore est suffisante pour l'interface utilisateur
-      console.warn('La suppression complète d\'un autre utilisateur nécessite une Cloud Function');
+      console.warn(
+        'ATTENTION: L\'utilisateur a été supprimé de Firestore et Storage, ' +
+        'mais PAS de Firebase Auth. Pour une suppression complète, ' +
+        'implémentez une Cloud Function utilisant Firebase Admin SDK.'
+      );
     }
 
-    toast.success('Utilisateur supprimé avec succès !');
+    toast.success('Utilisateur supprimé avec succès de Firestore et Storage!');
     return true;
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'utilisateur:', error);

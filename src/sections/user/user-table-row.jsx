@@ -1,8 +1,7 @@
-import PropTypes from 'prop-types';
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Select from '@mui/material/Select';
 import MenuList from '@mui/material/MenuList';
@@ -12,10 +11,11 @@ import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import ListItemText from '@mui/material/ListItemText';
 import LoadingButton from '@mui/lab/LoadingButton';
+import ListItemText from '@mui/material/ListItemText';
 
 import { useBoolean } from 'src/hooks/use-boolean';
+import { deleteUserCompletely } from 'src/hooks/use-users';
 
 import { CONFIG } from 'src/config-global';
 import { USER_STATUS_OPTIONS } from 'src/_mock';
@@ -24,8 +24,6 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-
-import { deleteUserCompletely } from 'src/hooks/use-users';
 
 import { UserQuickEditForm } from './user-quick-edit-form';
 
