@@ -6,7 +6,7 @@ import { RoleGuard } from './role-guard';
 
 // Ce composant est maintenu pour la compatibilité avec le code existant
 // Il réutilise simplement le RoleGuard avec les props appropriés
-export function RoleBasedGuard({ children, hasContent, currentRole, acceptRoles, sx }) {
+export function RoleBasedGuard({ children, hasContent = false, currentRole, acceptRoles, sx }) {
   return (
     <RoleGuard hasContent={hasContent} acceptRoles={acceptRoles} sx={sx}>
       {children}
@@ -20,8 +20,4 @@ RoleBasedGuard.propTypes = {
   currentRole: PropTypes.string, // Maintenu pour la compatibilité, mais non utilisé
   acceptRoles: PropTypes.arrayOf(PropTypes.string),
   sx: PropTypes.shape({}),
-};
-
-RoleBasedGuard.defaultProps = {
-  hasContent: false,
 };

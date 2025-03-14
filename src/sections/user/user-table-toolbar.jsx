@@ -122,14 +122,12 @@ export function UserTableToolbar({ filters, onResetPage }) {
             value={currentFilters.name}
             onChange={handleFilterName}
             placeholder="Rechercher par nom, email, téléphone..."
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
-                  </InputAdornment>
-                ),
-              },
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
             }}
           />
 
