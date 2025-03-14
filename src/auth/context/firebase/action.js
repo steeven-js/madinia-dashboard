@@ -21,9 +21,11 @@ export const signInWithPassword = async ({ email, password }) => {
 
     const user = AUTH.currentUser;
 
+    /* Désactivation de la vérification d'email en développement
     if (!user?.emailVerified) {
       throw new Error('Email not verified!');
     }
+    */
 
     // Récupérer l'uid de l'utilisateur créé
     const { uid } = user;

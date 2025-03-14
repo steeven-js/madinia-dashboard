@@ -21,7 +21,9 @@ export function AuthProvider({ children }) {
   const checkUserSession = useCallback(async () => {
     try {
       onAuthStateChanged(AUTH, async (user) => {
-        if (user && user.emailVerified) {
+        // Désactivation de la vérification d'email en développement
+        // if (user && user.emailVerified) {
+        if (user) {
           /*
            * (1) If skip emailVerified
            * Remove the condition (if/else) : user.emailVerified
