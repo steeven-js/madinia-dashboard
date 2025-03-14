@@ -19,7 +19,7 @@ export function SignUpTerms({ sx, ...other }) {
     >
       {'En vous inscrivant, vous acceptez les '}
       <Link underline="always" color="text.primary">
-        Conditions d'utilisation
+        Conditions d&apos;utilisation
       </Link>
       {' et la '}
       <Link underline="always" color="text.primary">
