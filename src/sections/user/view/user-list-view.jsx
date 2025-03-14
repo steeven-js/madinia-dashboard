@@ -109,6 +109,8 @@ export function UserListView({ users, currentAuthUser }) {
 
   const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
 
+  console.log('dataFiltered:', dataFiltered);
+
   const canReset =
     !!filters.state.name || filters.state.role.length > 0 || filters.state.status !== 'all';
 

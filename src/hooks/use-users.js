@@ -210,9 +210,15 @@ export async function updateOrCreateUserData({ currentUser, data }) {
       coverUrl = data.coverUrl;
     }
 
+    // Générer le displayName à partir de firstName et lastName s'ils existent
+    let displayName = data.displayName;
+    if (data.firstName && data.lastName) {
+      displayName = `${data.lastName} ${data.firstName}`;
+    }
+
     // Préparation des données à mettre à jour
     const userData = {
-      displayName: data.displayName,
+      displayName,
       email: data.email,
       phoneNumber: data.phoneNumber,
       country: data.country,
@@ -224,6 +230,15 @@ export async function updateOrCreateUserData({ currentUser, data }) {
       isPublic: data.isPublic,
       updatedAt: serverTimestamp(),
     };
+
+    // Ajouter firstName et lastName seulement s'ils sont définis
+    if (data.firstName !== undefined) {
+      userData.firstName = data.firstName;
+    }
+
+    if (data.lastName !== undefined) {
+      userData.lastName = data.lastName;
+    }
 
     // Ajouter les URLs seulement si elles existent
     if (avatarUrl) {
@@ -242,7 +257,7 @@ export async function updateOrCreateUserData({ currentUser, data }) {
 
     // Mise à jour du profil Auth
     await updateProfile(auth.currentUser, {
-      displayName: data.displayName,
+      displayName,
       photoURL: avatarUrl
     });
 
