@@ -63,35 +63,42 @@ export const signInWithTwitter = async () => {
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({ email, password, firstName, lastName }) => {
+export const signUp = async ({ email, password, displayName }) => {
+  console.log('Début de la fonction signUp avec:', { email, displayName });
   try {
+    console.log('Tentative de création de l\'utilisateur avec:', { email, password });
     const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
+    console.log('Utilisateur créé avec succès:', newUser.user.uid);
 
     /*
      * (1) If skip emailVerified
      * Remove : await _sendEmailVerification(newUser.user);
      */
-    await _sendEmailVerification(newUser.user);
+    // await _sendEmailVerification(newUser.user);
 
     // Récupérer l'uid de l'utilisateur créé
     const { uid } = newUser.user;
+    console.log('UID de l\'utilisateur:', uid);
 
     // Créer un document utilisateur
     const userRef = doc(FIRESTORE, 'users', uid);
+    console.log('Référence du document utilisateur créée');
 
     // Enregistrer les données utilisateur
+    console.log('Tentative d\'enregistrement des données utilisateur dans Firestore');
     await setDoc(userRef, {
+      uid,
       email,
-      firstName,
-      lastName,
+      displayName,
       isVerified: false,
       role: 'user',
       status: 'pending',
       createdAt: new Date(),
     });
+    console.log('Données utilisateur enregistrées avec succès dans Firestore');
 
   } catch (error) {
-    console.error('Error during sign up:', error);
+    console.error('Erreur détaillée lors de l\'inscription:', error);
     throw error;
   }
 };

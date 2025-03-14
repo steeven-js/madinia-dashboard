@@ -17,30 +17,30 @@ import { RouterLink } from 'src/routes/components';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { Iconify } from 'src/components/iconify';
+import { AnimateLogo2 } from 'src/components/animate';
 import { Form, Field } from 'src/components/hook-form';
 
 import { FormHead } from '../../components/form-head';
 import { SignUpTerms } from '../../components/sign-up-terms';
 import {
   signUp,
-  signInWithGithub,
-  signInWithGoogle,
-  signInWithTwitter,
+  // signInWithGithub,
+  // signInWithGoogle,
+  // signInWithTwitter,
 } from '../../context/firebase';
 
 // ----------------------------------------------------------------------
 
 export const SignUpSchema = zod.object({
-  firstName: zod.string().min(1, { message: 'First name is required!' }),
-  lastName: zod.string().min(1, { message: 'Last name is required!' }),
+  fullName: zod.string().min(1, { message: 'Nom complet requis!' }),
   email: zod
     .string()
-    .min(1, { message: 'Email is required!' })
-    .email({ message: 'Email must be a valid email address!' }),
+    .min(1, { message: 'Email requis!' })
+    .email({ message: "L'email doit être une adresse valide!" }),
   password: zod
     .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
+    .min(1, { message: 'Mot de passe requis!' })
+    .min(6, { message: 'Le mot de passe doit contenir au moins 6 caractères!' }),
 });
 
 // ----------------------------------------------------------------------
@@ -53,8 +53,7 @@ export function FirebaseSignUpView() {
   const password = useBoolean();
 
   const defaultValues = {
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
   };
@@ -74,8 +73,7 @@ export function FirebaseSignUpView() {
       await signUp({
         email: data.email,
         password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        displayName: data.fullName,
       });
 
       const searchParams = new URLSearchParams({ email: data.email }).toString();
@@ -89,43 +87,42 @@ export function FirebaseSignUpView() {
     }
   });
 
-  const handleSignInWithGoogle = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleSignInWithGoogle = async () => {
+  //   try {
+  //     await signInWithGoogle();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleSignInWithGithub = async () => {
-    try {
-      await signInWithGithub();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleSignInWithGithub = async () => {
+  //   try {
+  //     await signInWithGithub();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleSignInWithTwitter = async () => {
-    try {
-      await signInWithTwitter();
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const handleSignInWithTwitter = async () => {
+  //   try {
+  //     await signInWithTwitter();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
+  const renderLogo = <AnimateLogo2 sx={{ mb: 3, mx: 'auto' }} />;
 
   const renderForm = (
     <Box gap={3} display="flex" flexDirection="column">
-      <Box display="flex" gap={{ xs: 3, sm: 2 }} flexDirection={{ xs: 'column', sm: 'row' }}>
-        <Field.Text name="firstName" label="First name" InputLabelProps={{ shrink: true }} />
-        <Field.Text name="lastName" label="Last name" InputLabelProps={{ shrink: true }} />
-      </Box>
+      <Field.Text name="fullName" label="Nom et prénom" InputLabelProps={{ shrink: true }} />
 
-      <Field.Text name="email" label="Email address" InputLabelProps={{ shrink: true }} />
+      <Field.Text name="email" label="Adresse email" InputLabelProps={{ shrink: true }} />
 
       <Field.Text
         name="password"
-        label="Password"
-        placeholder="6+ characters"
+        label="Mot de passe"
+        placeholder="6+ caractères"
         type={password.value ? 'text' : 'password'}
         InputLabelProps={{ shrink: true }}
         InputProps={{
@@ -146,26 +143,28 @@ export function FirebaseSignUpView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Create account..."
+        loadingIndicator="Création du compte..."
       >
-        Create account
+        Créer un compte
       </LoadingButton>
     </Box>
   );
 
   return (
     <>
+      {renderLogo}
+
       <FormHead
-        title="Get started absolutely free"
+        title="Commencez gratuitement"
         description={
           <>
-            {`Already have an account? `}
+            {`Vous avez déjà un compte? `}
             <Link component={RouterLink} href={paths.auth.firebase.signIn} variant="subtitle2">
-              Get started
+              Connectez-vous
             </Link>
           </>
         }
-        sx={{ textAlign: { xs: 'center', md: 'left' } }}
+        // sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
       {!!errorMsg && (

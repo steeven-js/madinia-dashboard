@@ -24,9 +24,9 @@ import { useAuthContext } from '../../hooks';
 import { FormHead } from '../../components/form-head';
 // import { FormSocials } from '../../components/form-socials';
 import {
-  signInWithGoogle,
-  signInWithGithub,
-  signInWithTwitter,
+  // signInWithGoogle,
+  // signInWithGithub,
+  // signInWithTwitter,
   signInWithPassword,
 } from '../../context/firebase';
 
@@ -70,38 +70,38 @@ export function FirebaseSignInView() {
     }
   });
 
-  const handleSignInWithGoogle = async () => {
-    try {
-      await signInWithGoogle();
-      await checkUserSession?.();
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(typeof error === 'string' ? error : error.message);
-    }
-  };
+  // const handleSignInWithGoogle = async () => {
+  //   try {
+  //     await signInWithGoogle();
+  //     await checkUserSession?.();
+  //     router.refresh();
+  //   } catch (error) {
+  //     console.error(error);
+  //     setErrorMsg(typeof error === 'string' ? error : error.message);
+  //   }
+  // };
 
-  const handleSignInWithGithub = async () => {
-    try {
-      await signInWithGithub();
-      await checkUserSession?.();
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(typeof error === 'string' ? error : error.message);
-    }
-  };
+  // const handleSignInWithGithub = async () => {
+  //   try {
+  //     await signInWithGithub();
+  //     await checkUserSession?.();
+  //     router.refresh();
+  //   } catch (error) {
+  //     console.error(error);
+  //     setErrorMsg(typeof error === 'string' ? error : error.message);
+  //   }
+  // };
 
-  const handleSignInWithTwitter = async () => {
-    try {
-      await signInWithTwitter();
-      await checkUserSession?.();
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      setErrorMsg(typeof error === 'string' ? error : error.message);
-    }
-  };
+  // const handleSignInWithTwitter = async () => {
+  //   try {
+  //     await signInWithTwitter();
+  //     await checkUserSession?.();
+  //     router.refresh();
+  //   } catch (error) {
+  //     console.error(error);
+  //     setErrorMsg(typeof error === 'string' ? error : error.message);
+  //   }
+  // };
 
   const renderLogo = <AnimateLogo2 sx={{ mb: 3, mx: 'auto' }} />;
 
