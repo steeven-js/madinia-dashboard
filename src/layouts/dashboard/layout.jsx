@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
@@ -8,7 +8,7 @@ import { iconButtonClasses } from '@mui/material/IconButton';
 
 import { useAuth } from 'src/hooks/use-auth';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { auth } from 'src/utils/firebase';
+// import { auth } from 'src/utils/firebase';
 
 import { allLangs } from 'src/locales';
 
@@ -43,38 +43,40 @@ export function DashboardLayout({ sx, children, header, data }) {
 
   const { userProfile } = useAuth();
 
+  console.log('userProfile', userProfile);
+
   // Récupération des informations de Firebase Auth
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        // Afficher l'utilisateur actuel et ses informations
-        if (auth.currentUser) {
-          console.log('Firebase Auth - Utilisateur connecté:', auth.currentUser);
-          console.log('Firebase Auth - Email:', auth.currentUser.email);
-          console.log('Firebase Auth - UID:', auth.currentUser.uid);
-          console.log('Firebase Auth - Vérifié:', auth.currentUser.emailVerified);
+  // useEffect(() => {
+  //   const fetchUserInfo = async () => {
+  //     try {
+  //       // Afficher l'utilisateur actuel et ses informations
+  //       if (auth.currentUser) {
+  //         console.log('Firebase Auth - Utilisateur connecté:', auth.currentUser);
+  //         console.log('Firebase Auth - Email:', auth.currentUser.email);
+  //         console.log('Firebase Auth - UID:', auth.currentUser.uid);
+  //         console.log('Firebase Auth - Vérifié:', auth.currentUser.emailVerified);
 
-          // Récupérer les claims (rôles) de l'utilisateur
-          const idTokenResult = await auth.currentUser.getIdTokenResult();
-          console.log('Firebase Auth - Claims (rôles):', idTokenResult.claims);
+  //         // Récupérer les claims (rôles) de l'utilisateur
+  //         const idTokenResult = await auth.currentUser.getIdTokenResult();
+  //         console.log('Firebase Auth - Claims (rôles):', idTokenResult.claims);
 
-          // Afficher des claims spécifiques si présents
-          if (idTokenResult.claims.role) {
-            console.log('Firebase Auth - Rôle:', idTokenResult.claims.role);
-          }
-          if (idTokenResult.claims.admin) {
-            console.log('Firebase Auth - Admin:', idTokenResult.claims.admin);
-          }
-        } else {
-          console.log('Firebase Auth - Aucun utilisateur connecté');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des informations:', error);
-      }
-    };
+  //         // Afficher des claims spécifiques si présents
+  //         if (idTokenResult.claims.role) {
+  //           console.log('Firebase Auth - Rôle:', idTokenResult.claims.role);
+  //         }
+  //         if (idTokenResult.claims.admin) {
+  //           console.log('Firebase Auth - Admin:', idTokenResult.claims.admin);
+  //         }
+  //       } else {
+  //         console.log('Firebase Auth - Aucun utilisateur connecté');
+  //       }
+  //     } catch (error) {
+  //       console.error('Erreur lors de la récupération des informations:', error);
+  //     }
+  //   };
 
-    fetchUserInfo();
-  }, []);
+  //   fetchUserInfo();
+  // }, []);
 
   const useAuthRole = useSelector((state) => state.auth.role);
 

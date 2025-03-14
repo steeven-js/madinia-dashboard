@@ -312,7 +312,7 @@ export const dashboardRoutes = [
       {
         path: 'calendar',
         element: (
-          <RoleGuard requiredLevel={3}>
+          <RoleGuard requiredLevel={2}>
             <CalendarPage />
           </RoleGuard>
         ),

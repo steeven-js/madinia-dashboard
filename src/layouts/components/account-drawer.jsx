@@ -35,6 +35,8 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
 
   const { user: userAuth } = useAuth();
 
+  // console.log('userAuth', userAuth);
+
   const [open, setOpen] = useState(false);
 
   const handleOpenDrawer = useCallback(() => {
@@ -57,7 +59,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
     <AnimateAvatar
       width={96}
       slotProps={{
-        avatar: { src: user?.avatarUrl, alt: user?.displayName },
+        avatar: { src: userAuth?.photoURL, alt: userAuth?.displayName },
         overlay: {
           border: 2,
           spacing: 3,
@@ -65,7 +67,7 @@ export function AccountDrawer({ data = [], user, sx, ...other }) {
         },
       }}
     >
-      {user?.displayName?.charAt(0).toUpperCase()}
+      {userAuth?.displayName?.charAt(0).toUpperCase()}
     </AnimateAvatar>
   );
 
