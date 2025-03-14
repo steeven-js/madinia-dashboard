@@ -18,19 +18,29 @@ admin.initializeApp({
 const db = admin.firestore();
 const auth = admin.auth();
 
-const USER_UID = 'sONcdNjvlOgyMdJ8LyRJCFgCt4e2';
+const USER_UID = '8bPWrBnQ6MMLP5e7Yw1y8F1EiwJ3';
+const USER_ROLE = 'admin';
+const USER_DISPLAY_NAME = 'Admin Test';
+const USER_PHOTO_URL = 'https://assets.minimals.cc/public/assets/images/mock/avatar/avatar-25.webp';
 
 async function updateAdminRole() {
   try {
     // Mise à jour dans Firestore
     await db.collection('users').doc(USER_UID).update({
-      role: 'super_admin',
+      role: USER_ROLE,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     // Mise à jour des custom claims dans Auth
     await auth.setCustomUserClaims(USER_UID, {
-      role: 'super_admin'
+      role: USER_ROLE,
+      displayName: USER_DISPLAY_NAME,
+    });
+
+    // Mettre à jour photoURL dans FirebaseAuth
+    await auth.updateUser(USER_UID, {
+      displayName: USER_DISPLAY_NAME,
+      photoURL: USER_PHOTO_URL,
     });
 
     // Récupération et affichage des informations

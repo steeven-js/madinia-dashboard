@@ -169,11 +169,15 @@ const navConfigByLevel = {
   // Niveau 2 (admin) - Accès limité
   2: [
     navItems.overview,
+    navItems.userAccount,
     navItems.qrScanner,
     navItems.blog,
     navItems.event,
     navItems.eventOrders,
-    navItems.dataExport,
+    {
+      subheader: 'Administration',
+      items: [{ title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar }],
+    },
   ],
 
   // Niveau 1 (user) - Accès minimal
