@@ -22,8 +22,8 @@ export function AuthProvider({ children }) {
     try {
       onAuthStateChanged(AUTH, async (user) => {
         // Désactivation de la vérification d'email en développement
-        // if (user && user.emailVerified) {
-        if (user) {
+        if (user && user.emailVerified) {
+          // if (user) {
           /*
            * (1) If skip emailVerified
            * Remove the condition (if/else) : user.emailVerified

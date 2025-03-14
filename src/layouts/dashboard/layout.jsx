@@ -43,7 +43,7 @@ export function DashboardLayout({ sx, children, header, data }) {
 
   const { userProfile } = useAuth();
 
-  console.log('userProfile', userProfile);
+  // console.log('userProfile', userProfile);
 
   // Récupération des informations de Firebase Auth
   // useEffect(() => {
