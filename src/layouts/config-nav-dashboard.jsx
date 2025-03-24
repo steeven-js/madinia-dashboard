@@ -176,7 +176,10 @@ const navConfigByLevel = {
     navItems.eventOrders,
     {
       subheader: 'Administration',
-      items: [{ title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar }],
+      items: [
+        { title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar },
+        // { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
+      ],
     },
   ],
 

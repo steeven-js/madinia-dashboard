@@ -27,6 +27,7 @@ const collections = [
   'postCategories',
   'posts',
   'users',
+  'boards',
 ];
 
 export default function FirestoreExport({ db }) {

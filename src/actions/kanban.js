@@ -7,9 +7,10 @@ import {
   updateDoc,
   arrayUnion,
   onSnapshot,
+  getFirestore,
 } from 'firebase/firestore';
 
-import { db } from 'src/utils/firebase';
+const db = getFirestore();
 
 // ----------------------------------------------------------------------
 
@@ -106,7 +107,7 @@ export async function updateColumn(columnId, columnName) {
     }
 
     // Trouver l'index de la colonne à mettre à jour
-    const {columns} = boardData.board;
+    const { columns } = boardData.board;
     const columnIndex = columns.findIndex((column) => column.id === columnId);
 
     if (columnIndex === -1) {
@@ -133,7 +134,7 @@ export async function updateColumn(columnId, columnName) {
 // ----------------------------------------------------------------------
 
 export async function moveColumn(updateColumns) {
-// updateColumns est un objet avec les colonnes mises à jour qui doit remplacer les colonnes actuelles avec une lecture en temps réel
+  // updateColumns est un objet avec les colonnes mises à jour qui doit remplacer les colonnes actuelles avec une lecture en temps réel
 
   try {
     const boardRef = doc(db, 'boards', 'main-board');
@@ -153,7 +154,7 @@ export async function moveColumn(updateColumns) {
 // ----------------------------------------------------------------------
 
 export async function clearColumn(columnId) {
-// Supprime toutes les tâches de la colonne
+  // Supprime toutes les tâches de la colonne
 
   try {
     const boardRef = doc(db, 'boards', 'main-board');
@@ -207,31 +208,31 @@ export async function deleteColumn(columnId) {
 // ----------------------------------------------------------------------
 
 export async function createTask(columnId, taskData) {
-// Crée une nouvelle tâche dans la colonne spécifiée
+  // Crée une nouvelle tâche dans la colonne spécifiée
 
-    try {
-      const boardRef = doc(db, 'boards', 'main-board');
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
 
-      // Générer un nouvel ID unique pour la tâche avec le format demandé
-      const newTaskId = `task-${uuidv4()}`;
+    // Générer un nouvel ID unique pour la tâche avec le format demandé
+    const newTaskId = `task-${uuidv4()}`;
 
-      // Créer l'objet de la nouvelle tâche
-      const newTask = {
-        id: newTaskId,
-        ...taskData
-      };
+    // Créer l'objet de la nouvelle tâche
+    const newTask = {
+      id: newTaskId,
+      ...taskData
+    };
 
-      // Mettre à jour le tableau des tâches de la colonne avec la nouvelle tâche
-      await updateDoc(boardRef, {
-        [`board.tasks.${columnId}`]: arrayUnion(newTask)
-      });
+    // Mettre à jour le tableau des tâches de la colonne avec la nouvelle tâche
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: arrayUnion(newTask)
+    });
 
-      console.log('New task created successfully');
-      return newTask;
-    } catch (error) {
-      console.error('Error creating new task:', error);
-      throw error;
-    }
+    console.log('New task created successfully');
+    return newTask;
+  } catch (error) {
+    console.error('Error creating new task:', error);
+    throw error;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -285,50 +286,50 @@ export async function updateTask(columnId, taskData) {
 // ----------------------------------------------------------------------
 
 export async function moveTask(updateTasks) {
-// updateTasks est un objet avec les tâches mises à jour qui doit remplacer les tâches actuelles
+  // updateTasks est un objet avec les tâches mises à jour qui doit remplacer les tâches actuelles
 
-    try {
-      const boardRef = doc(db, 'boards', 'main-board');
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
 
-      // Mettre à jour les tâches du tableau
-      await updateDoc(boardRef, {
-        'board.tasks': updateTasks
-      });
+    // Mettre à jour les tâches du tableau
+    await updateDoc(boardRef, {
+      'board.tasks': updateTasks
+    });
 
-      console.log('Tasks moved successfully');
-    } catch (error) {
-      console.error('Error moving tasks:', error);
-      throw error;
-    }
+    console.log('Tasks moved successfully');
+  } catch (error) {
+    console.error('Error moving tasks:', error);
+    throw error;
+  }
 }
 
 // ----------------------------------------------------------------------
 
 export async function deleteTask(columnId, taskId) {
-// Supprime une tâche de la colonne spécifiée
+  // Supprime une tâche de la colonne spécifiée
 
-      try {
-        const boardRef = doc(db, 'boards', 'main-board');
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
 
-        // Récupérer les données actuelles du tableau
-        const boardSnapshot = await getDoc(boardRef);
-        const boardData = boardSnapshot.data();
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
 
-        if (!boardData || !boardData.board || !boardData.board.tasks) {
-          throw new Error('Invalid board structure');
-        }
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
 
-        // Filtrer les tâches pour supprimer la tâche avec l'ID fourni
-        const updatedTasks = boardData.board.tasks[columnId].filter((task) => task.id !== taskId);
+    // Filtrer les tâches pour supprimer la tâche avec l'ID fourni
+    const updatedTasks = boardData.board.tasks[columnId].filter((task) => task.id !== taskId);
 
-        // Mettre à jour les données du tableau avec updateDoc
-        await updateDoc(boardRef, {
-          [`board.tasks.${columnId}`]: updatedTasks
-        });
+    // Mettre à jour les données du tableau avec updateDoc
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: updatedTasks
+    });
 
-        console.log(`Task ${taskId} deleted successfully`);
-      } catch (error) {
-        console.error('Error deleting task:', error);
-        throw error;
-      }
+    console.log(`Task ${taskId} deleted successfully`);
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    throw error;
+  }
 }
