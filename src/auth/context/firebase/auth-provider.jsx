@@ -1,11 +1,9 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
-import { useSetState } from 'src/hooks/use-set-state';
-
-import axios from 'src/utils/axios';
-
+import axios from 'src/lib/axios';
 import { AUTH, FIRESTORE } from 'src/lib/firebase';
 
 import { AuthContext } from '../auth-context';
@@ -13,17 +11,12 @@ import { AuthContext } from '../auth-context';
 // ----------------------------------------------------------------------
 
 export function AuthProvider({ children }) {
-  const { state, setState } = useSetState({
-    user: null,
-    loading: true,
-  });
+  const { state, setState } = useSetState({ user: null, loading: true });
 
   const checkUserSession = useCallback(async () => {
     try {
       onAuthStateChanged(AUTH, async (user) => {
-        // Désactivation de la vérification d'email en développement
         if (user && user.emailVerified) {
-          // if (user) {
           /*
            * (1) If skip emailVerified
            * Remove the condition (if/else) : user.emailVerified

@@ -2,7 +2,7 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import cors from 'cors';
 
 // Initialiser l'application Firebase avec les credentials
@@ -29,7 +29,7 @@ const corsHandler = (req, res) => new Promise((resolve, reject) => {
 /**
  * Fonction Cloud pour l'authentification par email/mot de passe
  */
-export const signInWithPassword = functions.https.onRequest(async (req, res) => {
+export const signInWithPassword = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 
@@ -89,7 +89,7 @@ export const signInWithPassword = functions.https.onRequest(async (req, res) => 
 /**
  * Fonction Cloud pour l'inscription
  */
-export const signUp = functions.https.onRequest(async (req, res) => {
+export const signUp = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 
@@ -147,7 +147,7 @@ export const signUp = functions.https.onRequest(async (req, res) => {
 /**
  * Fonction Cloud pour la déconnexion (côté serveur)
  */
-export const signOut = functions.https.onRequest(async (req, res) => {
+export const signOut = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 
@@ -185,7 +185,7 @@ export const signOut = functions.https.onRequest(async (req, res) => {
 /**
  * Fonction Cloud pour réinitialiser le mot de passe
  */
-export const resetPassword = functions.https.onRequest(async (req, res) => {
+export const resetPassword = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 
@@ -229,7 +229,7 @@ export const resetPassword = functions.https.onRequest(async (req, res) => {
 /**
  * Fonction Cloud pour récupérer les logs de connexion
  */
-export const getLogs = functions.https.onRequest(async (req, res) => {
+export const getLogs = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 
@@ -255,24 +255,20 @@ export const getLogs = functions.https.onRequest(async (req, res) => {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
-    // Récupérer tous les logs, triés par date décroissante
-    const logsQuery = await db.collection('logs')
+    // Récupérer les logs
+    const logsSnapshot = await db.collection('logs')
       .orderBy('timestamp', 'desc')
-      .limit(100) // Limiter le nombre de logs retournés
+      .limit(100)
       .get();
 
-    const logs = [];
-    logsQuery.forEach(doc => {
-      logs.push({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp.toDate().toISOString()
-      });
-    });
+    const logs = logsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-    res.status(200).json({ logs });
+    res.status(200).json(logs);
   } catch (error) {
-    console.error('Error retrieving logs:', error);
+    console.error('Error during get logs:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -280,7 +276,7 @@ export const getLogs = functions.https.onRequest(async (req, res) => {
 /**
  * Fonction Cloud pour ajouter un log personnalisé
  */
-export const addLog = functions.https.onRequest(async (req, res) => {
+export const addLog = onRequest(async (req, res) => {
   try {
     await corsHandler(req, res);
 

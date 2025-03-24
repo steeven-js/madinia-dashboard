@@ -1,10 +1,11 @@
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, collection } from 'firebase/firestore';
 import {
   signOut as _signOut,
   signInWithPopup as _signInWithPopup,
   GoogleAuthProvider as _GoogleAuthProvider,
   GithubAuthProvider as _GithubAuthProvider,
   TwitterAuthProvider as _TwitterAuthProvider,
+  sendEmailVerification as _sendEmailVerification,
   sendPasswordResetEmail as _sendPasswordResetEmail,
   signInWithEmailAndPassword as _signInWithEmailAndPassword,
   createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
@@ -12,68 +13,42 @@ import {
 
 import { AUTH, FIRESTORE } from 'src/lib/firebase';
 
-// URL de base des Cloud Functions pour les opérations de logging uniquement
-const FUNCTIONS_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'https://us-central1-madinia-dashboard.cloudfunctions.net'
-  : 'https://us-central1-madinia-dashboard.cloudfunctions.net';
-
 /** **************************************
  * Sign in
  *************************************** */
+
+// ----------------------------------------------------------------------
+
 export const signInWithPassword = async ({ email, password }) => {
   try {
-    // Utiliser directement le SDK Firebase pour l'authentification
-    const userCredential = await _signInWithEmailAndPassword(AUTH, email, password);
-    const user = userCredential.user;
+    await _signInWithEmailAndPassword(AUTH, email, password);
 
-    // Vérifier si l'email est vérifié
-    if (!user.emailVerified) {
+    const user = AUTH.currentUser;
+
+    if (!user?.emailVerified) {
       throw new Error('Email not verified!');
     }
-
-    // Mettre à jour le document utilisateur
-    const userRef = doc(FIRESTORE, 'users', user.uid);
-    await updateDoc(userRef, {
-      isVerified: true,
-      lastConnection: new Date(),
-    });
-
-    // Enregistrer le log via Cloud Function
-    const token = await user.getIdToken();
-    await fetch(`${FUNCTIONS_BASE_URL}/addLog`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'login',
-        details: {
-          method: 'password'
-        }
-      }),
-    });
-
-    return {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-    };
   } catch (error) {
     console.error('Error during sign in with password:', error);
     throw error;
   }
 };
 
+// ----------------------------------------------------------------------
+
 export const signInWithGoogle = async () => {
   const provider = new _GoogleAuthProvider();
   await _signInWithPopup(AUTH, provider);
 };
 
+// ----------------------------------------------------------------------
+
 export const signInWithGithub = async () => {
   const provider = new _GithubAuthProvider();
   await _signInWithPopup(AUTH, provider);
 };
+
+// ----------------------------------------------------------------------
 
 export const signInWithTwitter = async () => {
   const provider = new _TwitterAuthProvider();
@@ -83,44 +58,28 @@ export const signInWithTwitter = async () => {
 /** **************************************
  * Sign up
  *************************************** */
-export const signUp = async ({ email, password, displayName }) => {
-  console.log('Début de la fonction signUp avec:', { email, displayName });
+
+// ----------------------------------------------------------------------
+
+export const signUp = async ({ email, password, firstName, lastName }) => {
   try {
-    // Utiliser directement le SDK Firebase pour la création de compte
-    const userCredential = await _createUserWithEmailAndPassword(AUTH, email, password);
-    const user = userCredential.user;
+    const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
 
-    // Créer le document utilisateur dans Firestore
-    const userRef = doc(FIRESTORE, 'users', user.uid);
-    await setDoc(userRef, {
-      uid: user.uid,
+    /*
+     * (1) If skip emailVerified
+     * Remove : await _sendEmailVerification(newUser.user);
+     */
+    // await _sendEmailVerification(newUser.user);
+
+    const userProfile = doc(collection(FIRESTORE, 'users'), newUser.user?.uid);
+
+    await setDoc(userProfile, {
+      uid: newUser.user?.uid,
       email,
-      displayName,
-      isVerified: false,
-      role: 'user',
-      status: 'pending',
-      createdAt: new Date(),
+      displayName: `${firstName} ${lastName}`,
     });
-
-    // Enregistrer le log via Cloud Function
-    const token = await user.getIdToken();
-    await fetch(`${FUNCTIONS_BASE_URL}/addLog`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'signup',
-        details: {
-          method: 'password'
-        }
-      }),
-    });
-
-    return { uid: user.uid };
   } catch (error) {
-    console.error('Erreur détaillée lors de l\'inscription:', error);
+    console.error('Error during sign up:', error);
     throw error;
   }
 };
@@ -128,38 +87,19 @@ export const signUp = async ({ email, password, displayName }) => {
 /** **************************************
  * Sign out
  *************************************** */
+
+// ----------------------------------------------------------------------
+
 export const signOut = async () => {
-  try {
-    // Récupérer le token avant la déconnexion
-    const token = await AUTH.currentUser?.getIdToken();
-
-    if (token) {
-      // Enregistrer le log de déconnexion
-      await fetch(`${FUNCTIONS_BASE_URL}/addLog`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'logout',
-          details: {}
-        }),
-      });
-    }
-
-    // Déconnecter l'utilisateur
-    await _signOut(AUTH);
-    window.location.href = '/auth/firebase/login';
-  } catch (error) {
-    console.error('Error during sign out:', error);
-    throw error;
-  }
+  await _signOut(AUTH);
 };
 
 /** **************************************
  * Reset password
  *************************************** */
+
+// ----------------------------------------------------------------------
+
 export const sendPasswordResetEmail = async ({ email }) => {
   await _sendPasswordResetEmail(AUTH, email);
 };
