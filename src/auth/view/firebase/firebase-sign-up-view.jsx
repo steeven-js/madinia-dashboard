@@ -16,6 +16,8 @@ import { RouterLink } from 'src/routes/components';
 
 import { useBoolean } from 'src/hooks/use-boolean';
 
+import { CONFIG } from 'src/config-global';
+
 import { Iconify } from 'src/components/iconify';
 import { AnimateLogo2 } from 'src/components/animate';
 import { Form, Field } from 'src/components/hook-form';
@@ -76,9 +78,10 @@ export function FirebaseSignUpView() {
         displayName: data.fullName,
       });
 
-      const searchParams = new URLSearchParams({ email: data.email }).toString();
+      // const searchParams = new URLSearchParams({ email: data.email }).toString();
 
-      const href = `${paths.auth.firebase.verify}?${searchParams}`;
+      // const href = `${paths.auth.firebase.verify}?${searchParams}`;
+      const href = CONFIG.auth.redirectPath;
 
       router.push(href);
     } catch (error) {
