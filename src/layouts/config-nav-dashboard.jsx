@@ -138,6 +138,7 @@ const navItems = {
       },
       { title: 'Calendrier', path: paths.dashboard.calendar, icon: ICONS.calendar },
       { title: 'Kanban', path: paths.dashboard.kanban, icon: ICONS.kanban },
+      { title: 'Gestionnaire de fichiers', path: paths.dashboard.fileManager, icon: ICONS.file },
     ],
   },
 };

@@ -51,6 +51,8 @@ const EventOrderDetailsPage = lazy(
 const QrScannerPage = lazy(() => import('src/pages/dashboard/app/qr-coder-scanner'));
 // Data Export
 const DataExportPage = lazy(() => import('src/pages/dashboard/data-export'));
+// File Manager
+const FileManagerPage = lazy(() => import('src/pages/dashboard/file-manager'));
 
 // ----------------------------------------------------------------------
 
@@ -330,6 +332,14 @@ export const dashboardRoutes = [
         element: (
           <RoleGuard requiredLevel={3}>
             <DataExportPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'file-manager',
+        element: (
+          <RoleGuard requiredLevel={3}>
+            <FileManagerPage />
           </RoleGuard>
         ),
       },
