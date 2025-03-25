@@ -53,7 +53,7 @@ const StyledLabel = styled('span')(({ theme }) => ({
   width: 100,
   flexShrink: 0,
   color: theme.vars.palette.text.secondary,
-  fontWeight: theme.typography.fontWeightSemiBold,
+  fontWeight: theme.typography.fontWeightBold,
 }));
 
 // ----------------------------------------------------------------------
@@ -301,7 +301,21 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
           onChangeStartDate={rangePicker.onChangeStartDate}
           onChangeEndDate={rangePicker.onChangeEndDate}
           open={rangePicker.open}
-          onClose={rangePicker.onClose}
+          onClose={() => {
+            // Mise à jour de la tâche avec les nouvelles dates sans conversion de fuseau horaire
+            if (rangePicker.startDate && rangePicker.endDate && !rangePicker.error) {
+              onUpdateTask({
+                ...task,
+                due: [
+                  dayjs(rangePicker.startDate).format('YYYY-MM-DDTHH:mm:ss'),
+                  dayjs(rangePicker.endDate).format('YYYY-MM-DDTHH:mm:ss'),
+                ],
+                updatedBy: user?.id,
+                updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+              });
+            }
+            rangePicker.onClose();
+          }}
           selected={rangePicker.selected}
           error={rangePicker.error}
         />

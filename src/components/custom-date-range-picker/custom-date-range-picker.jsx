@@ -8,6 +8,7 @@ import DialogContent from '@mui/material/DialogContent';
 import FormHelperText from '@mui/material/FormHelperText';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import dayjs from 'dayjs';
 
 import { useResponsive } from 'src/hooks/use-responsive';
 
@@ -29,6 +30,20 @@ export function CustomDateRangePicker({
   const mdUp = useResponsive('up', 'md');
 
   const isCalendarView = variant === 'calendar';
+
+  // Fonction pour gérer le changement de date de début sans conversion de fuseau horaire
+  const handleStartDateChange = (newDate) => {
+    // Formater la date sans conversion de fuseau horaire
+    const formattedDate = newDate ? dayjs(newDate).format('YYYY-MM-DDTHH:mm:ss') : null;
+    onChangeStartDate(dayjs(formattedDate));
+  };
+
+  // Fonction pour gérer le changement de date de fin sans conversion de fuseau horaire
+  const handleEndDateChange = (newDate) => {
+    // Formater la date sans conversion de fuseau horaire
+    const formattedDate = newDate ? dayjs(newDate).format('YYYY-MM-DDTHH:mm:ss') : null;
+    onChangeEndDate(dayjs(formattedDate));
+  };
 
   return (
     <Dialog
@@ -64,7 +79,11 @@ export function CustomDateRangePicker({
                   borderStyle: 'dashed',
                 }}
               >
-                <DateCalendar value={startDate} onChange={onChangeStartDate} />
+                <DateCalendar
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                  // Retirer complètement la propriété timezone/timeZone
+                />
               </Paper>
 
               <Paper
@@ -75,14 +94,14 @@ export function CustomDateRangePicker({
                   borderStyle: 'dashed',
                 }}
               >
-                <DateCalendar value={endDate} onChange={onChangeEndDate} />
+                <DateCalendar value={endDate} onChange={handleEndDateChange} />
               </Paper>
             </>
           ) : (
             <>
-              <DatePicker label="Start date" value={startDate} onChange={onChangeStartDate} />
+              <DatePicker label="Start date" value={startDate} onChange={handleStartDateChange} />
 
-              <DatePicker label="End date" value={endDate} onChange={onChangeEndDate} />
+              <DatePicker label="End date" value={endDate} onChange={handleEndDateChange} />
             </>
           )}
         </Stack>

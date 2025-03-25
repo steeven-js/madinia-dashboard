@@ -1,3 +1,6 @@
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { v4 as uuidv4 } from 'uuid';
 import { useMemo, useState, useEffect } from 'react';
 import {
@@ -9,6 +12,14 @@ import {
   onSnapshot,
   getFirestore,
 } from 'firebase/firestore';
+
+// Ajouter les plugins dayjs
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Constante pour le fuseau horaire de la Martinique (comme dans calendar)
+const MARTINIQUE_TIMEZONE = 'America/Martinique';
+
 
 const db = getFirestore();
 
@@ -211,6 +222,11 @@ export async function createTask(columnId, taskData, userId) {
   try {
     const boardRef = doc(db, 'boards', 'main-board');
 
+    // Formater les dates avec le fuseau horaire fixe de la Martinique
+    // sans conversion (simplement ajouter le nom du fuseau horaire)
+    const currentDate = dayjs().format('YYYY-MM-DDTHH:mm:ss');
+    const nextDay = dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm:ss');
+
     // S'assurer que toutes les valeurs sont définies
     const newTask = {
       id: taskData.id || crypto.randomUUID(),
@@ -221,11 +237,14 @@ export async function createTask(columnId, taskData, userId) {
       labels: taskData.labels || [],
       comments: taskData.comments || [],
       assignee: taskData.assignee || [],
-      due: taskData.due || [new Date().toISOString(), new Date(Date.now() + 86400000).toISOString()],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      // Utiliser les dates formatées sans conversion
+      due: taskData.due || [currentDate, nextDay],
+      createdAt: currentDate,
+      updatedAt: currentDate,
       createdBy: userId || null,
       updatedBy: userId || null,
+      // Ajouter le fuseau horaire fixe pour la compatibilité avec le reste du système
+      timezone: MARTINIQUE_TIMEZONE,
       reporter: {
         id: userId || null,
         name: taskData.reporter?.name || 'Anonymous',
@@ -274,15 +293,35 @@ export async function updateTask(columnId, taskData) {
       throw new Error(`Task with ID ${taskData.id} not found in column ${columnId}`);
     }
 
+    // Formatage de la date actuelle sans conversion de fuseau horaire
+    const currentDate = dayjs().format('YYYY-MM-DDTHH:mm:ss');
+
+    // Traitement des dates dans taskData pour standardiser le format
+    let processedTaskData = { ...taskData };
+
+    // Si le taskData contient une propriété 'due', nous nous assurons qu'elle soit formatée correctement
+    if (processedTaskData.due && Array.isArray(processedTaskData.due)) {
+      processedTaskData.due = processedTaskData.due.map(date => {
+        // Si c'est déjà une chaîne au format simple YYYY-MM-DDTHH:mm:ss, la garder telle quelle
+        // Sinon, reformater pour éliminer le suffixe de fuseau horaire
+        if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+          return date;
+        }
+        return dayjs(date).format('YYYY-MM-DDTHH:mm:ss');
+      });
+    }
+
     // Mettre à jour les données de la tâche avec le timestamp et l'utilisateur
     const updatedTask = {
       ...columnTasks[taskIndex],
-      ...taskData,
-      updatedAt: new Date().toISOString(),
-      updatedBy: taskData.updatedBy || columnTasks[taskIndex].updatedBy,
+      ...processedTaskData,
+      updatedAt: currentDate,
+      updatedBy: processedTaskData.updatedBy || columnTasks[taskIndex].updatedBy,
+      // Assurer que le fuseau horaire est toujours défini
+      timezone: MARTINIQUE_TIMEZONE,
       reporter: {
         ...columnTasks[taskIndex].reporter,
-        ...taskData.reporter,
+        ...processedTaskData.reporter,
       },
     };
 
