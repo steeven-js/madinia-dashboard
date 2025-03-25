@@ -146,6 +146,19 @@ const ItemBase = forwardRef(({ task, stateProps, sx, ...other }, ref) => {
       </Stack>
 
       <AvatarGroup sx={{ [`& .${avatarGroupClasses.avatar}`]: { width: 24, height: 24 } }}>
+        <Avatar
+          alt={task?.reporter?.name}
+          src={task?.reporter?.avatarUrl}
+          sx={{
+            width: 24,
+            height: 24,
+            border: (theme) => `solid 2px ${theme.palette.background.paper}`,
+            bgcolor: 'background.neutral',
+          }}
+        >
+          {task?.reporter?.name?.charAt(0).toUpperCase()}
+        </Avatar>
+
         {task?.assignee?.map((user) => (
           <Avatar key={user.id} alt={user.name} src={user.avatarUrl} />
         ))}
