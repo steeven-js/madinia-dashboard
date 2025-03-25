@@ -50,8 +50,13 @@ export function RHFMobileDateTimePicker({ name, slotProps, ...other }) {
         <MobileDateTimePicker
           {...field}
           value={dayjs(field.value)}
-          onChange={(newValue) => field.onChange(dayjs(newValue).format())}
+          onChange={(newValue) => {
+            // Conserver l'heure exactement comme saisie, sans tenir compte du fuseau horaire
+            const formattedDate = newValue ? dayjs(newValue).format('YYYY-MM-DDTHH:mm:ss') : null;
+            field.onChange(formattedDate);
+          }}
           format={formatStr.split.dateTime}
+          timeZone="system" // Utiliser le fuseau horaire local de l'utilisateur
           slotProps={{
             textField: {
               fullWidth: true,

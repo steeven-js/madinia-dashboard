@@ -117,16 +117,20 @@ export function useCalendar() {
   const onDropEvent = useCallback((arg, updateEvent) => {
     const { event } = arg;
 
+    // Conserver les dates telles quelles, sans conversion de fuseau horaire
+    const start = event.startStr ? dayjs(event.startStr).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+    const end = event.endStr ? dayjs(event.endStr).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+
+    // Préparation des données de l'événement pour la mise à jour
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
-      start: event.startStr
-        ? dayjs.tz(event.startStr, MARTINIQUE_TIMEZONE).utc().format()
-        : undefined,
-      end: event.endStr
-        ? dayjs.tz(event.endStr, MARTINIQUE_TIMEZONE).utc().format()
-        : undefined,
+      // Stocker les dates sans conversion
+      start,
+      end,
+      // Toujours utiliser le fuseau horaire de la Martinique
+      timezone: MARTINIQUE_TIMEZONE,
+      // Conservation des métadonnées de l'événement
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',
@@ -137,6 +141,7 @@ export function useCalendar() {
       color: event.backgroundColor || event.extendedProps.color || '#00AB55',
     };
 
+    // Nettoyage des valeurs undefined avant la mise à jour
     const cleanedData = Object.fromEntries(
       Object.entries(eventData).filter(([_, value]) => value !== undefined)
     );
@@ -147,16 +152,16 @@ export function useCalendar() {
   const onResizeEvent = useCallback((arg, updateEvent) => {
     const { event } = arg;
 
+    // Même logique que pour onDropEvent, sans conversion de fuseau horaire
+    const start = event.startStr ? dayjs(event.startStr).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+    const end = event.endStr ? dayjs(event.endStr).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
-      start: event.startStr
-        ? dayjs.tz(event.startStr, MARTINIQUE_TIMEZONE).utc().format()
-        : undefined,
-      end: event.endStr
-        ? dayjs.tz(event.endStr, MARTINIQUE_TIMEZONE).utc().format()
-        : undefined,
+      start,
+      end,
+      timezone: MARTINIQUE_TIMEZONE,
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',

@@ -78,15 +78,12 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     defaultValues: useMemo(() => {
       if (!currentEvent) return undefined;
 
-      // Convertir les dates en fuseau horaire de la Martinique
+      // Pour l'affichage, utiliser directement les dates stockées
+      // sans conversion de fuseau horaire
       return {
         ...currentEvent,
-        start: currentEvent.start
-          ? dayjs.utc(currentEvent.start).tz(MARTINIQUE_TIMEZONE).format()
-          : undefined,
-        end: currentEvent.end
-          ? dayjs.utc(currentEvent.end).tz(MARTINIQUE_TIMEZONE).format()
-          : undefined,
+        start: currentEvent.start,
+        end: currentEvent.end,
       };
     }, [currentEvent]),
   });
@@ -104,20 +101,27 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const dateError = fIsAfter(values.start, values.end);
 
   const onSubmit = handleSubmit(async (data) => {
+    // Garder les dates telles quelles, sans conversion de fuseau horaire
+    const start = data?.start ? dayjs(data.start).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+    const end = data?.end ? dayjs(data.end).format('YYYY-MM-DDTHH:mm:ss') : undefined;
+
     const eventData = {
       id: currentEvent?.id ? currentEvent?.id : uuidv4(),
       color: data?.color,
       title: data?.title,
       allDay: data?.allDay,
       description: data?.description,
-      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
-      start: data?.start ? dayjs.tz(data.start, MARTINIQUE_TIMEZONE).utc().format() : undefined,
-      end: data?.end ? dayjs.tz(data.end, MARTINIQUE_TIMEZONE).utc().format() : undefined,
+      // Stocker les dates sans conversion
+      start,
+      end,
+      // Utiliser toujours le fuseau horaire de la Martinique
+      timezone: MARTINIQUE_TIMEZONE,
     };
 
     try {
       if (!dateError) {
         if (currentEvent?.id) {
+          // En cas de modification, on préserve les métadonnées originales
           const updateData = {
             ...eventData,
             userId: currentEvent.userId || '',
@@ -208,6 +212,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               label="Date de début"
               ampm={false}
               format="DD/MM/YYYY HH:mm"
+              // Ne pas spécifier de timezone pour éviter la conversion
             />
 
             <Field.MobileDateTimePicker
@@ -215,6 +220,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
               label="Date de fin"
               ampm={false}
               format="DD/MM/YYYY HH:mm"
+              // Ne pas spécifier de timezone pour éviter la conversion
               slotProps={{
                 textField: {
                   error: dateError,
