@@ -209,18 +209,34 @@ export async function deleteColumn(columnId) {
 // ----------------------------------------------------------------------
 
 export async function createTask(columnId, taskData, userId) {
-  // Crée une nouvelle tâche dans la colonne spécifiée
-
   try {
     const boardRef = doc(db, 'boards', 'main-board');
 
-    // Use the provided userId instead of useSelector
-    const newTaskId = userId;
-
-    // Créer l'objet de la nouvelle tâche
+    // S'assurer que toutes les valeurs sont définies
     const newTask = {
-      id: newTaskId,
-      ...taskData
+      id: taskData.id || crypto.randomUUID(),
+      status: taskData.status || 'Untitled',
+      name: taskData.name || 'Untitled',
+      priority: taskData.priority || 'medium',
+      attachments: taskData.attachments || [],
+      labels: taskData.labels || [],
+      comments: taskData.comments || [],
+      assignee: taskData.assignee || [],
+      due: taskData.due || [new Date().toISOString(), new Date(Date.now() + 86400000).toISOString()],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: userId || null,
+      updatedBy: userId || null,
+      reporter: {
+        id: userId || null,
+        name: taskData.reporter?.name || 'Anonymous',
+        avatarUrl: taskData.reporter?.avatarUrl || null,
+        email: taskData.reporter?.email || null,
+        role: taskData.reporter?.role || null,
+        roleLevel: taskData.reporter?.roleLevel || 0,
+        isVerified: taskData.reporter?.isVerified || false,
+      },
+      description: taskData.description || '',
     };
 
     // Mettre à jour le tableau des tâches de la colonne avec la nouvelle tâche
@@ -239,7 +255,6 @@ export async function createTask(columnId, taskData, userId) {
 // ----------------------------------------------------------------------
 
 export async function updateTask(columnId, taskData) {
-  // Met à jour une tâche dans la colonne spécifiée
   try {
     const boardRef = doc(db, 'boards', 'main-board');
 
@@ -260,8 +275,19 @@ export async function updateTask(columnId, taskData) {
       throw new Error(`Task with ID ${taskData.id} not found in column ${columnId}`);
     }
 
-    // Mettre à jour les données de la tâche
-    columnTasks[taskIndex] = { ...columnTasks[taskIndex], ...taskData };
+    // Mettre à jour les données de la tâche avec le timestamp et l'utilisateur
+    const updatedTask = {
+      ...columnTasks[taskIndex],
+      ...taskData,
+      updatedAt: new Date().toISOString(),
+      updatedBy: taskData.updatedBy || columnTasks[taskIndex].updatedBy,
+      reporter: {
+        ...columnTasks[taskIndex].reporter,
+        ...taskData.reporter,
+      },
+    };
+
+    columnTasks[taskIndex] = updatedTask;
 
     // Utiliser setDoc avec merge: true pour mettre à jour uniquement les champs spécifiés
     await setDoc(
@@ -277,7 +303,7 @@ export async function updateTask(columnId, taskData) {
     );
 
     console.log(`Task ${taskData.id} updated successfully`);
-    return columnTasks[taskIndex];
+    return updatedTask;
   } catch (error) {
     console.error('Error updating task:', error);
     throw error;

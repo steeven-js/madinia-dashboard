@@ -1,34 +1,46 @@
 import { useMemo, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import Paper from '@mui/material/Paper';
 import FormHelperText from '@mui/material/FormHelperText';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
 
-import { uuidv4 } from 'src/utils/uuidv4';
 import { fAdd, today } from 'src/utils/format-time';
-
-import { _mock } from 'src/_mock';
 
 // ----------------------------------------------------------------------
 
 export function KanbanTaskAdd({ status, openAddTask, onAddTask, onCloseAddTask }) {
   const [taskName, setTaskName] = useState('');
+  const user = useSelector((state) => state.auth.user);
 
   const defaultTask = useMemo(
     () => ({
-      id: uuidv4(),
-      status,
-      name: taskName.trim() ? taskName : 'Untitled',
+      id: crypto.randomUUID(),
+      status: status || 'Untitled',
+      name: taskName.trim() || 'Untitled',
       priority: 'medium',
       attachments: [],
       labels: [],
       comments: [],
       assignee: [],
-      due: [today(), fAdd({ days: 1 })],
-      reporter: { id: _mock.id(16), name: _mock.fullName(16), avatarUrl: _mock.image.avatar(16) },
+      due: [new Date().toISOString(), new Date(Date.now() + 86400000).toISOString()],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: user?.id || null,
+      updatedBy: user?.id || null,
+      reporter: {
+        id: user?.id || null,
+        name: user?.displayName || `${user?.firstName} ${user?.lastName}` || 'Anonymous',
+        avatarUrl: user?.avatarUrl || null,
+        email: user?.email || null,
+        role: user?.role || null,
+        roleLevel: user?.roleLevel || 0,
+        isVerified: user?.isVerified || false,
+      },
+      description: '',
     }),
-    [status, taskName]
+    [status, taskName, user]
   );
 
   const handleChangeName = useCallback((event) => {

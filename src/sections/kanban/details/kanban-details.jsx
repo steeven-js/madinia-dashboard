@@ -58,25 +58,15 @@ const StyledLabel = styled('span')(({ theme }) => ({
 
 export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, onCloseDetails }) {
   const tabs = useTabs('overview');
-
-  const [priority, setPriority] = useState(task.priority);
-
-  const [taskName, setTaskName] = useState(task.name);
-
-  const [subtaskCompleted, setSubtaskCompleted] = useState(SUBTASKS.slice(0, 2));
-
-  const like = useBoolean();
-
-  const contacts = useBoolean();
-
-  const [taskDescription, setTaskDescription] = useState(task.description);
-
-  const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
-
-  // Récupérer l'uid de l'utilisateur connecté
   const user = useSelector((state) => state.auth.user);
 
-  // console.log('user', user);
+  const [priority, setPriority] = useState(task.priority);
+  const [taskName, setTaskName] = useState(task.name);
+  const [taskDescription, setTaskDescription] = useState(task.description);
+  const [subtaskCompleted, setSubtaskCompleted] = useState(SUBTASKS.slice(0, 2));
+  const like = useBoolean();
+  const contacts = useBoolean();
+  const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
 
   const handleChangeTaskName = useCallback((event) => {
     setTaskName(event.target.value);
@@ -87,23 +77,37 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       try {
         if (event.key === 'Enter') {
           if (taskName) {
-            onUpdateTask({ ...task, name: taskName });
+            onUpdateTask({
+              ...task,
+              name: taskName,
+              updatedBy: user?.uid,
+              updatedAt: new Date().toISOString(),
+            });
           }
         }
       } catch (error) {
         console.error(error);
       }
     },
-    [onUpdateTask, task, taskName]
+    [onUpdateTask, task, taskName, user?.uid]
   );
 
   const handleChangeTaskDescription = useCallback((event) => {
     setTaskDescription(event.target.value);
   }, []);
 
-  const handleChangePriority = useCallback((newValue) => {
-    setPriority(newValue);
-  }, []);
+  const handleChangePriority = useCallback(
+    (newValue) => {
+      setPriority(newValue);
+      onUpdateTask({
+        ...task,
+        priority: newValue,
+        updatedBy: user?.uid,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [onUpdateTask, task, user?.uid]
+  );
 
   const handleClickSubtaskComplete = (taskId) => {
     const selected = subtaskCompleted.includes(taskId)
@@ -155,7 +159,12 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       {/* Reporter */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <StyledLabel>Rapporteur</StyledLabel>
-        <Avatar alt={task.reporter.name} src={task.reporter.avatarUrl} />
+        <Avatar alt={task.reporter?.name} src={task.reporter?.avatarUrl}>
+          {task.reporter?.name?.charAt(0).toUpperCase()}
+        </Avatar>
+        <Typography variant="body2" sx={{ ml: 1 }}>
+          {task.reporter?.name || 'Anonymous'}
+        </Typography>
       </Box>
 
       {/* Assignee */}
@@ -326,7 +335,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
         {tabs.value === 'comments' && renderTabComments}
       </Scrollbar>
 
-      {tabs.value === 'comments' && <KanbanDetailsCommentInput />}
+      {tabs.value === 'comments' && <KanbanDetailsCommentInput taskId={task.id} />}
     </Drawer>
   );
 }

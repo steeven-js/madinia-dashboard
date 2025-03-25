@@ -56,7 +56,9 @@ const cssVars = {
 
 export function KanbanView() {
   const { board, boardLoading, boardEmpty } = useGetBoard();
-  const user = useSelector((state) => state.auth.user);
+  const authUser = useSelector((state) => state.auth.user);
+
+  console.log('authUser', authUser);
 
   console.log('board', board);
 
@@ -307,7 +309,7 @@ export function KanbanView() {
                   key={column.id}
                   column={column}
                   tasks={board.tasks[column.id]}
-                  userId={user?.uid}
+                  userId={authUser?.uid}
                 >
                   <SortableContext
                     items={board.tasks[column.id]}
