@@ -31,7 +31,7 @@ export function KanbanContactsDialog({ assignee = [], open, onClose, onAssign })
   const status = useSelector((state) => state.user.status);
 
   useEffect(() => {
-    console.log('🔍 Component mounted, fetching users...');
+    // console.log('🔍 Component mounted, fetching users...');
     dispatch(fetchAllUsers());
   }, [dispatch]);
 
@@ -45,14 +45,14 @@ export function KanbanContactsDialog({ assignee = [], open, onClose, onAssign })
 
   const handleAssignUser = useCallback(
     (user) => {
-      console.log('👤 Assigning user:', user);
+      // console.log('👤 Assigning user:', user);
       onAssign(user);
     },
     [onAssign]
   );
 
-  console.log('🎯 Current users:', users);
-  console.log('🔎 Filtered users:', dataFiltered);
+  // console.log('🎯 Current users:', users);
+  // console.log('🔎 Filtered users:', dataFiltered);
 
   return (
     <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose}>

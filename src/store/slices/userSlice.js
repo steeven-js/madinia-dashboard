@@ -23,13 +23,13 @@ export const fetchUserData = createAsyncThunk(
   'user/fetchUserData',
   async (userId, { dispatch }) => {
     try {
-      console.log('🚀 Fetching user data for:', userId);
+      // console.log('🚀 Fetching user data for:', userId);
       const docRef = doc(db, 'users', userId);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        console.log('📥 User data received:', userData);
+        // console.log('📥 User data received:', userData);
 
         if (userData.role) {
           dispatch(setRole(userData.role));
@@ -52,7 +52,7 @@ export const fetchAllUsers = createAsyncThunk(
   'user/fetchAllUsers',
   async (_, { dispatch }) => {
     try {
-      console.log('🚀 Fetching all users data');
+      // console.log('🚀 Fetching all users data');
       const usersRef = collection(db, 'users');
       const querySnapshot = await getDocs(usersRef);
 
@@ -64,7 +64,7 @@ export const fetchAllUsers = createAsyncThunk(
         });
       });
 
-      console.log('📥 All users data received:', users);
+      // console.log('📥 All users data received:', users);
       return users;
     } catch (error) {
       console.error('❌ Error fetching all users:', error);
@@ -91,7 +91,7 @@ const userSlice = createSlice({
     // Met à jour partiellement les données utilisateur en fusionnant avec les données existantes
     updateUserData: (state, action) => {
       state.data = { ...state.data, ...action.payload };
-      console.log('🔄 User data updated:', state.data);
+      // console.log('🔄 User data updated:', state.data);
     },
     // Réinitialise complètement l'état du slice aux valeurs par défaut
     clearUserData: (state) => {
@@ -99,7 +99,7 @@ const userSlice = createSlice({
       state.users = [];
       state.status = 'idle';
       state.error = null;
-      console.log('🧹 User data cleared');
+      // console.log('🧹 User data cleared');
     },
   },
   // Gestion des actions asynchrones avec extraReducers
@@ -108,34 +108,34 @@ const userSlice = createSlice({
       // Gestion de fetchUserData
       .addCase(fetchUserData.pending, (state) => {
         state.status = 'loading';
-        console.log('⏳ Loading user data...');
+        // console.log('⏳ Loading user data...');
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.data = action.payload;
         state.error = null;
-        console.log('✅ User data loaded successfully');
+        // console.log('✅ User data loaded successfully');
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
-        console.log('❌ Failed to load user data:', action.error.message);
+        // console.log('❌ Failed to load user data:', action.error.message);
       })
       // Gestion de fetchAllUsers
       .addCase(fetchAllUsers.pending, (state) => {
         state.status = 'loading';
-        console.log('⏳ Loading all users...');
+        // console.log('⏳ Loading all users...');
       })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.users = action.payload;
         state.error = null;
-        console.log('✅ All users loaded successfully');
+        // console.log('✅ All users loaded successfully');
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
-        console.log('❌ Failed to load all users:', action.error.message);
+        // console.log('❌ Failed to load all users:', action.error.message);
       });
   },
 });
