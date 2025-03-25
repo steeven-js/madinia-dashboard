@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
 import { v4 as uuidv4 } from 'uuid';
+import timezone from 'dayjs/plugin/timezone';
 import { useMemo, useState, useEffect } from 'react';
 import {
   doc,
@@ -297,7 +297,7 @@ export async function updateTask(columnId, taskData) {
     const currentDate = dayjs().format('YYYY-MM-DDTHH:mm:ss');
 
     // Traitement des dates dans taskData pour standardiser le format
-    let processedTaskData = { ...taskData };
+    const processedTaskData = { ...taskData };
 
     // Si le taskData contient une propriété 'due', nous nous assurons qu'elle soit formatée correctement
     if (processedTaskData.due && Array.isArray(processedTaskData.due)) {
