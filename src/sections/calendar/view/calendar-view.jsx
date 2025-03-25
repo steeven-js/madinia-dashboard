@@ -42,6 +42,9 @@ import { CalendarFiltersResult } from '../calendar-filters-result';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Constante pour le fuseau horaire de la Martinique
+const MARTINIQUE_TIMEZONE = 'America/Martinique';
+
 export function CalendarView() {
   const theme = useTheme();
 
@@ -49,12 +52,16 @@ export function CalendarView() {
 
   const { events, eventsLoading } = useGetEvents();
 
-  // Utiliser les dates telles qu'elles sont, sans conversion
-  const localEvents = useMemo(() => events.map((event) => ({
-      ...event,
-      start: event.start ? dayjs(event.start).format() : undefined,
-      end: event.end ? dayjs(event.end).format() : undefined,
-    })), [events]);
+  // Convertir les dates UTC en fuseau horaire de la Martinique
+  const localEvents = useMemo(
+    () =>
+      events.map((event) => ({
+        ...event,
+        start: event.start ? dayjs.utc(event.start).tz(MARTINIQUE_TIMEZONE).format() : undefined,
+        end: event.end ? dayjs.utc(event.end).tz(MARTINIQUE_TIMEZONE).format() : undefined,
+      })),
+    [events]
+  );
 
   // console.log('events', events);
 
@@ -166,6 +173,7 @@ export function CalendarView() {
               select={onSelectRange}
               eventClick={onClickEvent}
               aspectRatio={3}
+              timeZone={MARTINIQUE_TIMEZONE}
               eventDrop={(arg) => {
                 onDropEvent(arg, updateEvent);
               }}

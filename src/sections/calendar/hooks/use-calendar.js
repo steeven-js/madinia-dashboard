@@ -9,6 +9,9 @@ import { useResponsive } from 'src/hooks/use-responsive';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Constante pour le fuseau horaire de la Martinique
+const MARTINIQUE_TIMEZONE = 'America/Martinique';
+
 // ----------------------------------------------------------------------
 
 export function useCalendar() {
@@ -17,8 +20,6 @@ export function useCalendar() {
   const calendarEl = calendarRef.current;
 
   const smUp = useResponsive('up', 'sm');
-
-  const userTimezone = dayjs.tz.guess();
 
   const [date, setDate] = useState(new Date());
 
@@ -119,8 +120,13 @@ export function useCalendar() {
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      start: event.startStr ? dayjs(event.startStr).format() : undefined,
-      end: event.endStr ? dayjs(event.endStr).format() : undefined,
+      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
+      start: event.startStr
+        ? dayjs.tz(event.startStr, MARTINIQUE_TIMEZONE).utc().format()
+        : undefined,
+      end: event.endStr
+        ? dayjs.tz(event.endStr, MARTINIQUE_TIMEZONE).utc().format()
+        : undefined,
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',
@@ -144,8 +150,13 @@ export function useCalendar() {
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      start: event.startStr ? dayjs(event.startStr).format() : undefined,
-      end: event.endStr ? dayjs(event.endStr).format() : undefined,
+      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
+      start: event.startStr
+        ? dayjs.tz(event.startStr, MARTINIQUE_TIMEZONE).utc().format()
+        : undefined,
+      end: event.endStr
+        ? dayjs.tz(event.endStr, MARTINIQUE_TIMEZONE).utc().format()
+        : undefined,
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',

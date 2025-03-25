@@ -38,6 +38,9 @@ import { ColorPicker } from 'src/components/color-utils';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Constante pour le fuseau horaire de la Martinique
+const MARTINIQUE_TIMEZONE = 'America/Martinique';
+
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
@@ -75,11 +78,15 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
     defaultValues: useMemo(() => {
       if (!currentEvent) return undefined;
 
-      // Utiliser les dates telles qu'elles sont, sans conversion
+      // Convertir les dates en fuseau horaire de la Martinique
       return {
         ...currentEvent,
-        start: currentEvent.start ? dayjs(currentEvent.start).format() : undefined,
-        end: currentEvent.end ? dayjs(currentEvent.end).format() : undefined,
+        start: currentEvent.start
+          ? dayjs.utc(currentEvent.start).tz(MARTINIQUE_TIMEZONE).format()
+          : undefined,
+        end: currentEvent.end
+          ? dayjs.utc(currentEvent.end).tz(MARTINIQUE_TIMEZONE).format()
+          : undefined,
       };
     }, [currentEvent]),
   });
@@ -103,9 +110,9 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       title: data?.title,
       allDay: data?.allDay,
       description: data?.description,
-      // Stocker les dates telles qu'elles sont, sans conversion
-      start: data?.start ? dayjs(data.start).format() : undefined,
-      end: data?.end ? dayjs(data.end).format() : undefined,
+      // Convertir les dates en UTC en utilisant le fuseau horaire de la Martinique
+      start: data?.start ? dayjs.tz(data.start, MARTINIQUE_TIMEZONE).utc().format() : undefined,
+      end: data?.end ? dayjs.tz(data.end, MARTINIQUE_TIMEZONE).utc().format() : undefined,
     };
 
     try {
