@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import {
   arrayMove,
   SortableContext,
@@ -55,6 +56,9 @@ const cssVars = {
 
 export function KanbanView() {
   const { board, boardLoading, boardEmpty } = useGetBoard();
+  const user = useSelector((state) => state.auth.user);
+
+  console.log('board', board);
 
   const [columnFixed, setColumnFixed] = useState(true);
 
@@ -299,7 +303,12 @@ export function KanbanView() {
               strategy={horizontalListSortingStrategy}
             >
               {board?.columns.map((column) => (
-                <KanbanColumn key={column.id} column={column} tasks={board.tasks[column.id]}>
+                <KanbanColumn
+                  key={column.id}
+                  column={column}
+                  tasks={board.tasks[column.id]}
+                  userId={user?.uid}
+                >
                   <SortableContext
                     items={board.tasks[column.id]}
                     strategy={verticalListSortingStrategy}

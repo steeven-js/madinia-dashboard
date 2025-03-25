@@ -14,7 +14,7 @@ import { KanbanColumnToolBar } from './kanban-column-toolbar';
 
 // ----------------------------------------------------------------------
 
-export function KanbanColumn({ children, column, tasks, disabled, sx }) {
+export function KanbanColumn({ children, column, tasks, disabled, sx, userId }) {
   const openAddTask = useBoolean();
 
   const { attributes, isDragging, listeners, setNodeRef, transition, active, over, transform } =
@@ -67,14 +67,14 @@ export function KanbanColumn({ children, column, tasks, disabled, sx }) {
   const handleAddTask = useCallback(
     async (taskData) => {
       try {
-        createTask(column.id, taskData);
+        createTask(column.id, taskData, userId);
 
         openAddTask.onFalse();
       } catch (error) {
         console.error(error);
       }
     },
-    [column.id, openAddTask]
+    [column.id, openAddTask, userId]
   );
 
   return (

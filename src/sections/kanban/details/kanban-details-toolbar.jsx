@@ -51,7 +51,7 @@ export function KanbanDetailsToolbar({
         }}
       >
         {!smUp && (
-          <Tooltip title="Back">
+          <Tooltip title="Retour">
             <IconButton onClick={onCloseDetails} sx={{ mr: 1 }}>
               <Iconify icon="eva:arrow-ios-back-fill" />
             </IconButton>
@@ -68,13 +68,13 @@ export function KanbanDetailsToolbar({
         </Button>
 
         <Stack direction="row" justifyContent="flex-end" flexGrow={1}>
-          <Tooltip title="Like">
+          <Tooltip title="J'aime">
             <IconButton color={liked ? 'default' : 'primary'} onClick={onLike}>
               <Iconify icon="ic:round-thumb-up" />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Delete task">
+          <Tooltip title="Supprimer la tâche">
             <IconButton onClick={confirm.onTrue}>
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
@@ -93,7 +93,7 @@ export function KanbanDetailsToolbar({
         slotProps={{ arrow: { placement: 'top-right' } }}
       >
         <MenuList>
-          {['To do', 'In progress', 'Ready to test', 'Done'].map((option) => (
+          {['À faire', 'En cours', 'Prêt à tester', 'Terminé'].map((option) => (
             <MenuItem
               key={option}
               selected={status === option}
@@ -110,15 +110,15 @@ export function KanbanDetailsToolbar({
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
-        title="Delete"
+        title="Supprimer"
         content={
           <>
-            Are you sure want to delete <strong> {taskName} </strong>?
+            Êtes-vous sûr de vouloir supprimer <strong> {taskName} </strong>?
           </>
         }
         action={
           <Button variant="contained" color="error" onClick={onDelete}>
-            Delete
+            Supprimer
           </Button>
         }
       />

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import {
   doc,
@@ -207,14 +208,14 @@ export async function deleteColumn(columnId) {
 
 // ----------------------------------------------------------------------
 
-export async function createTask(columnId, taskData) {
+export async function createTask(columnId, taskData, userId) {
   // Crée une nouvelle tâche dans la colonne spécifiée
 
   try {
     const boardRef = doc(db, 'boards', 'main-board');
 
-    // Générer un nouvel ID unique pour la tâche avec le format demandé
-    const newTaskId = `task-${uuidv4()}`;
+    // Use the provided userId instead of useSelector
+    const newTaskId = userId;
 
     // Créer l'objet de la nouvelle tâche
     const newTask = {

@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -38,11 +39,11 @@ import { KanbanContactsDialog } from '../components/kanban-contacts-dialog';
 // ----------------------------------------------------------------------
 
 const SUBTASKS = [
-  'Complete project proposal',
-  'Conduct market research',
-  'Design user interface mockups',
-  'Develop backend api',
-  'Implement authentication system',
+  'Compléter la proposition de projet',
+  'Effectuer une étude de marché',
+  "Concevoir les maquettes d'interface utilisateur",
+  "Développer l'API backend",
+  "Implémenter le système d'authentification",
 ];
 
 const StyledLabel = styled('span')(({ theme }) => ({
@@ -71,6 +72,11 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
   const [taskDescription, setTaskDescription] = useState(task.description);
 
   const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
+
+  // Récupérer l'uid de l'utilisateur connecté
+  const user = useSelector((state) => state.auth.user);
+
+  // console.log('user', user);
 
   const handleChangeTaskName = useCallback((event) => {
     setTaskName(event.target.value);
@@ -126,9 +132,9 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       slotProps={{ tab: { px: 0 } }}
     >
       {[
-        { value: 'overview', label: 'Overview' },
-        { value: 'subTasks', label: 'Subtasks' },
-        { value: 'comments', label: `Comments (${task.comments.length})` },
+        { value: 'overview', label: 'Aperçu' },
+        { value: 'subTasks', label: 'Sous-tâches' },
+        { value: 'comments', label: `Commentaires (${task.comments.length})` },
       ].map((tab) => (
         <Tab key={tab.value} value={tab.value} label={tab.label} />
       ))}
@@ -139,7 +145,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
       {/* Task name */}
       <KanbanInputName
-        placeholder="Task name"
+        placeholder="Nom de la tâche"
         value={taskName}
         onChange={handleChangeTaskName}
         onKeyUp={handleUpdateTask}
@@ -148,20 +154,20 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Reporter */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledLabel>Reporter</StyledLabel>
+        <StyledLabel>Rapporteur</StyledLabel>
         <Avatar alt={task.reporter.name} src={task.reporter.avatarUrl} />
       </Box>
 
       {/* Assignee */}
       <Box sx={{ display: 'flex' }}>
-        <StyledLabel sx={{ height: 40, lineHeight: '40px' }}>Assignee</StyledLabel>
+        <StyledLabel sx={{ height: 40, lineHeight: '40px' }}>Assigné à</StyledLabel>
 
         <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
           {task.assignee.map((user) => (
             <Avatar key={user.id} alt={user.name} src={user.avatarUrl} />
           ))}
 
-          <Tooltip title="Add assignee">
+          <Tooltip title="Ajouter un assigné">
             <IconButton
               onClick={contacts.onTrue}
               sx={{
@@ -183,7 +189,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Label */}
       <Box sx={{ display: 'flex' }}>
-        <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Labels</StyledLabel>
+        <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Étiquettes</StyledLabel>
 
         {!!task.labels.length && (
           <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
@@ -196,14 +202,14 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Due date */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledLabel> Due date </StyledLabel>
+        <StyledLabel> Date d'échéance </StyledLabel>
 
         {rangePicker.selected ? (
           <Button size="small" onClick={rangePicker.onOpen}>
             {rangePicker.shortLabel}
           </Button>
         ) : (
-          <Tooltip title="Add due date">
+          <Tooltip title="Ajouter une date d'échéance">
             <IconButton
               onClick={rangePicker.onOpen}
               sx={{
@@ -218,7 +224,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
         <CustomDateRangePicker
           variant="calendar"
-          title="Choose due date"
+          title="Choisir la date d'échéance"
           startDate={rangePicker.startDate}
           endDate={rangePicker.endDate}
           onChangeStartDate={rangePicker.onChangeStartDate}
@@ -232,7 +238,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Priority */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledLabel>Priority</StyledLabel>
+        <StyledLabel>Priorité</StyledLabel>
         <KanbanDetailsPriority priority={priority} onChangePriority={handleChangePriority} />
       </Box>
 
@@ -252,7 +258,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Attachments */}
       <Box sx={{ display: 'flex' }}>
-        <StyledLabel>Attachments</StyledLabel>
+        <StyledLabel>Pièces jointes</StyledLabel>
         <KanbanDetailsAttachments attachments={task.attachments} />
       </Box>
     </Box>
@@ -262,7 +268,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
       <div>
         <Typography variant="body2" sx={{ mb: 1 }}>
-          {subtaskCompleted.length} of {SUBTASKS.length}
+          {subtaskCompleted.length} sur {SUBTASKS.length}
         </Typography>
 
         <LinearProgress
@@ -293,7 +299,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
         startIcon={<Iconify icon="mingcute:add-line" />}
         sx={{ alignSelf: 'flex-start' }}
       >
-        Subtask
+        Sous-tâche
       </Button>
     </Box>
   );
