@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -117,6 +117,26 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     setSubtaskCompleted(selected);
   };
 
+  const handleAssignUser = useCallback(
+    (selectedUser) => {
+      const isAlreadyAssigned = task.assignee.some(
+        (assignedUser) => assignedUser.id === selectedUser.id
+      );
+
+      const updatedAssignee = isAlreadyAssigned
+        ? task.assignee.filter((assignedUser) => assignedUser.id !== selectedUser.id)
+        : [...task.assignee, selectedUser];
+
+      onUpdateTask({
+        ...task,
+        assignee: updatedAssignee,
+        updatedBy: user?.id,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [task, onUpdateTask, user?.id]
+  );
+
   const renderToolbar = (
     <KanbanDetailsToolbar
       liked={like.value}
@@ -172,8 +192,8 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
         <StyledLabel sx={{ height: 40, lineHeight: '40px' }}>Assigné à</StyledLabel>
 
         <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
-          {task.assignee.map((user) => (
-            <Avatar key={user.id} alt={user.name} src={user.avatarUrl} />
+          {task.assignee.map((assignee) => (
+            <Avatar key={assignee.id} alt={assignee.name} src={assignee.avatarUrl} />
           ))}
 
           <Tooltip title="Ajouter un assigné">
@@ -192,6 +212,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
             assignee={task.assignee}
             open={contacts.value}
             onClose={contacts.onFalse}
+            onAssign={handleAssignUser}
           />
         </Box>
       </Box>
@@ -211,7 +232,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       {/* Due date */}
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledLabel> Date d'échéance </StyledLabel>
+        <StyledLabel> Date d&apos;échéance </StyledLabel>
 
         {rangePicker.selected ? (
           <Button size="small" onClick={rangePicker.onOpen}>
@@ -336,6 +357,13 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       </Scrollbar>
 
       {tabs.value === 'comments' && <KanbanDetailsCommentInput taskId={task.id} />}
+
+      <KanbanContactsDialog
+        assignee={task.assignee}
+        open={contacts.value}
+        onClose={contacts.onFalse}
+        onAssign={handleAssignUser}
+      />
     </Drawer>
   );
 }

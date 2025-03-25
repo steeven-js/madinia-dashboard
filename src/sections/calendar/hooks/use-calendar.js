@@ -1,6 +1,13 @@
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { useRef, useState, useCallback } from 'react';
 
 import { useResponsive } from 'src/hooks/use-responsive';
+
+// Ajouter les plugins dayjs
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // ----------------------------------------------------------------------
 
@@ -10,6 +17,8 @@ export function useCalendar() {
   const calendarEl = calendarRef.current;
 
   const smUp = useResponsive('up', 'sm');
+
+  const userTimezone = dayjs.tz.guess();
 
   const [date, setDate] = useState(new Date());
 
@@ -110,8 +119,8 @@ export function useCalendar() {
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      start: event.startStr,
-      end: event.endStr,
+      start: event.startStr ? dayjs(event.startStr).format() : undefined,
+      end: event.endStr ? dayjs(event.endStr).format() : undefined,
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',
@@ -135,8 +144,8 @@ export function useCalendar() {
     const eventData = {
       id: event.id,
       allDay: event.allDay,
-      start: event.startStr,
-      end: event.endStr,
+      start: event.startStr ? dayjs(event.startStr).format() : undefined,
+      end: event.endStr ? dayjs(event.endStr).format() : undefined,
       userId: event.extendedProps.userId || '',
       userDisplayName: event.extendedProps.userDisplayName || 'Anonymous',
       photoURL: event.extendedProps.photoURL || '',

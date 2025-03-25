@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import {
   doc,

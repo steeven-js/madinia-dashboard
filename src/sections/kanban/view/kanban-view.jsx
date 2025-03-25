@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   arrayMove,
   SortableContext,
@@ -58,7 +58,7 @@ export function KanbanView() {
   const { board, boardLoading, boardEmpty } = useGetBoard();
   const authUser = useSelector((state) => state.auth.user);
 
-  // console.log('authUser', authUser);
+  console.log('authUser', authUser);
 
   console.log('board', board);
 
@@ -309,7 +309,7 @@ export function KanbanView() {
                   key={column.id}
                   column={column}
                   tasks={board.tasks[column.id]}
-                  userId={authUser?.uid}
+                  userId={authUser?.id}
                 >
                   <SortableContext
                     items={board.tasks[column.id]}

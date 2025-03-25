@@ -1,5 +1,8 @@
+import dayjs from 'dayjs';
 import { z as zod } from 'zod';
+import utc from 'dayjs/plugin/utc';
 import { useSelector } from 'react-redux';
+import timezone from 'dayjs/plugin/timezone';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { useMemo, useState, useCallback } from 'react';
@@ -31,6 +34,10 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Form, Field } from 'src/components/hook-form';
 import { ColorPicker } from 'src/components/color-utils';
 
+// Ajouter les plugins dayjs
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 // ----------------------------------------------------------------------
 
 export const EventSchema = zod.object({
@@ -55,20 +62,26 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
   const { user } = useAuth();
   const userRole = useSelector((state) => state.auth.role);
 
-  // Vérifier si l'utilisateur a le droit de modifier/supprimer
   const canModify = useMemo(() => {
-    // Si c'est un nouvel événement (pas de currentEvent.id), autoriser la création
     if (!currentEvent?.id) {
       return true;
     }
-    // Sinon vérifier les permissions de modification
     return userRole === 'dev' || currentEvent?.userId === user?.uid;
   }, [userRole, currentEvent?.id, currentEvent?.userId, user?.uid]);
 
   const methods = useForm({
     mode: 'all',
     resolver: zodResolver(EventSchema),
-    defaultValues: currentEvent,
+    defaultValues: useMemo(() => {
+      if (!currentEvent) return undefined;
+
+      // Utiliser les dates telles qu'elles sont, sans conversion
+      return {
+        ...currentEvent,
+        start: currentEvent.start ? dayjs(currentEvent.start).format() : undefined,
+        end: currentEvent.end ? dayjs(currentEvent.end).format() : undefined,
+      };
+    }, [currentEvent]),
   });
 
   const {
@@ -90,14 +103,14 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
       title: data?.title,
       allDay: data?.allDay,
       description: data?.description,
-      end: data?.end,
-      start: data?.start,
+      // Stocker les dates telles qu'elles sont, sans conversion
+      start: data?.start ? dayjs(data.start).format() : undefined,
+      end: data?.end ? dayjs(data.end).format() : undefined,
     };
 
     try {
       if (!dateError) {
         if (currentEvent?.id) {
-          // S'assurer que toutes les propriétés ont des valeurs par défaut
           const updateData = {
             ...eventData,
             userId: currentEvent.userId || '',
@@ -107,7 +120,6 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }) {
             createdAt: currentEvent.createdAt || Date.now(),
           };
 
-          // Filtrer les propriétés undefined
           const cleanedData = Object.fromEntries(
             Object.entries(updateData).filter(([_, value]) => value !== undefined)
           );

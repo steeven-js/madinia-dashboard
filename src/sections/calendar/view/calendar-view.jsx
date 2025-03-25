@@ -1,7 +1,9 @@
 import Calendar from '@fullcalendar/react'; // => request placed at the top
-
-import { useEffect } from 'react';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { useMemo, useEffect } from 'react';
 import listPlugin from '@fullcalendar/list';
+import timezone from 'dayjs/plugin/timezone';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
@@ -36,12 +38,23 @@ import { CalendarFiltersResult } from '../calendar-filters-result';
 
 // ----------------------------------------------------------------------
 
+// Ajouter les plugins dayjs
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export function CalendarView() {
   const theme = useTheme();
 
   const openFilters = useBoolean();
 
   const { events, eventsLoading } = useGetEvents();
+
+  // Utiliser les dates telles qu'elles sont, sans conversion
+  const localEvents = useMemo(() => events.map((event) => ({
+      ...event,
+      start: event.start ? dayjs(event.start).format() : undefined,
+      end: event.end ? dayjs(event.end).format() : undefined,
+    })), [events]);
 
   // console.log('events', events);
 
@@ -148,7 +161,7 @@ export function CalendarView() {
               initialView={view}
               dayMaxEventRows={3}
               eventDisplay="block"
-              events={dataFiltered}
+              events={localEvents}
               headerToolbar={false}
               select={onSelectRange}
               eventClick={onClickEvent}
