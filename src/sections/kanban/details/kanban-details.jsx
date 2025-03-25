@@ -17,6 +17,8 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -64,6 +66,17 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
   const [taskName, setTaskName] = useState(task.name);
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [subtaskCompleted, setSubtaskCompleted] = useState(SUBTASKS.slice(0, 2));
+  const [labels, setLabels] = useState(task.labels || []);
+  const [availableLabels] = useState([
+    'Urgent',
+    'Important',
+    'En attente',
+    'En cours',
+    'Terminé',
+    'Bug',
+    'Feature',
+    'Documentation',
+  ]);
   const like = useBoolean();
   const contacts = useBoolean();
   const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
@@ -135,6 +148,20 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       });
     },
     [task, onUpdateTask, user?.id]
+  );
+
+  const handleChangeLabels = useCallback(
+    (event) => {
+      const newLabels = event.target.value;
+      setLabels(newLabels);
+      onUpdateTask({
+        ...task,
+        labels: newLabels,
+        updatedBy: user?.id,
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [onUpdateTask, task, user?.id]
   );
 
   const renderToolbar = (
@@ -221,13 +248,27 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       <Box sx={{ display: 'flex' }}>
         <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Étiquettes</StyledLabel>
 
-        {!!task.labels.length && (
-          <Box sx={{ gap: 1, display: 'flex', flexWrap: 'wrap' }}>
-            {task.labels.map((label) => (
-              <Chip key={label} color="info" label={label} size="small" variant="soft" />
+        <Box sx={{ flex: 1 }}>
+          <Select
+            multiple
+            value={labels}
+            onChange={handleChangeLabels}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={value} size="small" color="info" variant="soft" />
+                ))}
+              </Box>
+            )}
+            sx={{ minWidth: 200 }}
+          >
+            {availableLabels.map((label) => (
+              <MenuItem key={label} value={label}>
+                {label}
+              </MenuItem>
             ))}
-          </Box>
-        )}
+          </Select>
+        </Box>
       </Box>
 
       {/* Due date */}
