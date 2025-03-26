@@ -650,6 +650,7 @@ export function KanbanDetails({
           overflow: 'auto',
           px: 2.5,
           pb: 2,
+          width: '100%',
         }}
       >
         <KanbanDetailsCommentList
@@ -683,6 +684,7 @@ export function KanbanDetails({
       anchor="right"
       slotProps={{ backdrop: { invisible: true } }}
       PaperProps={{ sx: { width: { xs: 1, sm: 480 } } }}
+      sx={{ width: '100%' }}
     >
       {renderToolbar}
 

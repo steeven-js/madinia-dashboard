@@ -74,48 +74,44 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         return (
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
               p: 1.5,
               bgcolor: 'background.neutral',
               borderRadius: 1,
             }}
           >
-            <Image
-              alt={comment.fileName}
-              src={fileThumb(`file.${comment.fileExtension}`)}
-              sx={{ width: 40, height: 40, flexShrink: 0 }}
-            />
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              <Image
+                alt={comment.fileName}
+                src={fileThumb(`file.${comment.fileExtension}`)}
+                sx={{ width: 40, height: 40, flexShrink: 0 }}
+              />
               <Typography
                 variant="body2"
                 sx={{
+                  flexGrow: 1,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                 }}
               >
                 {comment.fileName}
               </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {formatFileSize(comment.fileSize)}
               </Typography>
+
+              <IconButton
+                size="small"
+                href={comment.message}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ color: 'text.secondary' }}
+              >
+                <Iconify icon="mdi:download" width={20} />
+              </IconButton>
             </Box>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:download" />}
-              href={comment.message}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Télécharger
-            </Button>
           </Box>
         );
       default:
@@ -141,12 +137,12 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
 
   return (
     <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', width: '100%' }}>
-      <Stack direction="column" spacing={2}>
+      <Stack direction="row" spacing={2} width="100%">
         <Avatar src={comment.avatarUrl} alt={comment.name} sx={{ width: 40, height: 40 }}>
           {comment.name?.charAt(0)}
         </Avatar>
 
-        <Stack spacing={1} flexGrow={1}>
+        <Stack spacing={1} flexGrow={1} width="100%">
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Typography variant="subtitle2">{comment.name}</Typography>
             <Stack direction="row" alignItems="center" spacing={1}>
