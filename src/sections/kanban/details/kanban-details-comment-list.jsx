@@ -6,11 +6,18 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 
 import { db } from 'src/utils/firebase';
 import { fToNow } from 'src/utils/format-time';
+
+import { deleteComment } from 'src/actions/kanban';
 
 import { Image } from 'src/components/image';
 import { Iconify } from 'src/components/iconify';
@@ -20,6 +27,24 @@ import { Lightbox, useLightBox } from 'src/components/lightbox';
 function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
   const slides = comment.messageType === 'image' ? [{ src: comment.message }] : [];
   const lightbox = useLightBox(slides);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      await deleteComment(columnId, taskId, comment.id);
+      setOpenDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleOpenDeleteDialog = () => {
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -31,9 +56,27 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         <Stack spacing={1} flexGrow={1}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Typography variant="subtitle2">{comment.name}</Typography>
-            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              {fToNow(comment.createdAt)}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                {fToNow(comment.createdAt)}
+              </Typography>
+              {authUser && authUser.id === comment.createdBy && (
+                <Tooltip title="Supprimer le commentaire">
+                  <IconButton
+                    size="small"
+                    onClick={handleOpenDeleteDialog}
+                    sx={{
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: 'error.main',
+                      },
+                    }}
+                  >
+                    <Iconify icon="solar:trash-bin-trash-bold" width={16} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Stack>
           </Stack>
 
           {/* Affichage du message d'origine si c'est une réponse */}
@@ -97,6 +140,10 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
                   bgcolor: 'background.neutral',
                   p: 1.5,
                   borderRadius: 1,
+                  maxWidth: '100%',
+                  overflowX: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
                 }}
               >
                 {comment.message}
@@ -134,6 +181,29 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         open={lightbox.open}
         close={lightbox.onClose}
       />
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCloseDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} color="inherit">
+            Annuler
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
