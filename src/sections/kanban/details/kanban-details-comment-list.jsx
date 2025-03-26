@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 
 import { db } from 'src/utils/firebase';
 import { fToNow } from 'src/utils/format-time';
@@ -74,46 +75,56 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
             </Box>
           )}
 
-          {comment.messageType === 'image' ? (
-            <Image
-              alt={comment.message}
-              src={comment.message}
-              onClick={() => lightbox.onOpen(comment.message)}
-              sx={{
-                borderRadius: 1.5,
-                cursor: 'pointer',
-                transition: (theme) => theme.transitions.create(['opacity']),
-                '&:hover': { opacity: 0.8 },
-                maxWidth: '100%',
-                height: 'auto',
-              }}
-            />
-          ) : (
-            <Typography
-              variant="body2"
-              sx={{
-                bgcolor: 'background.neutral',
-                p: 1.5,
-                borderRadius: 1,
-              }}
-            >
-              {comment.message}
-            </Typography>
-          )}
-
-          {authUser && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Button
-                size="small"
-                color="inherit"
-                startIcon={<Iconify icon="eva:corner-down-left-outline" width={16} />}
-                onClick={() => onReply(comment)}
-                sx={{ typography: 'caption' }}
+          <Box sx={{ position: 'relative' }}>
+            {comment.messageType === 'image' ? (
+              <Image
+                alt={comment.message}
+                src={comment.message}
+                onClick={() => lightbox.onOpen(comment.message)}
+                sx={{
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  transition: (theme) => theme.transitions.create(['opacity']),
+                  '&:hover': { opacity: 0.8 },
+                  maxWidth: '100%',
+                  height: 'auto',
+                }}
+              />
+            ) : (
+              <Typography
+                variant="body2"
+                sx={{
+                  bgcolor: 'background.neutral',
+                  p: 1.5,
+                  borderRadius: 1,
+                }}
               >
-                Répondre
-              </Button>
-            </Stack>
-          )}
+                {comment.message}
+              </Typography>
+            )}
+
+            {authUser && (
+              <IconButton
+                size="small"
+                onClick={() => onReply(comment)}
+                sx={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'text.secondary',
+                  bgcolor: 'background.paper',
+                  boxShadow: 1,
+                  '&:hover': {
+                    color: 'primary.main',
+                    bgcolor: 'background.paper',
+                  },
+                }}
+              >
+                <Iconify icon="eva:corner-down-left-outline" width={16} />
+              </IconButton>
+            )}
+          </Box>
         </Stack>
       </Stack>
 
