@@ -3,16 +3,16 @@ import utc from 'dayjs/plugin/utc';
 import { v4 as uuidv4 } from 'uuid';
 import timezone from 'dayjs/plugin/timezone';
 import { useMemo, useState, useEffect } from 'react';
+import { ref, deleteObject } from 'firebase/storage';
 import {
   doc,
   getDoc,
-  setDoc,
   updateDoc,
   arrayUnion,
   onSnapshot,
   getFirestore,
 } from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
+
 import { storage } from 'src/utils/firebase';
 
 // Ajouter les plugins dayjs
@@ -232,7 +232,7 @@ export async function createTask(columnId, taskData, userId) {
     // S'assurer que toutes les valeurs sont définies
     const newTask = {
       id: taskData.id || crypto.randomUUID(),
-      status: taskData.status || 'Untitled',
+      status: columnId, // Utiliser l'ID de la colonne comme status
       name: taskData.name || 'Untitled',
       priority: taskData.priority || 'medium',
       attachments: taskData.attachments || [],
@@ -256,8 +256,7 @@ export async function createTask(columnId, taskData, userId) {
         role: taskData.reporter?.role || null,
         roleLevel: taskData.reporter?.roleLevel || 0,
         isVerified: taskData.reporter?.isVerified || false,
-      },
-      description: taskData.description || '',
+      }
     };
 
     // Mettre à jour le tableau des tâches de la colonne avec la nouvelle tâche
@@ -285,6 +284,12 @@ export async function updateTask(columnId, taskData) {
 
     if (!boardData || !boardData.board || !boardData.board.tasks) {
       throw new Error('Invalid board structure');
+    }
+
+    // Vérifier si la colonne de destination existe
+    const columnExists = boardData.board.columns.some(col => col.id === taskData.status);
+    if (!columnExists) {
+      throw new Error(`Column with ID ${taskData.status} does not exist`);
     }
 
     // Trouver l'index de la tâche à mettre à jour
@@ -328,20 +333,27 @@ export async function updateTask(columnId, taskData) {
       },
     };
 
-    columnTasks[taskIndex] = updatedTask;
+    // Si le status (colonne) a changé, déplacer la tâche
+    if (columnId !== taskData.status) {
+      // Supprimer la tâche de l'ancienne colonne
+      const updatedOldColumnTasks = columnTasks.filter(task => task.id !== taskData.id);
 
-    // Utiliser setDoc avec merge: true pour mettre à jour uniquement les champs spécifiés
-    await setDoc(
-      boardRef,
-      {
-        board: {
-          tasks: {
-            [columnId]: columnTasks,
-          },
-        },
-      },
-      { merge: true }
-    );
+      // Ajouter la tâche à la nouvelle colonne
+      const newColumnTasks = tasks[taskData.status] || [];
+      newColumnTasks.push(updatedTask);
+
+      // Mettre à jour les deux colonnes
+      await updateDoc(boardRef, {
+        [`board.tasks.${columnId}`]: updatedOldColumnTasks,
+        [`board.tasks.${taskData.status}`]: newColumnTasks
+      });
+    } else {
+      // Si la tâche reste dans la même colonne, mettre à jour uniquement cette colonne
+      columnTasks[taskIndex] = updatedTask;
+      await updateDoc(boardRef, {
+        [`board.tasks.${columnId}`]: columnTasks
+      });
+    }
 
     console.log(`Task ${taskData.id} updated successfully`);
     return updatedTask;

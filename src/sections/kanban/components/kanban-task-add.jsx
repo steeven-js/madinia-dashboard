@@ -6,7 +6,6 @@ import FormHelperText from '@mui/material/FormHelperText';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
 
-
 // ----------------------------------------------------------------------
 
 export function KanbanTaskAdd({ status, openAddTask, onAddTask, onCloseAddTask }) {
@@ -16,7 +15,7 @@ export function KanbanTaskAdd({ status, openAddTask, onAddTask, onCloseAddTask }
   const defaultTask = useMemo(
     () => ({
       id: crypto.randomUUID(),
-      status: status || 'Untitled',
+      status,
       name: taskName.trim() || 'Untitled',
       priority: 'medium',
       attachments: [],

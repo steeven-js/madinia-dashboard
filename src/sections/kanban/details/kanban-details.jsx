@@ -172,6 +172,8 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       onDelete={onDeleteTask}
       taskStatus={task.status}
       onCloseDetails={onCloseDetails}
+      onUpdateTask={onUpdateTask}
+      task={task}
     />
   );
 

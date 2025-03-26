@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useResponsive } from 'src/hooks/use-responsive';
 
+import { useGetBoard } from 'src/actions/kanban';
+
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -23,22 +25,33 @@ export function KanbanDetailsToolbar({
   onDelete,
   taskStatus,
   onCloseDetails,
+  onUpdateTask,
+  task,
 }) {
   const smUp = useResponsive('up', 'sm');
-
+  const { board } = useGetBoard();
   const confirm = useBoolean();
-
   const popover = usePopover();
-
   const [status, setStatus] = useState(taskStatus);
 
   const handleChangeStatus = useCallback(
-    (newValue) => {
+    (newColumnId) => {
       popover.onClose();
-      setStatus(newValue);
+      setStatus(newColumnId);
+
+      // Mettre à jour la tâche avec le nouveau statut (columnId)
+      onUpdateTask({
+        ...task,
+        status: newColumnId,
+        updatedBy: task.updatedBy,
+        updatedAt: new Date().toISOString(),
+      });
     },
-    [popover]
+    [popover, onUpdateTask, task]
   );
+
+  // Trouver la colonne actuelle
+  const currentColumn = board?.columns?.find((col) => col.id === status);
 
   return (
     <>
@@ -64,7 +77,7 @@ export function KanbanDetailsToolbar({
           endIcon={<Iconify icon="eva:arrow-ios-downward-fill" width={16} sx={{ ml: -0.5 }} />}
           onClick={popover.onOpen}
         >
-          {status}
+          {currentColumn?.name || 'Sans statut'}
         </Button>
 
         <Stack direction="row" justifyContent="flex-end" flexGrow={1}>
@@ -93,15 +106,13 @@ export function KanbanDetailsToolbar({
         slotProps={{ arrow: { placement: 'top-right' } }}
       >
         <MenuList>
-          {['À faire', 'En cours', 'Prêt à tester', 'Terminé'].map((option) => (
+          {board?.columns?.map((column) => (
             <MenuItem
-              key={option}
-              selected={status === option}
-              onClick={() => {
-                handleChangeStatus(option);
-              }}
+              key={column.id}
+              selected={status === column.id}
+              onClick={() => handleChangeStatus(column.id)}
             >
-              {option}
+              {column.name}
             </MenuItem>
           ))}
         </MenuList>

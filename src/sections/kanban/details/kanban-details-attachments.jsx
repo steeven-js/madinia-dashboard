@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
 
 import { storage } from 'src/utils/firebase';
 
