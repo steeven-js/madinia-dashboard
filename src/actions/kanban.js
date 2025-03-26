@@ -95,7 +95,7 @@ export async function createColumn(columnData) {
       [`board.tasks.${newColumnId}`]: []
     });
 
-    console.log('New column created successfully');
+    // console.log('New column created successfully');
     return newColumn;
   } catch (error) {
     console.error('Error creating new column:', error);
@@ -136,7 +136,7 @@ export async function updateColumn(columnId, columnName) {
       'board.columns': columns
     });
 
-    console.log(`Column ${columnId} updated successfully to ${newColumnName}`);
+    // console.log(`Column ${columnId} updated successfully to ${newColumnName}`);
     return { id: columnId, name: newColumnName };
   } catch (error) {
     console.error('Error updating column:', error);
@@ -158,7 +158,7 @@ export async function moveColumn(updateColumns) {
       'board.columns': updateColumns
     });
 
-    console.log('Columns moved successfully');
+    // console.log('Columns moved successfully');
   } catch (error) {
     console.error('Error moving columns:', error);
     throw error;
@@ -178,7 +178,7 @@ export async function clearColumn(columnId) {
       [`board.tasks.${columnId}`]: []
     });
 
-    console.log(`Tasks in column ${columnId} cleared successfully`);
+    // console.log(`Tasks in column ${columnId} cleared successfully`);
   } catch (error) {
     console.error('Error clearing tasks:', error);
     throw error;
@@ -211,7 +211,7 @@ export async function deleteColumn(columnId) {
       'board.tasks': boardData.board.tasks
     });
 
-    console.log(`Column ${columnId} deleted successfully`);
+    // console.log(`Column ${columnId} deleted successfully`);
   } catch (error) {
     console.error('Error deleting column:', error);
     throw error;
@@ -265,7 +265,7 @@ export async function createTask(columnId, taskData, userId) {
       [`board.tasks.${columnId}`]: arrayUnion(newTask)
     });
 
-    console.log('New task created successfully');
+    // console.log('New task created successfully');
     return newTask;
   } catch (error) {
     console.error('Error creating new task:', error);
@@ -356,7 +356,7 @@ export async function updateTask(columnId, taskData) {
       });
     }
 
-    console.log(`Task ${taskData.id} updated successfully`);
+    // console.log(`Task ${taskData.id} updated successfully`);
     return updatedTask;
   } catch (error) {
     console.error('Error updating task:', error);
@@ -377,7 +377,7 @@ export async function moveTask(updateTasks) {
       'board.tasks': updateTasks
     });
 
-    console.log('Tasks moved successfully');
+    // console.log('Tasks moved successfully');
   } catch (error) {
     console.error('Error moving tasks:', error);
     throw error;
@@ -427,7 +427,7 @@ export async function deleteTask(columnId, taskId) {
       [`board.tasks.${columnId}`]: updatedTasks
     });
 
-    console.log(`Task ${taskId} deleted successfully`);
+    // console.log(`Task ${taskId} deleted successfully`);
   } catch (error) {
     console.error('Error deleting task:', error);
     throw error;
@@ -481,7 +481,7 @@ export async function addSubtask(columnId, taskId, subtaskData) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('New subtask added successfully');
+    // console.log('New subtask added successfully');
     return newSubtask;
   } catch (error) {
     console.error('Error adding subtask:', error);
@@ -534,7 +534,7 @@ export async function updateSubtask(columnId, taskId, subtaskId, subtaskData) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Subtask updated successfully');
+    // console.log('Subtask updated successfully');
     return columnTasks[taskIndex].subtasks[subtaskIndex];
   } catch (error) {
     console.error('Error updating subtask:', error);
@@ -575,7 +575,7 @@ export async function deleteSubtask(columnId, taskId, subtaskId) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Subtask deleted successfully');
+    // console.log('Subtask deleted successfully');
   } catch (error) {
     console.error('Error deleting subtask:', error);
     throw error;
@@ -626,7 +626,7 @@ export async function addAvailableLabel(labelName) {
     // Mettre à jour ou créer le document
     await setDoc(labelsRef, { labels: updatedLabels }, { merge: true });
 
-    console.log('New available label added successfully');
+    // console.log('New available label added successfully');
     return labelName;
   } catch (error) {
     console.error('Error adding available label:', error);
@@ -658,7 +658,7 @@ export async function deleteAvailableLabel(labelName) {
     // Mettre à jour le document
     await setDoc(labelsRef, { labels: updatedLabels });
 
-    console.log('Available label deleted successfully');
+    // console.log('Available label deleted successfully');
   } catch (error) {
     console.error('Error deleting available label:', error);
     throw error;
@@ -709,7 +709,7 @@ export async function addLabel(columnId, taskId, labelName) {
     // S'assurer que l'étiquette est disponible globalement
     await addAvailableLabel(labelName);
 
-    console.log('Label added successfully to task and global list');
+    // console.log('Label added successfully to task and global list');
     return labelName;
   } catch (error) {
     console.error('Error adding label:', error);
@@ -760,7 +760,7 @@ export async function updateLabel(columnId, taskId, oldLabel, newLabel) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Label updated successfully');
+    // console.log('Label updated successfully');
     return newLabel;
   } catch (error) {
     console.error('Error updating label:', error);
@@ -806,7 +806,7 @@ export async function deleteLabel(columnId, taskId, labelName) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Label deleted successfully');
+    // console.log('Label deleted successfully');
   } catch (error) {
     console.error('Error deleting label:', error);
     throw error;
@@ -817,24 +817,24 @@ export async function deleteLabel(columnId, taskId, labelName) {
 
 export async function addComment(columnId, taskId, commentData) {
   try {
-    console.log('Adding comment with:', { columnId, taskId, commentData });
+    // console.log('Adding comment with:', { columnId, taskId, commentData });
 
     const boardRef = doc(db, 'boards', 'main-board');
 
     // Récupérer les données actuelles du tableau
     const boardSnapshot = await getDoc(boardRef);
-    console.log('Board snapshot exists:', boardSnapshot.exists());
+    // console.log('Board snapshot exists:', boardSnapshot.exists());
 
     if (!boardSnapshot.exists()) {
       throw new Error('Board document not found');
     }
 
     const boardData = boardSnapshot.data();
-    console.log('Board data structure:', {
-      hasBoard: !!boardData.board,
-      hasTasks: !!boardData.board?.tasks,
-      hasColumn: !!boardData.board?.tasks[columnId]
-    });
+    // console.log('Board data structure:', {
+    //   hasBoard: !!boardData.board,
+    //   hasTasks: !!boardData.board?.tasks,
+    //   hasColumn: !!boardData.board?.tasks[columnId]
+    // });
 
     if (!boardData || !boardData.board || !boardData.board.tasks) {
       throw new Error('Invalid board structure');
@@ -843,25 +843,25 @@ export async function addComment(columnId, taskId, commentData) {
     // Trouver la tâche
     const { tasks } = boardData.board;
     const columnTasks = tasks[columnId];
-    console.log('Column tasks array:', { length: columnTasks?.length, isArray: Array.isArray(columnTasks) });
+    // console.log('Column tasks array:', { length: columnTasks?.length, isArray: Array.isArray(columnTasks) });
 
     if (!Array.isArray(columnTasks)) {
       throw new Error(`No tasks array found for column ${columnId}`);
     }
 
     const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
-    console.log('Task index:', taskIndex);
+    // console.log('Task index:', taskIndex);
 
     if (taskIndex === -1) {
       throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
     }
 
     // Vérifier si le tableau comments existe déjà
-    console.log('Current comments array:', columnTasks[taskIndex].comments);
+    // console.log('Current comments array:', columnTasks[taskIndex].comments);
 
     // Initialiser le tableau des commentaires s'il n'existe pas
     if (!columnTasks[taskIndex].comments) {
-      console.log('Creating new comments array');
+      // console.log('Creating new comments array');
       columnTasks[taskIndex].comments = [];
     }
 
@@ -881,22 +881,22 @@ export async function addComment(columnId, taskId, commentData) {
       roleLevel: commentData.roleLevel,
     };
 
-    console.log('New comment object:', newComment);
+    // console.log('New comment object:', newComment);
 
     // Ajouter le nouveau commentaire au début du tableau
     columnTasks[taskIndex].comments.unshift(newComment);
-    console.log('Updated comments array length:', columnTasks[taskIndex].comments.length);
+    // console.log('Updated comments array length:', columnTasks[taskIndex].comments.length);
 
     // Mettre à jour la tâche dans Firestore
     const updateData = {
       [`board.tasks.${columnId}`]: columnTasks
     };
 
-    console.log('Updating Firestore with data path:', `board.tasks.${columnId}`);
+    // console.log('Updating Firestore with data path:', `board.tasks.${columnId}`);
 
     try {
       await updateDoc(boardRef, updateData);
-      console.log('Firestore update successful');
+      // console.log('Firestore update successful');
     } catch (updateError) {
       console.error('Firestore update failed:', updateError);
       throw updateError;
@@ -954,7 +954,7 @@ export async function updateComment(columnId, taskId, commentId, commentData) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Comment updated successfully');
+    // console.log('Comment updated successfully');
     return columnTasks[taskIndex].comments[commentIndex];
   } catch (error) {
     console.error('Error updating comment:', error);
@@ -995,7 +995,7 @@ export async function deleteComment(columnId, taskId, commentId) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Comment deleted successfully');
+    // console.log('Comment deleted successfully');
   } catch (error) {
     console.error('Error deleting comment:', error);
     throw error;
@@ -1078,7 +1078,7 @@ export async function replyToComment(columnId, taskId, commentId, replyData) {
 
     await updateDoc(boardRef, updateData);
 
-    console.log('New reply added successfully');
+    // console.log('New reply added successfully');
     return newReply;
   } catch (error) {
     console.error('Error adding reply:', error);
@@ -1190,7 +1190,7 @@ export async function deleteCommentFile(columnId, taskId, commentId, filePath) {
       [`board.tasks.${columnId}`]: columnTasks
     });
 
-    console.log('Comment file deleted successfully');
+    // console.log('Comment file deleted successfully');
   } catch (error) {
     console.error('Error deleting comment file:', error);
     throw error;
@@ -1233,7 +1233,7 @@ export async function deleteTaskCommentFiles(columnId, taskId) {
       });
 
     await Promise.all(deletePromises);
-    console.log('All task comment files deleted successfully');
+    // console.log('All task comment files deleted successfully');
   } catch (error) {
     console.error('Error deleting task comment files:', error);
     throw error;
