@@ -113,9 +113,9 @@ const ItemBase = forwardRef(({ task, stateProps, sx, ...other }, ref) => {
     >
       <Box
         component="img"
-        className={imageClasses.root}
-        alt={task?.attachments?.[0]}
-        src={task?.attachments?.[0]}
+        className={imageClasses.root.concat('')}
+        alt={task?.attachments?.[0]?.name || 'Attachment'}
+        src={task?.attachments?.[0]?.url}
         sx={{
           width: 320,
           height: 'auto',

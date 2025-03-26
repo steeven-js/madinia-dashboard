@@ -12,6 +12,8 @@ import {
   onSnapshot,
   getFirestore,
 } from 'firebase/firestore';
+import { ref, deleteObject } from 'firebase/storage';
+import { storage } from 'src/utils/firebase';
 
 // Ajouter les plugins dayjs
 dayjs.extend(utc);
@@ -371,8 +373,6 @@ export async function moveTask(updateTasks) {
 // ----------------------------------------------------------------------
 
 export async function deleteTask(columnId, taskId) {
-  // Supprime une tâche de la colonne spécifiée
-
   try {
     const boardRef = doc(db, 'boards', 'main-board');
 
@@ -382,6 +382,27 @@ export async function deleteTask(columnId, taskId) {
 
     if (!boardData || !boardData.board || !boardData.board.tasks) {
       throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à supprimer pour récupérer ses pièces jointes
+    const taskToDelete = boardData.board.tasks[columnId].find((task) => task.id === taskId);
+    if (!taskToDelete) {
+      throw new Error(`Task ${taskId} not found in column ${columnId}`);
+    }
+
+    // Supprimer les pièces jointes du Storage
+    if (taskToDelete.attachments && taskToDelete.attachments.length > 0) {
+      const deletePromises = taskToDelete.attachments.map(async (attachment) => {
+        if (attachment.path) {
+          const storageRef = ref(storage, attachment.path);
+          try {
+            await deleteObject(storageRef);
+          } catch (error) {
+            console.warn(`Error deleting attachment ${attachment.path}:`, error);
+          }
+        }
+      });
+      await Promise.all(deletePromises);
     }
 
     // Filtrer les tâches pour supprimer la tâche avec l'ID fourni

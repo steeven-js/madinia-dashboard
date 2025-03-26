@@ -344,7 +344,18 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       {/* Attachments */}
       <Box sx={{ display: 'flex' }}>
         <StyledLabel>Pièces jointes</StyledLabel>
-        <KanbanDetailsAttachments attachments={task.attachments} />
+        <KanbanDetailsAttachments
+          attachments={task.attachments}
+          taskId={task.id}
+          onUpdateAttachments={(newAttachments) => {
+            onUpdateTask({
+              ...task,
+              attachments: newAttachments,
+              updatedBy: user?.id,
+              updatedAt: new Date().toISOString(),
+            });
+          }}
+        />
       </Box>
     </Box>
   );

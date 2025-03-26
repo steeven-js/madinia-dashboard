@@ -18,8 +18,8 @@ export function FileThumbnail({
   className,
   ...other
 }) {
-  const isUrl = typeof file === 'string';
-  const previewUrl = isUrl ? file : URL.createObjectURL(file);
+  const isUrl = file.isUrl || typeof file === 'string';
+  const previewUrl = isUrl ? file.preview : URL.createObjectURL(file);
 
   const { name } = fileData(file);
 
