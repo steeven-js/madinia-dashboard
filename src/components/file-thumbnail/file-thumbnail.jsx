@@ -19,12 +19,21 @@ export function FileThumbnail({
   ...other
 }) {
   const isUrl = file.isUrl || typeof file === 'string';
+
+  // console.log('file', file);
+
   const previewUrl = isUrl ? file.preview : URL.createObjectURL(file);
+
+  // console.log('previewUrl', previewUrl);
 
   const { name } = fileData(file);
 
-  // Pour les URLs, on force le format image
-  const format = isUrl ? 'image' : fileFormat(previewUrl);
+  // console.log('name', name);
+
+  // On utilise le nom du fichier pour déterminer le format
+  const format = fileFormat(name);
+
+  // console.log('format', format);
 
   const renderImg = (
     <Box
@@ -44,7 +53,7 @@ export function FileThumbnail({
   const renderIcon = (
     <Box
       component="img"
-      src={fileThumb(format)}
+      src={fileThumb(name)}
       className={fileThumbnailClasses.icon}
       sx={{ width: 1, height: 1, ...slotProps?.icon }}
     />
