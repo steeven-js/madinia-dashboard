@@ -641,6 +641,7 @@ export function KanbanDetails({
         flexDirection: 'column',
         height: 'calc(100vh - 200px)',
         overflow: 'hidden',
+        width: '100%',
       }}
     >
       <Box

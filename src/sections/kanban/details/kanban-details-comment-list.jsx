@@ -23,36 +23,7 @@ import { Image } from 'src/components/image';
 import { Iconify } from 'src/components/iconify';
 import { Lightbox, useLightBox } from 'src/components/lightbox';
 
-// Fonction pour obtenir l'icône en fonction de l'extension du fichier
-const getFileIcon = (extension) => {
-  const icons = {
-    pdf: 'mdi:file-pdf-box',
-    doc: 'mdi:file-word',
-    docx: 'mdi:file-word',
-    xls: 'mdi:file-excel',
-    xlsx: 'mdi:file-excel',
-    ppt: 'mdi:file-powerpoint',
-    pptx: 'mdi:file-powerpoint',
-    jpg: 'mdi:file-image',
-    jpeg: 'mdi:file-image',
-    png: 'mdi:file-image',
-    gif: 'mdi:file-image',
-    zip: 'mdi:zip-box',
-    rar: 'mdi:zip-box',
-    txt: 'mdi:file-document',
-    default: 'mdi:file',
-  };
-  return icons[extension] || icons.default;
-};
-
-// Fonction pour formater la taille du fichier
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / k**i).toFixed(2))  } ${  sizes[i]}`;
-};
+import { fileThumb, formatFileSize } from 'src/sections/kanban/utils';
 
 // Composant pour un commentaire unique (peut être un commentaire principal ou une réponse)
 function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
@@ -103,20 +74,20 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         return (
           <Box
             sx={{
-              bgcolor: 'background.neutral',
-              p: 1.5,
-              borderRadius: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: 1,
+              gap: 2,
+              p: 1.5,
+              bgcolor: 'background.neutral',
+              borderRadius: 1,
             }}
           >
-            <Iconify
-              icon={getFileIcon(comment.fileExtension)}
-              width={24}
-              sx={{ color: 'primary.main' }}
+            <Image
+              alt={comment.fileName}
+              src={fileThumb(`file.${comment.fileExtension}`)}
+              sx={{ width: 40, height: 40, flexShrink: 0 }}
             />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -138,6 +109,10 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
               href={comment.message}
               target="_blank"
               rel="noopener noreferrer"
+              sx={{
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
             >
               Télécharger
             </Button>
@@ -152,9 +127,10 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
               p: 1.5,
               borderRadius: 1,
               maxWidth: '100%',
-              overflowX: 'auto',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              overflow: 'hidden',
             }}
           >
             {comment.message}
@@ -164,8 +140,8 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
   };
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Stack direction="row" spacing={2}>
+    <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', width: '100%' }}>
+      <Stack direction="column" spacing={2}>
         <Avatar src={comment.avatarUrl} alt={comment.name} sx={{ width: 40, height: 40 }}>
           {comment.name?.charAt(0)}
         </Avatar>
@@ -235,7 +211,7 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
             </Box>
           )}
 
-          <Box sx={{ position: 'relative' }}>
+          <Box>
             {renderMessage()}
 
             {authUser && (
@@ -243,16 +219,12 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
                 size="small"
                 onClick={() => onReply(comment)}
                 sx={{
-                  position: 'absolute',
-                  right: 8,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+                  position: 'relative',
+                  float: 'right',
+                  mt: 1,
                   color: 'text.secondary',
-                  bgcolor: 'background.paper',
-                  boxShadow: 1,
                   '&:hover': {
                     color: 'primary.main',
-                    bgcolor: 'background.paper',
                   },
                 }}
               >
@@ -276,6 +248,13 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         onClose={handleCloseDeleteDialog}
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
+        PaperProps={{
+          sx: {
+            width: '100%',
+            maxWidth: 400,
+            mx: 2,
+          },
+        }}
       >
         <DialogTitle id="delete-dialog-title">Confirmer la suppression</DialogTitle>
         <DialogContent>
