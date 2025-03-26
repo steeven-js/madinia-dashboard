@@ -236,6 +236,7 @@ export async function createTask(columnId, taskData, userId) {
       name: taskData.name || 'Untitled',
       priority: taskData.priority || 'medium',
       attachments: taskData.attachments || [],
+      description: taskData.description || '',
       labels: taskData.labels || [],
       comments: taskData.comments || [],
       assignee: taskData.assignee || [],

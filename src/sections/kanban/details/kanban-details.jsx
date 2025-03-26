@@ -337,6 +337,16 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
           minRows={4}
           value={taskDescription}
           onChange={handleChangeTaskDescription}
+          onBlur={() => {
+            if (taskDescription !== task.description) {
+              onUpdateTask({
+                ...task,
+                description: taskDescription,
+                updatedBy: user?.id,
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          }}
           InputProps={{ sx: { typography: 'body2' } }}
         />
       </Box>
