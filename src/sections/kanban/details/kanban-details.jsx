@@ -79,6 +79,7 @@ export function KanbanDetails({
   const [isAddingLabel, setIsAddingLabel] = useState(false);
   const [availableLabels, setAvailableLabels] = useState([]);
   const [isLoadingLabels, setIsLoadingLabels] = useState(true);
+  const [replyTo, setReplyTo] = useState(null);
   const like = useBoolean();
   const contacts = useBoolean();
   const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
@@ -270,6 +271,14 @@ export function KanbanDetails({
     },
     [handleAddLabel]
   );
+
+  const handleReplyToComment = useCallback((comment) => {
+    setReplyTo(comment);
+  }, []);
+
+  const handleCancelReply = useCallback(() => {
+    setReplyTo(null);
+  }, []);
 
   const renderToolbar = (
     <KanbanDetailsToolbar
@@ -630,7 +639,7 @@ export function KanbanDetails({
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 200px)', // Hauteur fixe en soustrayant la hauteur du header et des tabs
+        height: 'calc(100vh - 200px)',
         overflow: 'hidden',
       }}
     >
@@ -642,7 +651,11 @@ export function KanbanDetails({
           pb: 2,
         }}
       >
-        <KanbanDetailsCommentList columnId={task.status} taskId={task.id} />
+        <KanbanDetailsCommentList
+          columnId={task.status}
+          taskId={task.id}
+          onReply={handleReplyToComment}
+        />
       </Box>
       <Box
         sx={{
@@ -652,7 +665,12 @@ export function KanbanDetails({
           bgcolor: 'background.default',
         }}
       >
-        <KanbanDetailsCommentInput columnId={task.status} taskId={task.id} />
+        <KanbanDetailsCommentInput
+          columnId={task.status}
+          taskId={task.id}
+          replyTo={replyTo}
+          onCancelReply={handleCancelReply}
+        />
       </Box>
     </Box>
   );

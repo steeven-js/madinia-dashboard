@@ -1060,17 +1060,16 @@ export async function replyToComment(columnId, taskId, commentId, replyData) {
       roleLevel: replyData.roleLevel,
       parentId: commentId,
       mentions: replyData.mentions || [],
+      replyTo: {
+        id: commentId,
+        message: columnTasks[taskIndex].comments[commentIndex].message,
+        name: columnTasks[taskIndex].comments[commentIndex].name,
+        avatarUrl: columnTasks[taskIndex].comments[commentIndex].avatarUrl,
+      }
     };
 
-    // Option 1: Ajouter la réponse dans un tableau de réponses du commentaire parent
-    if (!columnTasks[taskIndex].comments[commentIndex].replies) {
-      columnTasks[taskIndex].comments[commentIndex].replies = [];
-    }
-    columnTasks[taskIndex].comments[commentIndex].replies.unshift(newReply);
-
-    // Option 2 (alternative): Ajouter la réponse directement dans le tableau principal des commentaires
-    // avec une référence à son parent
-    // columnTasks[taskIndex].comments.unshift(newReply);
+    // Ajouter la réponse dans le tableau principal des commentaires
+    columnTasks[taskIndex].comments.unshift(newReply);
 
     // Mettre à jour la tâche dans Firestore
     const updateData = {

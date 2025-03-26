@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -7,14 +7,15 @@ import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import InputBase from '@mui/material/InputBase';
 import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
 
-import { addComment } from 'src/actions/kanban';
+import { addComment, replyToComment } from 'src/actions/kanban';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function KanbanDetailsCommentInput({ columnId, taskId }) {
+export function KanbanDetailsCommentInput({ columnId, taskId, replyTo, onCancelReply }) {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const authUser = useSelector((state) => state.auth.user);
@@ -41,14 +42,32 @@ export function KanbanDetailsCommentInput({ columnId, taskId }) {
         roleLevel: authUser.roleLevel,
       };
 
-      await addComment(columnId, taskId, commentData);
+      if (replyTo) {
+        await replyToComment(columnId, taskId, replyTo.id, commentData);
+      } else {
+        await addComment(columnId, taskId, commentData);
+      }
+
       setMessage('');
+      if (replyTo) {
+        onCancelReply();
+      }
     } catch (error) {
       console.error('Error submitting comment:', error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [message, authUser, columnId, taskId]);
+  }, [message, authUser, columnId, taskId, replyTo, onCancelReply]);
+
+  // Focus l'input quand on commence à répondre
+  useEffect(() => {
+    if (replyTo) {
+      const input = document.getElementById('comment-input');
+      if (input) {
+        input.focus();
+      }
+    }
+  }, [replyTo]);
 
   if (!authUser) {
     return null;
@@ -61,50 +80,85 @@ export function KanbanDetailsCommentInput({ columnId, taskId }) {
         gap: 2,
         px: 2.5,
         display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <Avatar src={authUser.avatarUrl} alt={authUser.displayName} sx={{ width: 40, height: 40 }}>
-        {authUser.displayName?.charAt(0) || authUser.firstName?.charAt(0) || 'U'}
-      </Avatar>
-
-      <Paper variant="outlined" sx={{ p: 1, flexGrow: 1, bgcolor: 'transparent' }}>
-        <InputBase
-          fullWidth
-          multiline
-          rows={2}
-          value={message}
-          onChange={handleChangeMessage}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmitComment();
-            }
+      {replyTo && (
+        <Box
+          sx={{
+            px: 2,
+            py: 1,
+            bgcolor: 'background.neutral',
+            borderRadius: 1,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mx: 1,
           }}
-          placeholder="Écrire un commentaire..."
-          disabled={isSubmitting}
-          sx={{ px: 1 }}
-        />
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Box sx={{ flexGrow: 1, display: 'flex' }}>
-            <IconButton disabled={isSubmitting}>
-              <Iconify icon="solar:gallery-add-bold" />
-            </IconButton>
-
-            <IconButton disabled={isSubmitting}>
-              <Iconify icon="eva:attach-2-fill" />
-            </IconButton>
-          </Box>
-
-          <Button
-            variant="contained"
-            onClick={handleSubmitComment}
-            disabled={!message.trim() || isSubmitting}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              maxWidth: 'calc(100% - 40px)', // Réserver de l'espace pour le bouton de fermeture
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
           >
-            Commenter
-          </Button>
+            En réponse à : {replyTo.message}
+          </Typography>
+          <IconButton size="small" onClick={onCancelReply}>
+            <Iconify icon="eva:close-fill" width={16} />
+          </IconButton>
         </Box>
-      </Paper>
+      )}
+
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Avatar src={authUser.avatarUrl} alt={authUser.displayName} sx={{ width: 40, height: 40 }}>
+          {authUser.displayName?.charAt(0) || authUser.firstName?.charAt(0) || 'U'}
+        </Avatar>
+
+        <Paper variant="outlined" sx={{ p: 1, flexGrow: 1, bgcolor: 'transparent' }}>
+          <InputBase
+            id="comment-input"
+            fullWidth
+            multiline
+            rows={2}
+            value={message}
+            onChange={handleChangeMessage}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmitComment();
+              }
+            }}
+            placeholder={replyTo ? `Répondre à ${replyTo.name}...` : 'Écrire un commentaire...'}
+            disabled={isSubmitting}
+            sx={{ px: 1 }}
+          />
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ flexGrow: 1, display: 'flex' }}>
+              <IconButton disabled={isSubmitting}>
+                <Iconify icon="solar:gallery-add-bold" />
+              </IconButton>
+
+              <IconButton disabled={isSubmitting}>
+                <Iconify icon="eva:attach-2-fill" />
+              </IconButton>
+            </Box>
+
+            <Button
+              variant="contained"
+              onClick={handleSubmitComment}
+              disabled={!message.trim() || isSubmitting}
+            >
+              {replyTo ? 'Répondre' : 'Commenter'}
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 }
