@@ -17,11 +17,42 @@ import DialogContent from '@mui/material/DialogContent';
 import { db } from 'src/utils/firebase';
 import { fToNow } from 'src/utils/format-time';
 
-import { deleteComment } from 'src/actions/kanban';
+import { deleteComment, deleteCommentFile } from 'src/actions/kanban';
 
 import { Image } from 'src/components/image';
 import { Iconify } from 'src/components/iconify';
 import { Lightbox, useLightBox } from 'src/components/lightbox';
+
+// Fonction pour obtenir l'icône en fonction de l'extension du fichier
+const getFileIcon = (extension) => {
+  const icons = {
+    pdf: 'mdi:file-pdf-box',
+    doc: 'mdi:file-word',
+    docx: 'mdi:file-word',
+    xls: 'mdi:file-excel',
+    xlsx: 'mdi:file-excel',
+    ppt: 'mdi:file-powerpoint',
+    pptx: 'mdi:file-powerpoint',
+    jpg: 'mdi:file-image',
+    jpeg: 'mdi:file-image',
+    png: 'mdi:file-image',
+    gif: 'mdi:file-image',
+    zip: 'mdi:zip-box',
+    rar: 'mdi:zip-box',
+    txt: 'mdi:file-document',
+    default: 'mdi:file',
+  };
+  return icons[extension] || icons.default;
+};
+
+// Fonction pour formater la taille du fichier
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / k**i).toFixed(2))  } ${  sizes[i]}`;
+};
 
 // Composant pour un commentaire unique (peut être un commentaire principal ou une réponse)
 function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
@@ -31,7 +62,11 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
 
   const handleDelete = async () => {
     try {
-      await deleteComment(columnId, taskId, comment.id);
+      if (comment.messageType === 'file') {
+        await deleteCommentFile(columnId, taskId, comment.id, comment.filePath);
+      } else {
+        await deleteComment(columnId, taskId, comment.id);
+      }
       setOpenDeleteDialog(false);
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -44,6 +79,88 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
 
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
+  };
+
+  const renderMessage = () => {
+    switch (comment.messageType) {
+      case 'image':
+        return (
+          <Image
+            alt={comment.message}
+            src={comment.message}
+            onClick={() => lightbox.onOpen(comment.message)}
+            sx={{
+              borderRadius: 1.5,
+              cursor: 'pointer',
+              transition: (theme) => theme.transitions.create(['opacity']),
+              '&:hover': { opacity: 0.8 },
+              maxWidth: '100%',
+              height: 'auto',
+            }}
+          />
+        );
+      case 'file':
+        return (
+          <Box
+            sx={{
+              bgcolor: 'background.neutral',
+              p: 1.5,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <Iconify
+              icon={getFileIcon(comment.fileExtension)}
+              width={24}
+              sx={{ color: 'primary.main' }}
+            />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {comment.fileName}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {formatFileSize(comment.fileSize)}
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:download" />}
+              href={comment.message}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Télécharger
+            </Button>
+          </Box>
+        );
+      default:
+        return (
+          <Typography
+            variant="body2"
+            sx={{
+              bgcolor: 'background.neutral',
+              p: 1.5,
+              borderRadius: 1,
+              maxWidth: '100%',
+              overflowX: 'auto',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {comment.message}
+          </Typography>
+        );
+    }
   };
 
   return (
@@ -119,36 +236,7 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
           )}
 
           <Box sx={{ position: 'relative' }}>
-            {comment.messageType === 'image' ? (
-              <Image
-                alt={comment.message}
-                src={comment.message}
-                onClick={() => lightbox.onOpen(comment.message)}
-                sx={{
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: (theme) => theme.transitions.create(['opacity']),
-                  '&:hover': { opacity: 0.8 },
-                  maxWidth: '100%',
-                  height: 'auto',
-                }}
-              />
-            ) : (
-              <Typography
-                variant="body2"
-                sx={{
-                  bgcolor: 'background.neutral',
-                  p: 1.5,
-                  borderRadius: 1,
-                  maxWidth: '100%',
-                  overflowX: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {comment.message}
-              </Typography>
-            )}
+            {renderMessage()}
 
             {authUser && (
               <IconButton
@@ -192,7 +280,9 @@ function CommentItem({ comment, columnId, taskId, onReply, authUser }) {
         <DialogTitle id="delete-dialog-title">Confirmer la suppression</DialogTitle>
         <DialogContent>
           <Typography id="delete-dialog-description">
-            Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer ce{' '}
+            {comment.messageType === 'file' ? 'fichier' : 'commentaire'} ? Cette action est
+            irréversible.
           </Typography>
         </DialogContent>
         <DialogActions>

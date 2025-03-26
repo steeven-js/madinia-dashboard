@@ -3,7 +3,7 @@ import utc from 'dayjs/plugin/utc';
 import { v4 as uuidv4 } from 'uuid';
 import timezone from 'dayjs/plugin/timezone';
 import { useMemo, useState, useEffect } from 'react';
-import { ref, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, deleteObject, getDownloadURL } from 'firebase/storage';
 import {
   doc,
   getDoc,
@@ -1082,6 +1082,160 @@ export async function replyToComment(columnId, taskId, commentId, replyData) {
     return newReply;
   } catch (error) {
     console.error('Error adding reply:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function uploadCommentFile(columnId, taskId, file, userId) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
+    const filePath = `comments/${columnId}/${taskId}/${fileName}`;
+    const storageRef = ref(storage, filePath);
+
+    // Upload file to Firebase Storage
+    await uploadBytes(storageRef, file);
+
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+
+    // Create comment data
+    const commentData = {
+      id: crypto.randomUUID(),
+      message: downloadURL,
+      messageType: 'file',
+      fileName: file.name,
+      fileExtension,
+      fileSize: file.size,
+      filePath,
+      name: userId?.displayName || `${userId?.firstName} ${userId?.lastName}`,
+      avatarUrl: userId?.avatarUrl || '',
+      createdAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      createdBy: userId?.id,
+      updatedBy: userId?.id,
+      email: userId?.email,
+      role: userId?.role,
+      roleLevel: userId?.roleLevel,
+    };
+
+    // Add comment to task
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    if (!columnTasks[taskIndex].comments) {
+      columnTasks[taskIndex].comments = [];
+    }
+
+    columnTasks[taskIndex].comments.unshift(commentData);
+
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    return commentData;
+  } catch (error) {
+    console.error('Error uploading comment file:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteCommentFile(columnId, taskId, commentId, filePath) {
+  try {
+    // Delete file from Storage
+    if (filePath) {
+      const storageRef = ref(storage, filePath);
+      await deleteObject(storageRef);
+    }
+
+    // Delete comment from task
+    const boardRef = doc(db, 'boards', 'main-board');
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    columnTasks[taskIndex].comments = columnTasks[taskIndex].comments.filter(
+      (comment) => comment.id !== commentId
+    );
+
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Comment file deleted successfully');
+  } catch (error) {
+    console.error('Error deleting comment file:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteTaskCommentFiles(columnId, taskId) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    const task = columnTasks[taskIndex];
+    if (!task.comments) return;
+
+    // Delete all files from Storage
+    const deletePromises = task.comments
+      .filter(comment => comment.messageType === 'file' && comment.filePath)
+      .map(async (comment) => {
+        const storageRef = ref(storage, comment.filePath);
+        try {
+          await deleteObject(storageRef);
+        } catch (error) {
+          console.warn(`Error deleting file ${comment.filePath}:`, error);
+        }
+      });
+
+    await Promise.all(deletePromises);
+    console.log('All task comment files deleted successfully');
+  } catch (error) {
+    console.error('Error deleting task comment files:', error);
     throw error;
   }
 }
