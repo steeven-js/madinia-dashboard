@@ -58,7 +58,7 @@ export function KanbanView() {
   const { board, boardLoading, boardEmpty } = useGetBoard();
   const authUser = useSelector((state) => state.auth.user);
 
-  // console.log('authUser', authUser);
+  console.log('authUser', authUser);
 
   console.log('board', board);
 
@@ -321,6 +321,7 @@ export function KanbanView() {
                         key={task.id}
                         columnId={column.id}
                         disabled={isSortingContainer}
+                        authUser={authUser}
                       />
                     ))}
                   </SortableContext>

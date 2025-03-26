@@ -812,3 +812,277 @@ export async function deleteLabel(columnId, taskId, labelName) {
     throw error;
   }
 }
+
+// ----------------------------------------------------------------------
+
+export async function addComment(columnId, taskId, commentData) {
+  try {
+    console.log('Adding comment with:', { columnId, taskId, commentData });
+
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    console.log('Board snapshot exists:', boardSnapshot.exists());
+
+    if (!boardSnapshot.exists()) {
+      throw new Error('Board document not found');
+    }
+
+    const boardData = boardSnapshot.data();
+    console.log('Board data structure:', {
+      hasBoard: !!boardData.board,
+      hasTasks: !!boardData.board?.tasks,
+      hasColumn: !!boardData.board?.tasks[columnId]
+    });
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    console.log('Column tasks array:', { length: columnTasks?.length, isArray: Array.isArray(columnTasks) });
+
+    if (!Array.isArray(columnTasks)) {
+      throw new Error(`No tasks array found for column ${columnId}`);
+    }
+
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+    console.log('Task index:', taskIndex);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Vérifier si le tableau comments existe déjà
+    console.log('Current comments array:', columnTasks[taskIndex].comments);
+
+    // Initialiser le tableau des commentaires s'il n'existe pas
+    if (!columnTasks[taskIndex].comments) {
+      console.log('Creating new comments array');
+      columnTasks[taskIndex].comments = [];
+    }
+
+    // Créer le nouveau commentaire
+    const newComment = {
+      id: crypto.randomUUID(),
+      message: commentData.message,
+      messageType: commentData.messageType || 'text',
+      name: commentData.name,
+      avatarUrl: commentData.avatarUrl,
+      createdAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      createdBy: commentData.createdBy,
+      updatedBy: commentData.updatedBy,
+      email: commentData.email,
+      role: commentData.role,
+      roleLevel: commentData.roleLevel,
+    };
+
+    console.log('New comment object:', newComment);
+
+    // Ajouter le nouveau commentaire au début du tableau
+    columnTasks[taskIndex].comments.unshift(newComment);
+    console.log('Updated comments array length:', columnTasks[taskIndex].comments.length);
+
+    // Mettre à jour la tâche dans Firestore
+    const updateData = {
+      [`board.tasks.${columnId}`]: columnTasks
+    };
+
+    console.log('Updating Firestore with data path:', `board.tasks.${columnId}`);
+
+    try {
+      await updateDoc(boardRef, updateData);
+      console.log('Firestore update successful');
+    } catch (updateError) {
+      console.error('Firestore update failed:', updateError);
+      throw updateError;
+    }
+
+    return newComment;
+  } catch (error) {
+    console.error('Error in addComment function:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateComment(columnId, taskId, commentId, commentData) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Trouver l'index du commentaire à mettre à jour
+    const commentIndex = columnTasks[taskIndex].comments.findIndex(
+      (comment) => comment.id === commentId
+    );
+
+    if (commentIndex === -1) {
+      throw new Error(`Comment with ID ${commentId} not found`);
+    }
+
+    // Mettre à jour le commentaire
+    columnTasks[taskIndex].comments[commentIndex] = {
+      ...columnTasks[taskIndex].comments[commentIndex],
+      ...commentData,
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedBy: commentData.userId || columnTasks[taskIndex].comments[commentIndex].updatedBy,
+    };
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Comment updated successfully');
+    return columnTasks[taskIndex].comments[commentIndex];
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteComment(columnId, taskId, commentId) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Filtrer le commentaire à supprimer
+    columnTasks[taskIndex].comments = columnTasks[taskIndex].comments.filter(
+      (comment) => comment.id !== commentId
+    );
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Comment deleted successfully');
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    throw error;
+  }
+}
+
+// À ajouter dans kanban.js après la fonction addComment
+
+export async function replyToComment(columnId, taskId, commentId, replyData) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+
+    if (!Array.isArray(columnTasks)) {
+      throw new Error(`No tasks array found for column ${columnId}`);
+    }
+
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Vérifier si les commentaires existent
+    if (!columnTasks[taskIndex].comments) {
+      throw new Error(`No comments found for task ${taskId}`);
+    }
+
+    // Trouver le commentaire parent
+    const commentIndex = columnTasks[taskIndex].comments.findIndex(
+      (comment) => comment.id === commentId
+    );
+
+    if (commentIndex === -1) {
+      throw new Error(`Comment with ID ${commentId} not found`);
+    }
+
+    // Créer la nouvelle réponse
+    const newReply = {
+      id: crypto.randomUUID(),
+      message: replyData.message,
+      messageType: replyData.messageType || 'text',
+      name: replyData.name,
+      avatarUrl: replyData.avatarUrl,
+      createdAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      createdBy: replyData.createdBy,
+      updatedBy: replyData.updatedBy,
+      email: replyData.email,
+      role: replyData.role,
+      roleLevel: replyData.roleLevel,
+      parentId: commentId,
+      mentions: replyData.mentions || [],
+    };
+
+    // Option 1: Ajouter la réponse dans un tableau de réponses du commentaire parent
+    if (!columnTasks[taskIndex].comments[commentIndex].replies) {
+      columnTasks[taskIndex].comments[commentIndex].replies = [];
+    }
+    columnTasks[taskIndex].comments[commentIndex].replies.unshift(newReply);
+
+    // Option 2 (alternative): Ajouter la réponse directement dans le tableau principal des commentaires
+    // avec une référence à son parent
+    // columnTasks[taskIndex].comments.unshift(newReply);
+
+    // Mettre à jour la tâche dans Firestore
+    const updateData = {
+      [`board.tasks.${columnId}`]: columnTasks
+    };
+
+    await updateDoc(boardRef, updateData);
+
+    console.log('New reply added successfully');
+    return newReply;
+  } catch (error) {
+    console.error('Error adding reply:', error);
+    throw error;
+  }
+}

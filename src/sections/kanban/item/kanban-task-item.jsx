@@ -13,7 +13,7 @@ import { KanbanDetails } from '../details/kanban-details';
 
 // ----------------------------------------------------------------------
 
-export function KanbanTaskItem({ task, disabled, columnId, sx }) {
+export function KanbanTaskItem({ task, disabled, columnId, sx, authUser }) {
   const openDetails = useBoolean();
 
   const { setNodeRef, listeners, isDragging, isSorting, transform, transition } = useSortable({
@@ -67,6 +67,7 @@ export function KanbanTaskItem({ task, disabled, columnId, sx }) {
         onCloseDetails={openDetails.onFalse}
         onUpdateTask={handleUpdateTask}
         onDeleteTask={handleDeleteTask}
+        authUser={authUser}
       />
     </>
   );

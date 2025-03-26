@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
-import { doc , onSnapshot, getFirestore } from 'firebase/firestore';
+import { doc, onSnapshot, getFirestore } from 'firebase/firestore';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -59,9 +58,15 @@ const StyledLabel = styled('span')(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, onCloseDetails }) {
+export function KanbanDetails({
+  task,
+  openDetails,
+  onUpdateTask,
+  onDeleteTask,
+  onCloseDetails,
+  authUser,
+}) {
   const tabs = useTabs('overview');
-  const user = useSelector((state) => state.auth.user);
   const db = getFirestore();
 
   const [priority, setPriority] = useState(task.priority);
@@ -129,7 +134,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
             onUpdateTask({
               ...task,
               name: taskName,
-              updatedBy: user?.uid,
+              updatedBy: authUser?.uid,
               updatedAt: new Date().toISOString(),
             });
           }
@@ -138,7 +143,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
         console.error(error);
       }
     },
-    [onUpdateTask, task, taskName, user?.uid]
+    [onUpdateTask, task, taskName, authUser?.uid]
   );
 
   const handleChangeTaskDescription = useCallback((event) => {
@@ -151,11 +156,11 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       onUpdateTask({
         ...task,
         priority: newValue,
-        updatedBy: user?.uid,
+        updatedBy: authUser?.uid,
         updatedAt: new Date().toISOString(),
       });
     },
-    [onUpdateTask, task, user?.uid]
+    [onUpdateTask, task, authUser?.uid]
   );
 
   const handleClickSubtaskComplete = async (subtaskId) => {
@@ -165,7 +170,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
 
       const updatedSubtask = await updateSubtask(task.status, task.id, subtaskId, {
         completed: !subtask.completed,
-        userId: user?.id,
+        userId: authUser?.id,
       });
 
       setSubtasks(subtasks.map((st) => (st.id === subtaskId ? updatedSubtask : st)));
@@ -180,7 +185,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     try {
       const newSubtask = await addSubtask(task.status, task.id, {
         name: newSubtaskName.trim(),
-        userId: user?.id,
+        userId: authUser?.id,
       });
 
       setSubtasks([...subtasks, newSubtask]);
@@ -212,11 +217,11 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       onUpdateTask({
         ...task,
         assignee: updatedAssignee,
-        updatedBy: user?.id,
+        updatedBy: authUser?.id,
         updatedAt: new Date().toISOString(),
       });
     },
-    [task, onUpdateTask, user?.id]
+    [task, onUpdateTask, authUser?.id]
   );
 
   const handleAddLabel = useCallback(
@@ -492,7 +497,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
                   dayjs(rangePicker.startDate).format('YYYY-MM-DDTHH:mm:ss'),
                   dayjs(rangePicker.endDate).format('YYYY-MM-DDTHH:mm:ss'),
                 ],
-                updatedBy: user?.id,
+                updatedBy: authUser?.id,
                 updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
               });
             }
@@ -524,7 +529,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
               onUpdateTask({
                 ...task,
                 description: taskDescription,
-                updatedBy: user?.id,
+                updatedBy: authUser?.id,
                 updatedAt: new Date().toISOString(),
               });
             }
@@ -543,7 +548,7 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
             onUpdateTask({
               ...task,
               attachments: newAttachments,
-              updatedBy: user?.id,
+              updatedBy: authUser?.id,
               updatedAt: new Date().toISOString(),
             });
           }}
@@ -621,7 +626,35 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
   );
 
   const renderTabComments = (
-    <>{!!task.comments.length && <KanbanDetailsCommentList comments={task.comments} />}</>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 200px)', // Hauteur fixe en soustrayant la hauteur du header et des tabs
+        overflow: 'hidden',
+      }}
+    >
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: 'auto',
+          px: 2.5,
+          pb: 2,
+        }}
+      >
+        <KanbanDetailsCommentList columnId={task.status} taskId={task.id} />
+      </Box>
+      <Box
+        sx={{
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.default',
+        }}
+      >
+        <KanbanDetailsCommentInput columnId={task.status} taskId={task.id} />
+      </Box>
+    </Box>
   );
 
   return (
@@ -641,8 +674,6 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
         {tabs.value === 'subTasks' && renderTabSubtasks}
         {tabs.value === 'comments' && renderTabComments}
       </Scrollbar>
-
-      {tabs.value === 'comments' && <KanbanDetailsCommentInput taskId={task.id} />}
 
       <KanbanContactsDialog
         assignee={task.assignee}
