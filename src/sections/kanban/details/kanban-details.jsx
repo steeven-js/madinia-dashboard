@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { doc , onSnapshot, getFirestore } from 'firebase/firestore';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
@@ -24,6 +25,14 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { varAlpha } from 'src/theme/styles';
+import {
+  addLabel,
+  addSubtask,
+  deleteLabel,
+  updateSubtask,
+  deleteSubtask,
+  addAvailableLabel,
+} from 'src/actions/kanban';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -40,14 +49,6 @@ import { KanbanContactsDialog } from '../components/kanban-contacts-dialog';
 
 // ----------------------------------------------------------------------
 
-const SUBTASKS = [
-  'Compléter la proposition de projet',
-  'Effectuer une étude de marché',
-  "Concevoir les maquettes d'interface utilisateur",
-  "Développer l'API backend",
-  "Implémenter le système d'authentification",
-];
-
 const StyledLabel = styled('span')(({ theme }) => ({
   ...theme.typography.caption,
   width: 100,
@@ -61,25 +62,60 @@ const StyledLabel = styled('span')(({ theme }) => ({
 export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, onCloseDetails }) {
   const tabs = useTabs('overview');
   const user = useSelector((state) => state.auth.user);
+  const db = getFirestore();
 
   const [priority, setPriority] = useState(task.priority);
   const [taskName, setTaskName] = useState(task.name);
   const [taskDescription, setTaskDescription] = useState(task.description);
-  const [subtaskCompleted, setSubtaskCompleted] = useState(SUBTASKS.slice(0, 2));
+  const [subtasks, setSubtasks] = useState(task.subtasks || []);
+  const [newSubtaskName, setNewSubtaskName] = useState('');
   const [labels, setLabels] = useState(task.labels || []);
-  const [availableLabels] = useState([
-    'Urgent',
-    'Important',
-    'En attente',
-    'En cours',
-    'Terminé',
-    'Bug',
-    'Feature',
-    'Documentation',
-  ]);
+  const [newLabel, setNewLabel] = useState('');
+  const [isAddingLabel, setIsAddingLabel] = useState(false);
+  const [availableLabels, setAvailableLabels] = useState([]);
+  const [isLoadingLabels, setIsLoadingLabels] = useState(true);
   const like = useBoolean();
   const contacts = useBoolean();
   const rangePicker = useDateRangePicker(dayjs(task.due[0]), dayjs(task.due[1]));
+
+  // Utiliser un écouteur en temps réel pour les étiquettes disponibles
+  useEffect(() => {
+    // console.log('Setting up labels listener');
+    const labelsRef = doc(db, 'settings', 'Étiquettes');
+
+    const unsubscribe = onSnapshot(
+      labelsRef,
+      (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const labelsData = docSnapshot.data();
+          if (Array.isArray(labelsData.labels)) {
+            setAvailableLabels(labelsData.labels);
+            // console.log('Available labels updated:', labelsData.labels);
+          } else {
+            // console.warn('Labels data is not an array:', labelsData);
+            setAvailableLabels([]);
+          }
+        } else {
+          // console.log('No labels document found');
+          setAvailableLabels([]);
+        }
+        setIsLoadingLabels(false);
+      },
+      (error) => {
+        // console.error('Error loading available labels:', error);
+        setIsLoadingLabels(false);
+      }
+    );
+
+    return () => {
+      // console.log('Cleaning up labels listener');
+      unsubscribe();
+    };
+  }, [db]); // Keep only db in the dependency array
+
+  const filteredLabels = availableLabels.filter((label) => !labels.includes(label));
+  // console.log('Task labels:', labels);
+  // console.log('Available labels for selection:', filteredLabels);
 
   const handleChangeTaskName = useCallback((event) => {
     setTaskName(event.target.value);
@@ -122,12 +158,45 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     [onUpdateTask, task, user?.uid]
   );
 
-  const handleClickSubtaskComplete = (taskId) => {
-    const selected = subtaskCompleted.includes(taskId)
-      ? subtaskCompleted.filter((value) => value !== taskId)
-      : [...subtaskCompleted, taskId];
+  const handleClickSubtaskComplete = async (subtaskId) => {
+    try {
+      const subtask = subtasks.find((st) => st.id === subtaskId);
+      if (!subtask) return;
 
-    setSubtaskCompleted(selected);
+      const updatedSubtask = await updateSubtask(task.status, task.id, subtaskId, {
+        completed: !subtask.completed,
+        userId: user?.id,
+      });
+
+      setSubtasks(subtasks.map((st) => (st.id === subtaskId ? updatedSubtask : st)));
+    } catch (error) {
+      console.error('Error updating subtask:', error);
+    }
+  };
+
+  const handleAddSubtask = async () => {
+    if (!newSubtaskName.trim()) return;
+
+    try {
+      const newSubtask = await addSubtask(task.status, task.id, {
+        name: newSubtaskName.trim(),
+        userId: user?.id,
+      });
+
+      setSubtasks([...subtasks, newSubtask]);
+      setNewSubtaskName('');
+    } catch (error) {
+      console.error('Error adding subtask:', error);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId) => {
+    try {
+      await deleteSubtask(task.status, task.id, subtaskId);
+      setSubtasks(subtasks.filter((st) => st.id !== subtaskId));
+    } catch (error) {
+      console.error('Error deleting subtask:', error);
+    }
   };
 
   const handleAssignUser = useCallback(
@@ -150,18 +219,51 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     [task, onUpdateTask, user?.id]
   );
 
-  const handleChangeLabels = useCallback(
-    (event) => {
-      const newLabels = event.target.value;
-      setLabels(newLabels);
-      onUpdateTask({
-        ...task,
-        labels: newLabels,
-        updatedBy: user?.id,
-        updatedAt: new Date().toISOString(),
-      });
+  const handleAddLabel = useCallback(
+    async (labelToAdd) => {
+      const labelName = labelToAdd || newLabel.trim();
+      if (labelName && !labels.includes(labelName)) {
+        try {
+          console.log('Adding label:', labelName);
+          // Ajouter l'étiquette à la tâche
+          await addLabel(task.status, task.id, labelName);
+
+          // Ajouter l'étiquette à la liste des étiquettes disponibles si elle n'existe pas déjà
+          if (!availableLabels.includes(labelName)) {
+            await addAvailableLabel(labelName);
+          }
+
+          // Mettre à jour l'état local des étiquettes de la tâche
+          setLabels((prevLabels) => [...prevLabels, labelName]);
+          setNewLabel('');
+          setIsAddingLabel(false);
+        } catch (error) {
+          console.error('Error adding label:', error);
+        }
+      }
     },
-    [onUpdateTask, task, user?.id]
+    [labels, newLabel, task.status, task.id, availableLabels]
+  );
+
+  const handleDeleteLabel = useCallback(
+    async (labelToDelete) => {
+      try {
+        await deleteLabel(task.status, task.id, labelToDelete);
+        setLabels(labels.filter((label) => label !== labelToDelete));
+      } catch (error) {
+        console.error('Error deleting label:', error);
+      }
+    },
+    [labels, task.status, task.id]
+  );
+
+  const handleKeyPress = useCallback(
+    (event) => {
+      if (event.key === 'Enter') {
+        handleAddLabel();
+      }
+    },
+    [handleAddLabel]
   );
 
   const renderToolbar = (
@@ -247,29 +349,107 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
       </Box>
 
       {/* Label */}
-      <Box sx={{ display: 'flex' }}>
-        <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Étiquettes</StyledLabel>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ display: 'flex' }}>
+          <StyledLabel sx={{ height: 24, lineHeight: '24px' }}>Étiquettes</StyledLabel>
 
-        <Box sx={{ flex: 1 }}>
-          <Select
-            multiple
-            value={labels}
-            onChange={handleChangeLabels}
-            renderValue={(selected) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={value} size="small" color="info" variant="soft" />
-                ))}
-              </Box>
-            )}
-            sx={{ minWidth: 200 }}
-          >
-            {availableLabels.map((label) => (
-              <MenuItem key={label} value={label}>
-                {label}
-              </MenuItem>
+          <Box sx={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {labels.map((label) => (
+              <Chip
+                key={label}
+                label={label}
+                size="small"
+                color="info"
+                variant="soft"
+                onDelete={() => handleDeleteLabel(label)}
+              />
             ))}
-          </Select>
+          </Box>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1, ml: 10 }}>
+          {isAddingLabel ? (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Nouvelle étiquette"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                onKeyPress={handleKeyPress}
+                autoFocus
+                sx={{ width: 200 }}
+              />
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => handleAddLabel()}
+                disabled={!newLabel.trim()}
+              >
+                Ajouter
+              </Button>
+              <Button
+                size="small"
+                color="inherit"
+                onClick={() => {
+                  setNewLabel('');
+                  setIsAddingLabel(false);
+                }}
+              >
+                Annuler
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Select
+                size="small"
+                displayEmpty
+                value=""
+                disabled={isLoadingLabels}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleAddLabel(e.target.value);
+                  }
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { maxHeight: 240 },
+                  },
+                }}
+                sx={{
+                  width: 200,
+                  '& .MuiSelect-select': {
+                    color: (theme) => theme.palette.text.secondary,
+                  },
+                }}
+              >
+                <MenuItem value="" disabled>
+                  {isLoadingLabels ? 'Chargement...' : 'Sélectionner une étiquette'}
+                </MenuItem>
+                {!isLoadingLabels &&
+                  availableLabels
+                    .filter((label) => !labels.includes(label))
+                    .sort((a, b) => a.localeCompare(b))
+                    .map((label) => (
+                      <MenuItem key={label} value={label}>
+                        {label}
+                      </MenuItem>
+                    ))}
+              </Select>
+
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+                onClick={() => {
+                  // console.log('Current available labels:', availableLabels);
+                  // console.log('Current task labels:', labels);
+                  setIsAddingLabel(true);
+                }}
+              >
+                Nouvelle
+              </Button>
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -376,39 +556,67 @@ export function KanbanDetails({ task, openDetails, onUpdateTask, onDeleteTask, o
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
       <div>
         <Typography variant="body2" sx={{ mb: 1 }}>
-          {subtaskCompleted.length} sur {SUBTASKS.length}
+          {subtasks.filter((st) => st.completed).length} sur {subtasks.length}
         </Typography>
 
         <LinearProgress
           variant="determinate"
-          value={(subtaskCompleted.length / SUBTASKS.length) * 100}
+          value={(subtasks.filter((st) => st.completed).length / (subtasks.length || 1)) * 100}
         />
       </div>
 
       <FormGroup>
-        {SUBTASKS.map((taskItem) => (
+        {subtasks.map((subtask) => (
           <FormControlLabel
-            key={taskItem}
+            key={subtask.id}
             control={
               <Checkbox
                 disableRipple
-                name={taskItem}
-                checked={subtaskCompleted.includes(taskItem)}
+                name={subtask.id}
+                checked={subtask.completed}
+                onChange={() => handleClickSubtaskComplete(subtask.id)}
               />
             }
-            label={taskItem}
-            onChange={() => handleClickSubtaskComplete(taskItem)}
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2">{subtask.name}</Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteSubtask(subtask.id)}
+                  sx={{ ml: 'auto' }}
+                >
+                  <Iconify icon="solar:trash-bin-trash-bold" />
+                </IconButton>
+              </Box>
+            }
           />
         ))}
       </FormGroup>
 
-      <Button
-        variant="outlined"
-        startIcon={<Iconify icon="mingcute:add-line" />}
-        sx={{ alignSelf: 'flex-start' }}
-      >
-        Sous-tâche
-      </Button>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Nouvelle sous-tâche"
+          value={newSubtaskName}
+          onChange={(e) => setNewSubtaskName(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleAddSubtask();
+            }
+          }}
+        />
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={handleAddSubtask}
+          disabled={!newSubtaskName.trim()}
+          sx={{ alignSelf: 'flex-end' }}
+        >
+          Ajouter une sous-tâche
+        </Button>
+      </Box>
     </Box>
   );
 

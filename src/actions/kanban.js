@@ -7,6 +7,7 @@ import { ref, deleteObject } from 'firebase/storage';
 import {
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   arrayUnion,
   onSnapshot,
@@ -429,6 +430,385 @@ export async function deleteTask(columnId, taskId) {
     console.log(`Task ${taskId} deleted successfully`);
   } catch (error) {
     console.error('Error deleting task:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function addSubtask(columnId, taskId, subtaskData) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Créer la nouvelle sous-tâche
+    const newSubtask = {
+      id: crypto.randomUUID(),
+      name: subtaskData.name,
+      completed: false,
+      createdAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      createdBy: subtaskData.userId || null,
+      updatedBy: subtaskData.userId || null,
+    };
+
+    // Initialiser le tableau des sous-tâches s'il n'existe pas
+    if (!columnTasks[taskIndex].subtasks) {
+      columnTasks[taskIndex].subtasks = [];
+    }
+
+    // Ajouter la nouvelle sous-tâche
+    columnTasks[taskIndex].subtasks.push(newSubtask);
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('New subtask added successfully');
+    return newSubtask;
+  } catch (error) {
+    console.error('Error adding subtask:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateSubtask(columnId, taskId, subtaskId, subtaskData) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Trouver l'index de la sous-tâche à mettre à jour
+    const subtaskIndex = columnTasks[taskIndex].subtasks.findIndex(
+      (subtask) => subtask.id === subtaskId
+    );
+
+    if (subtaskIndex === -1) {
+      throw new Error(`Subtask with ID ${subtaskId} not found`);
+    }
+
+    // Mettre à jour la sous-tâche
+    columnTasks[taskIndex].subtasks[subtaskIndex] = {
+      ...columnTasks[taskIndex].subtasks[subtaskIndex],
+      ...subtaskData,
+      updatedAt: dayjs().format('YYYY-MM-DDTHH:mm:ss'),
+      updatedBy: subtaskData.userId || columnTasks[taskIndex].subtasks[subtaskIndex].updatedBy,
+    };
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Subtask updated successfully');
+    return columnTasks[taskIndex].subtasks[subtaskIndex];
+  } catch (error) {
+    console.error('Error updating subtask:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteSubtask(columnId, taskId, subtaskId) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Filtrer la sous-tâche à supprimer
+    columnTasks[taskIndex].subtasks = columnTasks[taskIndex].subtasks.filter(
+      (subtask) => subtask.id !== subtaskId
+    );
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Subtask deleted successfully');
+  } catch (error) {
+    console.error('Error deleting subtask:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function getAvailableLabels() {
+  try {
+    const labelsRef = doc(db, 'settings', 'Étiquettes');
+    const labelsSnapshot = await getDoc(labelsRef);
+
+    if (!labelsSnapshot.exists()) {
+      // Créer le document avec quelques étiquettes par défaut
+      const defaultLabels = ['Urgent', 'Important', 'En attente', 'En cours', 'Terminé', 'Bug', 'Feature'];
+      await setDoc(labelsRef, { labels: defaultLabels });
+      return defaultLabels;
+    }
+
+    return labelsSnapshot.data().labels || [];
+  } catch (error) {
+    console.error('Error getting available labels:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function addAvailableLabel(labelName) {
+  try {
+    const labelsRef = doc(db, 'settings', 'Étiquettes');
+    const labelsSnapshot = await getDoc(labelsRef);
+
+    let currentLabels = [];
+    if (labelsSnapshot.exists()) {
+      currentLabels = labelsSnapshot.data().labels || [];
+    }
+
+    // Vérifier si l'étiquette existe déjà
+    if (currentLabels.includes(labelName)) {
+      return labelName; // L'étiquette existe déjà, pas besoin de l'ajouter
+    }
+
+    // Ajouter la nouvelle étiquette
+    const updatedLabels = [...currentLabels, labelName];
+
+    // Mettre à jour ou créer le document
+    await setDoc(labelsRef, { labels: updatedLabels }, { merge: true });
+
+    console.log('New available label added successfully');
+    return labelName;
+  } catch (error) {
+    console.error('Error adding available label:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteAvailableLabel(labelName) {
+  try {
+    const labelsRef = doc(db, 'settings', 'Étiquettes');
+    const labelsSnapshot = await getDoc(labelsRef);
+
+    if (!labelsSnapshot.exists()) {
+      throw new Error('Labels document does not exist');
+    }
+
+    const currentLabels = labelsSnapshot.data().labels || [];
+
+    // Vérifier si l'étiquette existe
+    if (!currentLabels.includes(labelName)) {
+      throw new Error('Label not found in available labels');
+    }
+
+    // Supprimer l'étiquette
+    const updatedLabels = currentLabels.filter(label => label !== labelName);
+
+    // Mettre à jour le document
+    await setDoc(labelsRef, { labels: updatedLabels });
+
+    console.log('Available label deleted successfully');
+  } catch (error) {
+    console.error('Error deleting available label:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function addLabel(columnId, taskId, labelName) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Initialiser le tableau des étiquettes s'il n'existe pas
+    if (!columnTasks[taskIndex].labels) {
+      columnTasks[taskIndex].labels = [];
+    }
+
+    // Vérifier si l'étiquette existe déjà dans la tâche
+    if (columnTasks[taskIndex].labels.includes(labelName)) {
+      return labelName;
+    }
+
+    // Ajouter l'étiquette à la tâche
+    columnTasks[taskIndex].labels.push(labelName);
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    // S'assurer que l'étiquette est disponible globalement
+    await addAvailableLabel(labelName);
+
+    console.log('Label added successfully to task and global list');
+    return labelName;
+  } catch (error) {
+    console.error('Error adding label:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateLabel(columnId, taskId, oldLabel, newLabel) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Vérifier si l'ancienne étiquette existe
+    if (!columnTasks[taskIndex].labels.includes(oldLabel)) {
+      throw new Error('Old label not found');
+    }
+
+    // Vérifier si la nouvelle étiquette existe déjà
+    if (columnTasks[taskIndex].labels.includes(newLabel)) {
+      throw new Error('New label already exists');
+    }
+
+    // Mettre à jour l'étiquette
+    columnTasks[taskIndex].labels = columnTasks[taskIndex].labels.map(
+      (label) => (label === oldLabel ? newLabel : label)
+    );
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Label updated successfully');
+    return newLabel;
+  } catch (error) {
+    console.error('Error updating label:', error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteLabel(columnId, taskId, labelName) {
+  try {
+    const boardRef = doc(db, 'boards', 'main-board');
+
+    // Récupérer les données actuelles du tableau
+    const boardSnapshot = await getDoc(boardRef);
+    const boardData = boardSnapshot.data();
+
+    if (!boardData || !boardData.board || !boardData.board.tasks) {
+      throw new Error('Invalid board structure');
+    }
+
+    // Trouver la tâche à mettre à jour
+    const { tasks } = boardData.board;
+    const columnTasks = tasks[columnId];
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+      throw new Error(`Task with ID ${taskId} not found in column ${columnId}`);
+    }
+
+    // Vérifier si l'étiquette existe
+    if (!columnTasks[taskIndex].labels.includes(labelName)) {
+      throw new Error('Label not found');
+    }
+
+    // Supprimer l'étiquette
+    columnTasks[taskIndex].labels = columnTasks[taskIndex].labels.filter(
+      (label) => label !== labelName
+    );
+
+    // Mettre à jour la tâche dans Firestore
+    await updateDoc(boardRef, {
+      [`board.tasks.${columnId}`]: columnTasks
+    });
+
+    console.log('Label deleted successfully');
+  } catch (error) {
+    console.error('Error deleting label:', error);
     throw error;
   }
 }
